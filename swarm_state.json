@@ -1,0 +1,56 @@
+{
+  "SAT_03": {
+    "timestamp": "2026-02-26T10:31:55.690789",
+    "node_id": "SAT_03",
+    "battery": 52.0,
+    "position": "SECTOR_6",
+    "status": "IDLE",
+    "is_winner": true,
+    "current_task": {
+      "type": "TASK_BROADCAST",
+      "task": "IMAGING",
+      "location": "SECTOR_1",
+      "timestamp": "2026-02-26T10:30:07.531382",
+      "priority": 1
+    },
+    "last_bid_scores": {
+      "SAT_03": 10.25
+    }
+  },
+  "SAT_01": {
+    "timestamp": "2026-02-26T10:31:55.689277",
+    "node_id": "SAT_01",
+    "battery": 51.5,
+    "position": "SECTOR_3",
+    "status": "IDLE",
+    "is_winner": true,
+    "current_task": {
+      "type": "TASK_BROADCAST",
+      "task": "IMAGING",
+      "location": "SECTOR_1",
+      "timestamp": "2026-02-26T10:30:07.531382",
+      "priority": 1
+    },
+    "last_bid_scores": {
+      "SAT_01": 10.25
+    }
+  }
+}  "SAT_02": {
+    "timestamp": "2026-02-26T10:31:55.688783",
+    "node_id": "SAT_02",
+    "battery": 51.5,
+    "position": "SECTOR_5",
+    "status": "IDLE",
+    "is_winner": true,
+    "current_task": {
+      "type": "TASK_BROADCAST",
+      "task": "IMAGING",
+      "location": "SECTOR_1",
+      "timestamp": "2026-02-26T10:30:07.531382",
+      "priority": 1
+    },
+    "last_bid_scores": {
+      "SAT_02": 10.0
+    }
+  }
+}

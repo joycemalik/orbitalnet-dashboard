@@ -145,12 +145,19 @@ def main():
     table_rows = []
     for sat in SATELLITE_IDS:
         state = swarm_state.get(sat, {})
+        current_task = state.get("current_task")
+        task_str = (
+            f"{current_task.get('task')} @ {current_task.get('location')}"
+            if current_task
+            else "-"
+        )
         table_rows.append(
             {
                 "Satellite": sat,
                 "Battery": state.get("battery", 0),
                 "Status": state.get("status", "OFFLINE"),
                 "Position": state.get("position", ""),
+                "Current Task": task_str,
                 "Last Bid Scores": state.get("last_bid_scores", {}),
             }
         )
@@ -161,11 +168,11 @@ def main():
     for line in logs:
         st.text(line)
 
-    # --- Automatic refresh via JS hack ---
+    # --- Automatic refresh via JS hack (2 seconds) ---
     st.markdown(
         """
         <script>
-        setTimeout(function(){window.location.reload();}, 1000);
+        setTimeout(function(){window.location.reload();}, 2000);
         </script>
         """,
         unsafe_allow_html=True,

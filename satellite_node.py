@@ -133,17 +133,30 @@ class SatelliteNode:
             raise
 
     def _listen_for_tasks(self):
-        """Thread: Listen for incoming task broadcasts from ground station."""
+        """Thread: Listen for incoming UDP messages (tasks or bids)."""
         self.logger.info(f"Listener thread started on port {self.port}")
 
         while self.is_running:
             try:
                 data, addr = self.task_socket.recvfrom(MESSAGE_BUFFER_SIZE)
                 message = json.loads(data.decode("utf-8"))
+                mtype = message.get("type")
 
-                if message.get("type") == "TASK_BROADCAST":
+                if mtype == "TASK_BROADCAST":
                     self.logger.info(f"Received task: {message['task']} at {message['location']}")
-                    self._handle_task(message)
+                    # handle in separate thread to avoid blocking listener
+                    threading.Thread(
+                        target=self._handle_task,
+                        args=(message,),
+                        daemon=True,
+                    ).start()
+                elif mtype == "BID":
+                    peer_id = message.get("node_id")
+                    peer_score = message.get("score")
+                    with self.state_lock:
+                        self.last_bid_scores[peer_id] = peer_score
+                    self.logger.debug(f"Received bid from {peer_id}: {peer_score:.2f}")
+                # ignore other message types
             except socket.timeout:
                 continue
             except Exception as e:
@@ -235,37 +248,6 @@ class SatelliteNode:
         with self.state_lock:
             self.last_bid_scores[self.node_id] = bid_score
 
-    def _listen_for_bids(self, duration: float = BID_TIMEOUT):
-        """
-        Listen for peer bid responses.
-
-        Args:
-            duration: Time window to listen (seconds)
-        """
-        start_time = time.time()
-        while time.time() - start_time < duration:
-            try:
-                # Create a temporary socket for listening to bids
-                temp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                temp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                temp_socket.bind((LOCALHOST, self.port))
-                temp_socket.settimeout(0.1)
-
-                data, addr = temp_socket.recvfrom(MESSAGE_BUFFER_SIZE)
-                message = json.loads(data.decode("utf-8"))
-
-                if message.get("type") == "BID":
-                    peer_id = message.get("node_id")
-                    peer_score = message.get("score")
-                    with self.state_lock:
-                        self.last_bid_scores[peer_id] = peer_score
-                    self.logger.debug(f"Received bid from {peer_id}: {peer_score:.2f}")
-
-                temp_socket.close()
-            except socket.timeout:
-                continue
-            except Exception:
-                continue
 
     def _determine_winner(self, my_score: float):
         """

@@ -6,6 +6,7 @@ Usage: streamlit run dashboard.py
 
 import json
 import socket
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -46,6 +47,15 @@ def send_task(task: str, location: str):
     sock.close()
 
 
+def batch_send_task(task: str, location: str, repeats: int, interval: float):
+    """Send multiple tasks in background, waiting between each."""
+    for i in range(repeats):
+        send_task(task, location)
+        print(f"[GroundStation] broadcast {task} to {location} ({i+1}/{repeats})")
+        if i < repeats - 1:
+            time.sleep(interval)
+
+
 def read_logs(lines: int = 50):
     """Return the last `lines` entries from the event log."""
     try:
@@ -84,10 +94,16 @@ def main():
         st.header("Ground Station Control")
         task_type = st.selectbox("Task Type", ["IMAGING", "SURVEILLANCE", "COMMUNICATION"])
         sector = st.selectbox("Target Sector", SECTORS)
+        repeat_count = st.number_input("Repeat Count", min_value=1, max_value=10, value=1)
+        interval = st.number_input("Interval (Seconds)", min_value=1.0, value=5.0)
         submitted = st.form_submit_button("Broadcast Task")
         if submitted:
-            send_task(task_type, sector)
-            st.sidebar.success(f"Sent {task_type} to {sector}")
+            threading.Thread(
+                target=batch_send_task,
+                args=(task_type, sector, repeat_count, interval),
+                daemon=True,
+            ).start()
+            st.sidebar.success(f"Scheduled {repeat_count} x {task_type} to {sector}")
 
     # --- Read state and logs ---
     swarm_state = read_swarm_state()
@@ -141,6 +157,31 @@ def main():
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # --- Live Consensus & Bidding Tracker ---
+    st.subheader("Live Consensus & Bidding Tracker")
+    bidding_info = []
+    winning = None
+    for sat, state in swarm_state.items():
+        status = state.get("status")
+        if status in ("BIDDING", "EXECUTING"):
+            bids = state.get("last_bid_scores", {})
+            bidding_info.append((sat, status, bids))
+            if status == "EXECUTING":
+                winning = sat
+    if bidding_info:
+        cols = st.columns(len(bidding_info))
+        for idx, (sat, status, bids) in enumerate(bidding_info):
+            with cols[idx]:
+                st.write(f"**{sat}**")
+                st.write(status)
+                scores = bids.get(sat, 0)
+                st.progress(min(scores / 150, 1.0))
+                st.write(f"Score: {scores:.2f}")
+        if winning:
+            st.success(f"{winning} is executing")
+    else:
+        st.write("No active bidding at the moment.")
+
     # --- Data table ---
     table_rows = []
     for sat in SATELLITE_IDS:
@@ -168,11 +209,11 @@ def main():
     for line in logs:
         st.text(line)
 
-    # --- Automatic refresh via JS hack (2 seconds) ---
+    # --- Automatic refresh via JS hack (1 second) ---
     st.markdown(
         """
         <script>
-        setTimeout(function(){window.location.reload();}, 2000);
+        setTimeout(function(){window.location.reload();}, 1000);
         </script>
         """,
         unsafe_allow_html=True,

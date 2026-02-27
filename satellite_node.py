@@ -102,10 +102,12 @@ class SatelliteNode:
         listener_thread = threading.Thread(target=self._listen_for_tasks, daemon=True)
         heartbeat_thread = threading.Thread(target=self._heartbeat, daemon=True)
         battery_thread = threading.Thread(target=self._simulate_battery, daemon=True)
+        orbit_thread = threading.Thread(target=self._simulate_orbit, daemon=True)
 
         listener_thread.start()
         heartbeat_thread.start()
         battery_thread.start()
+        orbit_thread.start()
 
         try:
             while self.is_running:
@@ -303,6 +305,17 @@ class SatelliteNode:
                     self.battery = max(0, self.battery - BATTERY_DRAIN_RATE)
 
             time.sleep(1.0)
+
+    def _simulate_orbit(self):
+        """Thread: Move the satellite through orbit sectors periodically."""
+        while self.is_running:
+            time.sleep(10)  # advance sector every 10 seconds
+            with self.state_lock:
+                try:
+                    idx = SECTORS.index(self.position)
+                except ValueError:
+                    idx = 0
+                self.position = SECTORS[(idx + 1) % len(SECTORS)]
 
     def _heartbeat(self):
         """Thread: Periodically update swarm state."""

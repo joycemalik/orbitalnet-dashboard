@@ -1,36 +1,48 @@
 """
-Configuration for USOS (OrbitalNet OS) - Distributed Satellite Autonomy Prototype
+config.py
+---------
+Central configuration for the USOS Satellite Node Lambda function.
+
+All sector definitions, battery limits, and AWS resource identifiers
+are read from here. Topic ARNs and the DynamoDB table name are read
+from environment variables so that the same deployment package can be
+reused across different environments without code changes.
 """
 
-# Network Configuration
-LOCALHOST = "127.0.0.1"
-SATELLITE_PORTS = [5001, 5002, 5003]
-SATELLITE_IDS = ["SAT_01", "SAT_02", "SAT_03"]
+import os
 
-# Simulation Parameters
-MAX_BATTERY = 100
-MIN_BATTERY = 0
-BATTERY_DRAIN_RATE = 2  # % per second at idle
-BATTERY_DRAIN_TASK = 10  # % per task execution
-BATTERY_RECHARGE_RATE = 0.5  # % per second in sunlight
+# ---------------------------------------------------------------------------
+# Sector definitions
+# ---------------------------------------------------------------------------
 
-# Orbit & Sectors
-SECTORS = ["SECTOR_1", "SECTOR_2", "SECTOR_3", "SECTOR_4", "SECTOR_5", "SECTOR_6"]
+SECTORS = [
+    "SECTOR_1",
+    "SECTOR_2",
+    "SECTOR_3",
+    "SECTOR_4",
+    "SECTOR_5",
+    "SECTOR_6",
+]
 
-# Bidding & Consensus
-BID_TIMEOUT = 2.0  # seconds to wait for peer bids
-BID_WEIGHT_BATTERY = 0.5
-BID_WEIGHT_POSITION = 100.0
+# ---------------------------------------------------------------------------
+# Battery constants
+# ---------------------------------------------------------------------------
 
-# Task Parameters
-TASK_EXECUTION_TIME = 3  # seconds
-MAX_RETRIES = 2
+MAX_BATTERY: int = 100
+"""Maximum battery level (full charge)."""
 
-# Logging & State
-STATE_FILE = "swarm_state.json"
-LOG_FILE = "swarm_events.log"
+BATTERY_DRAIN_TASK: int = 10
+"""Amount of battery consumed when a node executes a task."""
 
-# Communication
-BROADCAST_PORT = 9999  # for ground_station to broadcast tasks
-HEARTBEAT_INTERVAL = 0.5  # seconds
-MESSAGE_BUFFER_SIZE = 4096
+# ---------------------------------------------------------------------------
+# AWS resource identifiers (injected via Lambda environment variables)
+# ---------------------------------------------------------------------------
+
+TASKS_TOPIC_ARN: str = os.environ.get("TASKS_TOPIC_ARN", "")
+"""SNS Topic ARN that broadcasts new task assignments to all satellite nodes."""
+
+BIDS_TOPIC_ARN: str = os.environ.get("BIDS_TOPIC_ARN", "")
+"""SNS Topic ARN that carries bid messages between satellite nodes."""
+
+TABLE_NAME: str = os.environ.get("TABLE_NAME", "SwarmState")
+"""DynamoDB table name used to persist per-node state (battery, position, status)."""

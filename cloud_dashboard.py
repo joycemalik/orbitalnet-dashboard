@@ -282,9 +282,9 @@ with col_sim:
 
             // Draw HUD Overlays
             ctx.fillStyle = "#38bdf8"; ctx.font = "10px monospace";
-            ctx.fillText(`SYS.T: ${new Date().toISOString()}`, 10, 20);
-            ctx.fillText(`ORB.V: ${orbitalSpeed.toFixed(1)} DEG/S`, 10, 35);
-            ctx.fillText(`ACT.N: ${swarmData.length}`, 10, 50);
+            ctx.fillText('SYS.T: ' + new Date().toISOString(), 10, 20);
+            ctx.fillText('ORB.V: ' + orbitalSpeed.toFixed(1) + ' DEG/S', 10, 35);
+            ctx.fillText('ACT.N: ' + swarmData.length, 10, 50);
 
             requestAnimationFrame(draw);
         }}

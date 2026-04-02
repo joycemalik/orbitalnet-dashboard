@@ -114,7 +114,19 @@ with col_sim:
             // Sync rotation to the global clock so it doesn't stutter on Python reload
             const timeSec = Date.now() / 1000; 
 
-            // Draw Earth
+            // --- 1. Draw Sunlit Hemisphere (Sectors 1, 2, 3) ---
+            ctx.beginPath();
+            // 0 to 180 degrees (right side of the orbit)
+            ctx.arc(cx, cy, rOrbit + 20, -Math.PI/2, Math.PI/2); 
+            ctx.strokeStyle = "rgba(251, 191, 36, 0.15)";
+            ctx.lineWidth = 40;
+            ctx.stroke();
+
+            // --- 2. Draw Sun Icon ---
+            ctx.font = "30px Arial";
+            ctx.fillText("☀️", cx + rOrbit + 40, cy - 10);
+
+            // --- 3. Draw Earth ---
             ctx.beginPath();
             ctx.arc(cx, cy, 40, 0, Math.PI * 2);
             ctx.fillStyle = "#0f172a"; ctx.fill();
@@ -141,12 +153,16 @@ with col_sim:
 
             // Draw Satellites
             swarmData.forEach(sat => {{
-                const secIdx = sectors[sat.position || "SECTOR_1"];
-                const baseAngle = (secIdx * Math.PI / 3) - Math.PI/2;
-                const angle = baseAngle + (timeSec * 0.15); // Slow orbit speed
+                // Use the continuous angle from DynamoDB instead of static sector bases
+                const angleRad = (sat.current_angle - 90) * (Math.PI / 180);
+                const sx = cx + Math.cos(angleRad) * rOrbit;
+                const sy = cy + Math.sin(angleRad) * rOrbit;
 
-                const sx = cx + Math.cos(angle) * rOrbit;
-                const sy = cy + Math.sin(angle) * rOrbit;
+                // Visual feedback if charging
+                if (sat.current_angle >= 0 && sat.current_angle <= 180) {{
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#fbbf24";
+                }}
 
                 // Draw Data Link if EXECUTING
                 if (sat.status === "EXECUTING" || sat.status === "BIDDING") {{
@@ -162,8 +178,6 @@ with col_sim:
                 ctx.beginPath();
                 ctx.arc(sx, sy, 8, 0, Math.PI * 2);
                 ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : (sat.status === "BIDDING" ? "#fff" : "#888");
-                ctx.shadowBlur = sat.status === "EXECUTING" ? 15 : 0;
-                ctx.shadowColor = "#fbbf24";
                 ctx.fill();
                 ctx.shadowBlur = 0; // reset
 

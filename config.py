@@ -25,7 +25,7 @@ SECTORS = [
 ]
 
 # ---------------------------------------------------------------------------
-# Battery constants
+# Battery & Orbital Constants
 # ---------------------------------------------------------------------------
 
 MAX_BATTERY: int = 100
@@ -34,10 +34,20 @@ MAX_BATTERY: int = 100
 BATTERY_DRAIN_TASK: int = 10
 """Amount of battery consumed when a node executes a task."""
 
-# Rates per minute
-PASSIVE_DRAIN_RATE = 6.6  # 100% / 15 mins = 6.6% per min
-SOLAR_RECHARGE_RATE = 8.0 # 40% / 5 mins = 8% per min
-SUNLIT_SECTORS = ["SECTOR_1", "SECTOR_2", "SECTOR_3"]
+# --- Orbital Constants ---
+ORBITAL_PERIOD_MINS = 15.0  # Time for one full 360° orbit
+ORBITAL_SPEED = 360.0 / ORBITAL_PERIOD_MINS # Degrees per minute
+
+# --- Realistic Power Logic ---
+# 100% / 15 mins = ~6.67% per minute base drain
+PASSIVE_DRAIN_RATE = 6.67 
+
+# If the satellite spends 7.5 mins in the sun, it needs to recover 
+# the 15-min total drain (100%). Recharge rate must be ~13.33% / min.
+SOLAR_RECHARGE_RATE = 20.0 # High enough to hit 100% comfortably
+
+# Sectors 1, 2, 3 correspond to 0° - 180°
+SUNLIT_ANGLE_RANGE = (0, 180)
 
 # ---------------------------------------------------------------------------
 # AWS resource identifiers (injected via Lambda environment variables)

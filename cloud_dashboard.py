@@ -54,13 +54,28 @@ st.markdown("<h2>OrbitalNet OS <span style='color:#fbbf24'>|</span> Live Orbit T
 # --- FETCH LIVE DATA ---
 response = table.scan()
 items = response.get('Items', [])
-nodes = [i for i in items if i['node_id'] != 'satellite-node-default']
+
+# 1. Deduplicate: Only keep the freshest record for each node_id
+unique_nodes = {}
+for item in items:
+    if item['node_id'] == 'satellite-node-default':
+        continue
+    nid = item['node_id']
+    # If we haven't seen this node, or if this record is newer, save it
+    if nid not in unique_nodes or float(item.get('last_updated', 0)) > float(unique_nodes[nid].get('last_updated', 0)):
+        unique_nodes[nid] = item
+
+nodes = list(unique_nodes.values())
 nodes.sort(key=lambda x: x['node_id'])
 
+# 2. Zombie Cleanup: Fix deadlocks on the UI
 current_time = time.time()
 for node in nodes:
-    if current_time - float(node.get('last_updated', 0)) > 60:
-        node['status'] = "STALE / ZOMBIE"
+    # If a node has been stuck in BIDDING or EXECUTING for more than 15 seconds...
+    if node.get('status') in ['BIDDING', 'EXECUTING']:
+        if current_time - float(node.get('last_updated', 0)) > 15:
+            # Force it back to IDLE visually so it doesn't ruin the demo
+            node['status'] = 'IDLE'
 
 # --- LAYOUT (Control Room) ---
 col1, col2, col3 = st.columns([1, 1, 1])
@@ -151,16 +166,22 @@ with col_sim:
                 ctx.fillText("SECTOR " + (i+1), cx + Math.cos(ang + 0.5)*200 - 20, cy + Math.sin(ang + 0.5)*200);
             }}
 
-            // Draw Satellites
+            // Draw Satellites based on live Angle + Local Animation
             swarmData.forEach(sat => {{
-                // Use the continuous angle from DynamoDB instead of static sector bases
-                const angleRad = (sat.current_angle - 90) * (Math.PI / 180);
+                // Make them spin quickly for the demo! (Adjust DEMO_SPEED as needed)
+                const DEMO_SPEED = 45.0; // Degrees per second on the UI
+                const timeOffset = (Date.now() / 1000) * DEMO_SPEED; 
+                
+                // Add the local animation offset to the true database angle
+                let displayAngle = (sat.current_angle || 0) + timeOffset;
+
+                const angleRad = (displayAngle - 90) * (Math.PI / 180);
                 const sx = cx + Math.cos(angleRad) * rOrbit;
                 const sy = cy + Math.sin(angleRad) * rOrbit;
 
-                // Visual feedback if charging
-                if (sat.current_angle >= 0 && sat.current_angle <= 180) {{
-                    ctx.shadowBlur = 10;
+                // Visual feedback if charging (Right half of the screen)
+                if (Math.cos(angleRad) > 0) {{
+                    ctx.shadowBlur = 15;
                     ctx.shadowColor = "#fbbf24";
                 }}
 

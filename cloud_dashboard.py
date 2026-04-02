@@ -146,35 +146,40 @@ with col_sim:
     <script>
         const canvas = document.getElementById('orbitCanvas');
         const ctx = canvas.getContext('2d');
+        
+        // 1. Data injected from Python
         const swarmData = {json.dumps(nodes, cls=DecimalEncoder)};
+        const orbitalSpeed = {ORBITAL_SPEED_DEG_PER_SEC}; 
+        
+        // 2. Record the exact millisecond this UI frame loaded
+        const initTime = Date.now(); 
         
         const cx = 350; const cy = 250; const rOrbit = 180;
-        const sectors = {{"SECTOR_1": 0, "SECTOR_2": 1, "SECTOR_3": 2, "SECTOR_4": 3, "SECTOR_5": 4, "SECTOR_6": 5}};
 
         function draw() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Sync rotation to the global clock so it doesn't stutter on Python reload
-            const timeSec = Date.now() / 1000; 
+            // 3. Calculate how many seconds have passed since Python sent the data
+            const elapsedSec = (Date.now() - initTime) / 1000.0;
 
-            // --- 1. Draw Sunlit Hemisphere (Sectors 1, 2, 3) ---
+            // Draw Sunlit Hemisphere (Sectors 1, 2, 3)
             ctx.beginPath();
-            // 0 to 180 degrees (right side of the orbit)
             ctx.arc(cx, cy, rOrbit + 20, -Math.PI/2, Math.PI/2); 
             ctx.strokeStyle = "rgba(251, 191, 36, 0.15)";
             ctx.lineWidth = 40;
             ctx.stroke();
 
-            // --- 2. Draw Sun Icon ---
+            // Draw Sun Icon
+            ctx.fillStyle = "#fbbf24";
             ctx.font = "30px Arial";
             ctx.fillText("☀️", cx + rOrbit + 40, cy - 10);
 
-            // --- 3. Draw Earth ---
+            // Draw Earth
             ctx.beginPath();
             ctx.arc(cx, cy, 40, 0, Math.PI * 2);
             ctx.fillStyle = "#0f172a"; ctx.fill();
-            ctx.lineWidth = 2; ctx.strokeStyle = "#38bdf8"; ctx.stroke();
-            
+            ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2; ctx.stroke();
+
             // Draw Orbital Ring
             ctx.beginPath();
             ctx.arc(cx, cy, rOrbit, 0, Math.PI * 2);
@@ -194,20 +199,22 @@ with col_sim:
                 ctx.fillText("SECTOR " + (i+1), cx + Math.cos(ang + 0.5)*200 - 20, cy + Math.sin(ang + 0.5)*200);
             }}
 
-            // Draw Satellites based on TRUE Projected Angle
+            // Draw Satellites
             swarmData.forEach(sat => {{
-                // We use the exact angle calculated by Python, no fake zooming.
-                const angleRad = ((sat.current_angle || 0) - 90) * (Math.PI / 180);
+                // 4. THE MAGIC: Predict the current angle based on elapsed time
+                const predictedAngle = typeof sat.current_angle !== 'undefined' ? sat.current_angle + (orbitalSpeed * elapsedSec) : 0;
+                
+                const angleRad = (predictedAngle - 90) * (Math.PI / 180);
                 const sx = cx + Math.cos(angleRad) * rOrbit;
                 const sy = cy + Math.sin(angleRad) * rOrbit;
 
-                // Visual feedback if charging (Sunlit zone is right half)
-                if (sat.current_angle >= 0 && sat.current_angle <= 180) {{
+                // Visual feedback if charging
+                if (predictedAngle % 360 >= 0 && predictedAngle % 360 <= 180) {{
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = "#fbbf24";
                 }}
 
-                // Draw Data Link if EXECUTING
+                // Draw Data Link if Executing
                 if (sat.status === "EXECUTING" || sat.status === "BIDDING") {{
                     ctx.beginPath();
                     ctx.moveTo(cx, cy);
@@ -217,18 +224,18 @@ with col_sim:
                     ctx.stroke();
                 }}
 
-                // Draw Satellite Dot
+                // Draw Node
                 ctx.beginPath();
                 ctx.arc(sx, sy, 8, 0, Math.PI * 2);
                 ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : (sat.status === "BIDDING" ? "#fff" : "#888");
                 ctx.fill();
-                ctx.shadowBlur = 0; // reset
-
-                // Draw Label & Battery
+                ctx.shadowBlur = 0;
+                
+                // Draw Labels
                 ctx.fillStyle = "#fff"; ctx.font = "12px Arial";
                 ctx.fillText(sat.node_id, sx + 15, sy - 5);
                 ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : "#aaa";
-                ctx.fillText(parseFloat(sat.battery).toFixed(0) + "%", sx + 15, sy + 10);
+                ctx.fillText(parseFloat(sat.battery).toFixed(1) + "%", sx + 15, sy + 10);
             }});
 
             requestAnimationFrame(draw);

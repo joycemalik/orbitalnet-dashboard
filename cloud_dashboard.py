@@ -317,6 +317,8 @@ with col_ctrl:
             Message=json.dumps({"type": "TASK", "location": target_sector, "task_id": str(time.time())})
         )
         st.success(f"Signal Transmitted to {target_sector}")
+        time.sleep(1.5)
+        st.rerun()
 
     st.markdown("<br><h4>Live Telemetry</h4>", unsafe_allow_html=True)
     for node in nodes:
@@ -329,5 +331,7 @@ with col_ctrl:
         """, unsafe_allow_html=True)
 
 # Auto-refresh to keep data synced
-time.sleep(15)
+# Fast refresh (2s) while tasks are active, calm refresh (15s) when idle
+active_swarm_states = sum(1 for n in nodes if n.get('status') in ['EXECUTING', 'BIDDING'])
+time.sleep(2 if active_swarm_states > 0 else 15)
 st.rerun()

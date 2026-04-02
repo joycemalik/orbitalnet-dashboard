@@ -239,10 +239,11 @@ def drain_battery_and_execute(node_id: str, battery: float, current_angle: float
         UpdateExpression=(
             "SET #s = :s, battery = :new_batt, current_angle = :ca, #pos = :pos, reputation = reputation + :rep_inc, last_task_time = :ltt, last_updated = :lu"
         ),
-        ConditionExpression="battery >= :drain",
+        ConditionExpression="battery >= :drain AND #s = :bid_status",
         ExpressionAttributeNames={"#s": "status", "#pos": "position"},
         ExpressionAttributeValues={
             ":s": "EXECUTING",
+            ":bid_status": "BIDDING",
             ":new_batt": Decimal(str(new_battery)),
             ":ca": Decimal(str(current_angle)),
             ":pos": position,
@@ -483,11 +484,8 @@ def handle_bid_received(message: dict) -> None:
         try:
             drain_battery_and_execute(NODE_ID, battery, current_angle, position)
         except _dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
-            # Battery already too low – gracefully yield.
-            logger.warning(
-                "[%s] Not enough battery to execute task. Yielding.", NODE_ID
-            )
-            update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
+            # Already yielded to a better bid, or already executing
+            logger.info("[%s] Ignored bid from %s (already yielded or executing).", NODE_ID, incoming_node_id)
             return
 
         try:
@@ -497,15 +495,9 @@ def handle_bid_received(message: dict) -> None:
         finally:
             update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
             logger.info("[%s] Task complete. Status → IDLE.", NODE_ID)
-
     else:
-        # A peer has a higher or equal score – yield immediately.
-        logger.info(
-            "[%s] Lost or tied auction (%.2f ≤ %.2f). Yielding.",
-            NODE_ID,
-            my_score,
-            incoming_score,
-        )
+        # We were beaten by incoming_score! Yield.
+        logger.info("[%s] Beaten by %s (%.2f <= %.2f). Yielding.", NODE_ID, incoming_node_id, my_score, incoming_score)
         update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
 
 

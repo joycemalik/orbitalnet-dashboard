@@ -222,7 +222,7 @@ with col_sim:
                 
                 // Sector Labels
                 ctx.fillStyle = "#475569"; ctx.font = "9px monospace";
-                ctx.fillText(`[SEC_0${i+1}]`, cx + Math.cos(ang + 0.5)*210 - 20, cy + Math.sin(ang + 0.5)*210);
+                ctx.fillText('[SEC_0' + (i + 1) + ']', cx + Math.cos(ang + 0.5)*210 - 20, cy + Math.sin(ang + 0.5)*210);
             }}
 
             // Draw Satellites based on TRUE Projected Angle

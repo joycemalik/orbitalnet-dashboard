@@ -49,6 +49,17 @@ SOLAR_RECHARGE_RATE = 20.0 # High enough to hit 100% comfortably
 # Sectors 1, 2, 3 correspond to 0° - 180°
 SUNLIT_ANGLE_RANGE = (0, 180)
 
+# --- DEMO ORBITAL MECHANICS ---
+# 1 full orbit takes 60 seconds (6 degrees per second)
+ORBITAL_SPEED_DEG_PER_SEC = 6.0 
+
+# Battery dies in 100 seconds in the dark (1% per sec)
+PASSIVE_DRAIN_PER_SEC = 1.0
+
+# Battery charges in 33 seconds in the sun (3% per sec)
+SOLAR_CHARGE_PER_SEC = 3.0
+
+
 # ---------------------------------------------------------------------------
 # AWS resource identifiers (injected via Lambda environment variables)
 # ---------------------------------------------------------------------------

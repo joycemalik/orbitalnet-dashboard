@@ -20,6 +20,16 @@ class DecimalEncoder(json.JSONEncoder):
             return float(obj)
         return super(DecimalEncoder, self).default(obj)
 
+# --- DEMO ORBITAL MECHANICS ---
+# 1 full orbit takes 60 seconds (6 degrees per second)
+ORBITAL_SPEED_DEG_PER_SEC = 6.0 
+
+# Battery dies in 100 seconds in the dark (1% per sec)
+PASSIVE_DRAIN_PER_SEC = 1.0
+
+# Battery charges in 33 seconds in the sun (3% per sec)
+SOLAR_CHARGE_PER_SEC = 3.0
+
 # --- SECURE CLOUD CONFIGURATION ---
 AWS_REGION = "ap-south-1"
 
@@ -51,31 +61,49 @@ st.markdown("""
 
 st.markdown("<h2>OrbitalNet OS <span style='color:#fbbf24'>|</span> Live Orbit Tracker</h2>", unsafe_allow_html=True)
 
-# --- FETCH LIVE DATA ---
+# --- FETCH & CLEAN LIVE DATA ---
+current_time = time.time()
 response = table.scan()
 items = response.get('Items', [])
 
-# 1. Deduplicate: Only keep the freshest record for each node_id
 unique_nodes = {}
 for item in items:
-    if item['node_id'] == 'satellite-node-default':
-        continue
+    if item['node_id'] == 'satellite-node-default': continue
+    
+    # Base data from DynamoDB
     nid = item['node_id']
-    # If we haven't seen this node, or if this record is newer, save it
-    if nid not in unique_nodes or float(item.get('last_updated', 0)) > float(unique_nodes[nid].get('last_updated', 0)):
+    last_updated = float(item.get('last_updated', current_time))
+    elapsed_sec = current_time - last_updated
+    
+    # 1. Project Real-Time Angle
+    base_angle = float(item.get('current_angle', 0.0))
+    real_angle = (base_angle + (ORBITAL_SPEED_DEG_PER_SEC * elapsed_sec)) % 360.0
+    item['current_angle'] = real_angle
+    
+    # 2. Project Real-Time Battery
+    battery = float(item.get('battery', 100.0))
+    battery -= PASSIVE_DRAIN_PER_SEC * elapsed_sec
+    
+    # Sunlit Zone is 0 to 180 degrees (Right side of screen)
+    if 0 <= real_angle <= 180:
+        battery += SOLAR_CHARGE_PER_SEC * elapsed_sec
+        
+    item['battery'] = max(0.0, min(100.0, battery))
+    
+    # 3. Update Sector text based on angle
+    sector_idx = int(real_angle // 60) + 1
+    item['position'] = f"SECTOR_{sector_idx}"
+    
+    # Zombie Cleanup (Clear stuck states)
+    if item.get('status') in ['BIDDING', 'EXECUTING'] and elapsed_sec > 15:
+        item['status'] = 'IDLE'
+
+    # Deduplicate: Only keep the freshest record
+    if nid not in unique_nodes or last_updated > float(unique_nodes[nid].get('last_updated', 0)):
         unique_nodes[nid] = item
 
 nodes = list(unique_nodes.values())
 nodes.sort(key=lambda x: x['node_id'])
-
-# 2. Zombie Cleanup: Fix deadlocks on the UI
-current_time = time.time()
-for node in nodes:
-    # If a node has been stuck in BIDDING or EXECUTING for more than 15 seconds...
-    if node.get('status') in ['BIDDING', 'EXECUTING']:
-        if current_time - float(node.get('last_updated', 0)) > 15:
-            # Force it back to IDLE visually so it doesn't ruin the demo
-            node['status'] = 'IDLE'
 
 # --- LAYOUT (Control Room) ---
 col1, col2, col3 = st.columns([1, 1, 1])
@@ -166,21 +194,15 @@ with col_sim:
                 ctx.fillText("SECTOR " + (i+1), cx + Math.cos(ang + 0.5)*200 - 20, cy + Math.sin(ang + 0.5)*200);
             }}
 
-            // Draw Satellites based on live Angle + Local Animation
+            // Draw Satellites based on TRUE Projected Angle
             swarmData.forEach(sat => {{
-                // Make them spin quickly for the demo! (Adjust DEMO_SPEED as needed)
-                const DEMO_SPEED = 45.0; // Degrees per second on the UI
-                const timeOffset = (Date.now() / 1000) * DEMO_SPEED; 
-                
-                // Add the local animation offset to the true database angle
-                let displayAngle = (sat.current_angle || 0) + timeOffset;
-
-                const angleRad = (displayAngle - 90) * (Math.PI / 180);
+                // We use the exact angle calculated by Python, no fake zooming.
+                const angleRad = ((sat.current_angle || 0) - 90) * (Math.PI / 180);
                 const sx = cx + Math.cos(angleRad) * rOrbit;
                 const sy = cy + Math.sin(angleRad) * rOrbit;
 
-                // Visual feedback if charging (Right half of the screen)
-                if (Math.cos(angleRad) > 0) {{
+                // Visual feedback if charging (Sunlit zone is right half)
+                if (sat.current_angle >= 0 && sat.current_angle <= 180) {{
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = "#fbbf24";
                 }}

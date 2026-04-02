@@ -170,12 +170,24 @@ with col_sim:
             for(let x=0; x<canvas.width; x+=50) {{ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }}
             for(let y=0; y<canvas.height; y+=50) {{ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }}
 
-            // Draw Sunlit Hemisphere Zone (HUD Arc)
+            // Draw Sunlit Hemisphere Zone (Irradiance Area)
+            const sunGrad = ctx.createLinearGradient(cx, cy, cx + rOrbit + 50, cy);
+            sunGrad.addColorStop(0, "rgba(251, 191, 36, 0.0)");
+            sunGrad.addColorStop(1, "rgba(251, 191, 36, 0.12)");
+            
             ctx.beginPath();
-            ctx.arc(cx, cy, rOrbit + 15, -Math.PI/2, Math.PI/2); 
-            ctx.strokeStyle = "rgba(251, 191, 36, 0.15)";
-            ctx.lineWidth = 2;
+            ctx.arc(cx, cy, rOrbit + 50, -Math.PI/2, Math.PI/2); 
+            ctx.fillStyle = sunGrad;
+            ctx.fill();
+
+            // Terminator line (Day/Night boundary)
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - rOrbit - 50);
+            ctx.lineTo(cx, cy + rOrbit + 50);
+            ctx.strokeStyle = "rgba(251, 191, 36, 0.3)";
+            ctx.setLineDash([5, 10]);
             ctx.stroke();
+            ctx.setLineDash([]);
             
             // Draw Solar Vector (Arrows instead of Emoji)
             ctx.fillStyle = "#fbbf24";
@@ -222,7 +234,7 @@ with col_sim:
                 
                 // Sector Labels
                 ctx.fillStyle = "#475569"; ctx.font = "9px monospace";
-                ctx.fillText('[SEC_0' + (i + 1) + ']', cx + Math.cos(ang + 0.5)*210 - 20, cy + Math.sin(ang + 0.5)*210);
+                ctx.fillText('[SEC_0' + (i+1) + ']', cx + Math.cos(ang + 0.5)*210 - 20, cy + Math.sin(ang + 0.5)*210);
             }}
 
             // Draw Satellites based on TRUE Projected Angle
@@ -270,14 +282,14 @@ with col_sim:
                 // Draw Technical Labels
                 ctx.fillStyle = "#f8fafc"; ctx.font = "9px monospace";
                 const shortId = sat.node_id.replace('satellite-node-', 'SAT-');
-                ctx.fillText(`> ${shortId}`, sx + 15, sy - 20);
+                ctx.fillText('> ' + shortId, sx + 15, sy - 20);
                 
                 ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : "#38bdf8";
-                ctx.fillText(`[PWR: ${parseFloat(sat.battery).toFixed(1)}%]`, sx + 15, sy - 6);
+                ctx.fillText('[PWR: ' + parseFloat(sat.battery).toFixed(1) + '%]', sx + 15, sy - 6);
                 
                 // Status tag
                 ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : (sat.status === "BIDDING" ? "#e2e8f0" : "#64748b");
-                ctx.fillText(`[STS: ${sat.status}]`, sx + 15, sy + 4);
+                ctx.fillText('[STS: ' + sat.status + ']', sx + 15, sy + 4);
             }});
 
             // Draw HUD Overlays
@@ -317,5 +329,5 @@ with col_ctrl:
         """, unsafe_allow_html=True)
 
 # Auto-refresh to keep data synced
-time.sleep(2)
+time.sleep(15)
 st.rerun()

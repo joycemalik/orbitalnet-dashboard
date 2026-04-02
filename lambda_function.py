@@ -228,37 +228,6 @@ def drain_battery_and_execute(node_id: str, battery: float) -> None:
     )
 
 
-def drain_battery_and_execute(node_id: str) -> None:
-    """Deduct BATTERY_DRAIN_TASK from the node's battery and mark EXECUTING.
-
-    Uses a DynamoDB conditional update to prevent the battery from dropping
-    below zero even under concurrent invocations.
-
-    Parameters
-    ----------
-    node_id:
-        The unique satellite identifier (DynamoDB partition key).
-    """
-    table = _get_table()
-    table.update_item(
-        Key={"node_id": node_id},
-        UpdateExpression=(
-            "SET #s = :s, battery = battery - :drain"
-        ),
-        ConditionExpression="battery >= :drain",
-        ExpressionAttributeNames={"#s": "status"},
-        ExpressionAttributeValues={
-            ":s": "EXECUTING",
-            ":drain": Decimal(str(config.BATTERY_DRAIN_TASK)),
-        },
-    )
-    logger.info(
-        "[%s] Battery drained by %d, status → EXECUTING",
-        node_id,
-        config.BATTERY_DRAIN_TASK,
-    )
-
-
 # ---------------------------------------------------------------------------
 # SNS helpers
 # ---------------------------------------------------------------------------

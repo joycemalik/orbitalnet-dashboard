@@ -52,14 +52,16 @@ table = dynamodb.Table("SwarmState")
 st.set_page_config(page_title="OrbitalNet OS", layout="wide")
 st.markdown("""
     <style>
-    .stApp { background-color: #0a0a0a; color: #ffffff; }
-    .stButton>button { background-color: #fbbf24; color: #000000 !important; font-weight: bold; border-radius: 4px; border: none; width: 100%; }
-    .stButton>button:hover { background-color: #f59e0b; }
-    .metric-box { background-color: #151515; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 10px; }
+    .stApp { background-color: #020617; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; }
+    h1, h2, h3, h4 { color: #38bdf8 !important; font-family: 'Courier New', Courier, monospace; letter-spacing: -0.5px; }
+    .stButton>button { background-color: #0ea5e9; color: #ffffff !important; font-weight: bold; border-radius: 2px; border: 1px solid #38bdf8; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
+    .stButton>button:hover { background-color: #0284c7; box-shadow: 0 0 10px rgba(56,189,248,0.5); }
+    .metric-box { background-color: #0f172a; padding: 15px; border-radius: 2px; border: 1px solid #1e293b; margin-bottom: 10px; border-left: 4px solid #0ea5e9; font-family: 'Courier New', Courier, monospace; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+    .stDataFrame { border: 1px solid #1e293b; }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h2>OrbitalNet OS <span style='color:#fbbf24'>|</span> Live Orbit Tracker</h2>", unsafe_allow_html=True)
+st.markdown("<h2>ORBITAL_NET / <span style='color:#0ea5e9'>TELEMETRY ROOT</span></h2>", unsafe_allow_html=True)
 
 # --- FETCH & CLEAN LIVE DATA ---
 current_time = time.time()
@@ -137,12 +139,12 @@ with col_sim:
     <html>
     <head>
     <style>
-        body {{ margin: 0; background-color: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 500px; color: white; font-family: sans-serif; overflow: hidden; }}
-        canvas {{ background: radial-gradient(circle, #111 0%, #050505 100%); border-radius: 12px; border: 1px solid #222; box-shadow: 0 0 20px rgba(0,0,0,0.5); }}
+        body {{ margin: 0; background-color: #020617; display: flex; justify-content: center; align-items: center; height: 600px; color: #38bdf8; font-family: 'Courier New', Courier, monospace; overflow: hidden; }}
+        canvas {{ background: #020617; border-radius: 4px; border: 1px solid #1e293b; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }}
     </style>
     </head>
     <body>
-    <canvas id="orbitCanvas" width="700" height="500"></canvas>
+    <canvas id="orbitCanvas" width="800" height="600"></canvas>
     <script>
         const canvas = document.getElementById('orbitCanvas');
         const ctx = canvas.getContext('2d');
@@ -154,7 +156,7 @@ with col_sim:
         // 2. Record the exact millisecond this UI frame loaded
         const initTime = Date.now(); 
         
-        const cx = 350; const cy = 250; const rOrbit = 180;
+        const cx = 400; const cy = 300; const rOrbit = 200;
 
         function draw() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -162,56 +164,80 @@ with col_sim:
             // 3. Calculate how many seconds have passed since Python sent the data
             const elapsedSec = (Date.now() - initTime) / 1000.0;
 
-            // Draw Sunlit Hemisphere (Sectors 1, 2, 3)
+            // Draw Subtle Grid Background
+            ctx.strokeStyle = "rgba(15, 23, 42, 0.5)";
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=50) {{ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }}
+            for(let y=0; y<canvas.height; y+=50) {{ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }}
+
+            // Draw Sunlit Hemisphere Zone (HUD Arc)
             ctx.beginPath();
-            ctx.arc(cx, cy, rOrbit + 20, -Math.PI/2, Math.PI/2); 
+            ctx.arc(cx, cy, rOrbit + 15, -Math.PI/2, Math.PI/2); 
             ctx.strokeStyle = "rgba(251, 191, 36, 0.15)";
-            ctx.lineWidth = 40;
+            ctx.lineWidth = 2;
             ctx.stroke();
-
-            // Draw Sun Icon
+            
+            // Draw Solar Vector (Arrows instead of Emoji)
             ctx.fillStyle = "#fbbf24";
-            ctx.font = "30px Arial";
-            ctx.fillText("☀️", cx + rOrbit + 40, cy - 10);
+            ctx.font = "10px monospace";
+            ctx.fillText("SOLAR IRRADIANCE VECTOR →", cx + rOrbit + 30, cy - 20);
+            ctx.strokeStyle = "rgba(251, 191, 36, 0.3)";
+            for(let scanY = cy - 10; scanY <= cy + 10; scanY += 10) {{
+                ctx.beginPath(); ctx.moveTo(cx + rOrbit + 30, scanY); ctx.lineTo(cx + rOrbit + 70, scanY); ctx.stroke();
+            }}
 
-            // Draw Earth
-            ctx.beginPath();
+            // Draw Earth (Atmospheric Glow + Wireframe)
+            ctx.beginPath(); // Inner deep core
+            ctx.arc(cx, cy, 38, 0, Math.PI * 2);
+            ctx.fillStyle = "#020617"; ctx.fill();
+            
+            ctx.beginPath(); // Outer atmosphere
             ctx.arc(cx, cy, 40, 0, Math.PI * 2);
-            ctx.fillStyle = "#0f172a"; ctx.fill();
-            ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = "#0ea5e9"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.shadowBlur = 15; ctx.shadowColor = "#0ea5e9"; ctx.stroke(); ctx.shadowBlur = 0;
+            
+            // Earth Wireframe Lines
+            ctx.beginPath(); ctx.ellipse(cx, cy, 20, 40, 0, 0, Math.PI*2); ctx.strokeStyle="rgba(14, 165, 233, 0.3)"; ctx.lineWidth=1; ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(cx, cy, 40, 20, 0, 0, Math.PI*2); ctx.stroke();
 
-            // Draw Orbital Ring
+            // Draw Orbital Ring (HUD Style with ticks)
             ctx.beginPath();
             ctx.arc(cx, cy, rOrbit, 0, Math.PI * 2);
-            ctx.setLineDash([4, 6]); ctx.strokeStyle = "#333"; ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.strokeStyle = "rgba(30, 41, 59, 0.8)"; ctx.stroke();
+            for(let t=0; t<360; t+=10) {{
+                let tr = t * Math.PI/180;
+                let tLen = (t%30===0) ? 6 : 3;
+                ctx.beginPath(); ctx.moveTo(cx + Math.cos(tr)*(rOrbit-tLen), cy + Math.sin(tr)*(rOrbit-tLen));
+                ctx.lineTo(cx + Math.cos(tr)*(rOrbit+tLen), cy + Math.sin(tr)*(rOrbit+tLen));
+                ctx.strokeStyle = (t%30===0) ? "#334155" : "rgba(30, 41, 59, 0.5)"; ctx.stroke();
+            }}
 
-            // Draw Sector Dividers
+            // Draw Sector Dividers (Crosshairs)
             for(let i=0; i<6; i++) {{
                 const ang = (i * Math.PI / 3) - Math.PI/2;
                 ctx.beginPath();
                 ctx.moveTo(cx + Math.cos(ang)*50, cy + Math.sin(ang)*50);
-                ctx.lineTo(cx + Math.cos(ang)*220, cy + Math.sin(ang)*220);
-                ctx.strokeStyle = "#222"; ctx.stroke();
+                ctx.lineTo(cx + Math.cos(ang)*240, cy + Math.sin(ang)*240);
+                ctx.strokeStyle = "rgba(30, 41, 59, 0.3)"; ctx.stroke();
                 
                 // Sector Labels
-                ctx.fillStyle = "#444"; ctx.font = "10px Arial";
-                ctx.fillText("SECTOR " + (i+1), cx + Math.cos(ang + 0.5)*200 - 20, cy + Math.sin(ang + 0.5)*200);
+                ctx.fillStyle = "#475569"; ctx.font = "9px monospace";
+                ctx.fillText(`[SEC_0${i+1}]`, cx + Math.cos(ang + 0.5)*210 - 20, cy + Math.sin(ang + 0.5)*210);
             }}
 
-            // Draw Satellites
+            // Draw Satellites based on TRUE Projected Angle
             swarmData.forEach(sat => {{
-                // 4. THE MAGIC: Predict the current angle based on elapsed time
+                // Predict the current angle
                 const predictedAngle = typeof sat.current_angle !== 'undefined' ? sat.current_angle + (orbitalSpeed * elapsedSec) : 0;
                 
                 const angleRad = (predictedAngle - 90) * (Math.PI / 180);
                 const sx = cx + Math.cos(angleRad) * rOrbit;
                 const sy = cy + Math.sin(angleRad) * rOrbit;
 
-                // Visual feedback if charging
+                // Charging Aura
                 if (predictedAngle % 360 >= 0 && predictedAngle % 360 <= 180) {{
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = "#fbbf24";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "rgba(251, 191, 36, 0.5)";
                 }}
 
                 // Draw Data Link if Executing
@@ -219,24 +245,46 @@ with col_sim:
                     ctx.beginPath();
                     ctx.moveTo(cx, cy);
                     ctx.lineTo(sx, sy);
-                    ctx.strokeStyle = sat.status === "EXECUTING" ? "rgba(251, 191, 36, 0.8)" : "rgba(255, 255, 255, 0.3)";
-                    ctx.lineWidth = sat.status === "EXECUTING" ? 3 : 1;
+                    ctx.strokeStyle = sat.status === "EXECUTING" ? "rgba(245, 158, 11, 0.8)" : "rgba(56, 189, 248, 0.3)";
+                    ctx.lineWidth = sat.status === "EXECUTING" ? 2 : 1;
+                    ctx.setLineDash(sat.status === "EXECUTING" ? [] : [2, 2]);
                     ctx.stroke();
+                    ctx.setLineDash([]);
                 }}
 
-                // Draw Node
+                // Draw Node (Technical Triangle/Marker instead of a plain dot)
+                ctx.translate(sx, sy);
+                ctx.rotate(angleRad + Math.PI/2);
                 ctx.beginPath();
-                ctx.arc(sx, sy, 8, 0, Math.PI * 2);
-                ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : (sat.status === "BIDDING" ? "#fff" : "#888");
-                ctx.fill();
+                ctx.moveTo(0, -6); ctx.lineTo(4, 0); ctx.lineTo(0, 6); ctx.lineTo(-4, 0); ctx.closePath();
+                ctx.fillStyle = sat.status === "EXECUTING" ? "#f59e0b" : "#38bdf8"; ctx.fill();
+                ctx.strokeStyle = sat.status === "EXECUTING" ? "#fbbf24" : "#7dd3fc"; ctx.lineWidth = 1; ctx.stroke();
+                ctx.rotate(-(angleRad + Math.PI/2));
+                ctx.translate(-sx, -sy);
                 ctx.shadowBlur = 0;
                 
-                // Draw Labels
-                ctx.fillStyle = "#fff"; ctx.font = "12px Arial";
-                ctx.fillText(sat.node_id, sx + 15, sy - 5);
-                ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : "#aaa";
-                ctx.fillText(parseFloat(sat.battery).toFixed(1) + "%", sx + 15, sy + 10);
+                // Draw Callout Line
+                ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 15, sy - 15); ctx.lineTo(sx + 50, sy - 15);
+                ctx.strokeStyle = "rgba(51, 65, 85, 0.8)"; ctx.lineWidth = 1; ctx.stroke();
+
+                // Draw Technical Labels
+                ctx.fillStyle = "#f8fafc"; ctx.font = "9px monospace";
+                const shortId = sat.node_id.replace('satellite-node-', 'SAT-');
+                ctx.fillText(`> ${shortId}`, sx + 15, sy - 20);
+                
+                ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : "#38bdf8";
+                ctx.fillText(`[PWR: ${parseFloat(sat.battery).toFixed(1)}%]`, sx + 15, sy - 6);
+                
+                // Status tag
+                ctx.fillStyle = sat.status === "EXECUTING" ? "#fbbf24" : (sat.status === "BIDDING" ? "#e2e8f0" : "#64748b");
+                ctx.fillText(`[STS: ${sat.status}]`, sx + 15, sy + 4);
             }});
+
+            // Draw HUD Overlays
+            ctx.fillStyle = "#38bdf8"; ctx.font = "10px monospace";
+            ctx.fillText(`SYS.T: ${new Date().toISOString()}`, 10, 20);
+            ctx.fillText(`ORB.V: ${orbitalSpeed.toFixed(1)} DEG/S`, 10, 35);
+            ctx.fillText(`ACT.N: ${swarmData.length}`, 10, 50);
 
             requestAnimationFrame(draw);
         }}

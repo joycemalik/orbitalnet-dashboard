@@ -31,6 +31,7 @@ import json
 import logging
 import os
 import time
+import random
 from decimal import Decimal
 
 import boto3
@@ -87,10 +88,13 @@ def get_node_state(node_id: str) -> dict:
 
     if item is None:
         logger.info("No existing state found for %s – initialising defaults.", node_id)
+        random_battery = float(random.randint(50, config.MAX_BATTERY))
+        random_position = random.choice(config.SECTORS)
+        
         default_state = {
             "node_id": node_id,
-            "battery": Decimal(str(config.MAX_BATTERY)),
-            "position": config.SECTORS[0],
+            "battery": Decimal(str(random_battery)),
+            "position": random_position,
             "status": "IDLE",
             "last_score": Decimal("0"),
             "last_updated": Decimal(str(time.time())),
@@ -100,8 +104,8 @@ def get_node_state(node_id: str) -> dict:
         }
         table.put_item(Item=default_state)
         return {
-            "battery": float(config.MAX_BATTERY),
-            "position": config.SECTORS[0],
+            "battery": random_battery,
+            "position": random_position,
             "status": "IDLE",
             "last_score": 0.0,
             "last_updated": time.time(),

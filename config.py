@@ -34,6 +34,11 @@ MAX_BATTERY: int = 100
 BATTERY_DRAIN_TASK: int = 10
 """Amount of battery consumed when a node executes a task."""
 
+# Rates per minute
+PASSIVE_DRAIN_RATE = 6.6  # 100% / 15 mins = 6.6% per min
+SOLAR_RECHARGE_RATE = 8.0 # 40% / 5 mins = 8% per min
+SUNLIT_SECTORS = ["SECTOR_1", "SECTOR_2", "SECTOR_3"]
+
 # ---------------------------------------------------------------------------
 # AWS resource identifiers (injected via Lambda environment variables)
 # ---------------------------------------------------------------------------

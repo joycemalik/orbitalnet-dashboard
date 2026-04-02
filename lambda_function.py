@@ -93,6 +93,10 @@ def get_node_state(node_id: str) -> dict:
             "position": config.SECTORS[0],
             "status": "IDLE",
             "last_score": Decimal("0"),
+            "last_updated": Decimal(str(time.time())),
+            "reputation": Decimal("0"),
+            "last_task_time": Decimal("0"),
+            "last_task_id": "0",
         }
         table.put_item(Item=default_state)
         return {
@@ -100,6 +104,10 @@ def get_node_state(node_id: str) -> dict:
             "position": config.SECTORS[0],
             "status": "IDLE",
             "last_score": 0.0,
+            "last_updated": time.time(),
+            "reputation": 0,
+            "last_task_time": 0.0,
+            "last_task_id": "0",
         }
 
     # Convert Decimal → float for all numeric fields.
@@ -108,10 +116,14 @@ def get_node_state(node_id: str) -> dict:
         "position": str(item.get("position", config.SECTORS[0])),
         "status": str(item.get("status", "IDLE")),
         "last_score": float(item.get("last_score", 0)),
+        "last_updated": float(item.get("last_updated", time.time())),
+        "reputation": int(item.get("reputation", 0)),
+        "last_task_time": float(item.get("last_task_time", 0)),
+        "last_task_id": str(item.get("last_task_id", "0")),
     }
 
 
-def update_node_status(node_id: str, status: str) -> None:
+def update_node_status(node_id: str, status: str, battery: float = None) -> None:
     """Update only the *status* field of a node's DynamoDB record.
 
     Parameters
@@ -120,18 +132,29 @@ def update_node_status(node_id: str, status: str) -> None:
         The unique satellite identifier (DynamoDB partition key).
     status:
         New status string – typically one of IDLE, BIDDING, or EXECUTING.
+    battery:
+        Optional continuous battery float to sync with DB.
     """
     table = _get_table()
+    
+    update_expr = "SET #s = :s"
+    expr_vals = {":s": status}
+    
+    if battery is not None:
+        update_expr += ", battery = :b, last_updated = :lu"
+        expr_vals[":b"] = Decimal(str(battery))
+        expr_vals[":lu"] = Decimal(str(time.time()))
+
     table.update_item(
         Key={"node_id": node_id},
-        UpdateExpression="SET #s = :s",
+        UpdateExpression=update_expr,
         ExpressionAttributeNames={"#s": "status"},
-        ExpressionAttributeValues={":s": status},
+        ExpressionAttributeValues=expr_vals,
     )
     logger.info("[%s] Status updated → %s", node_id, status)
 
 
-def update_node_after_bid(node_id: str, score: float) -> None:
+def update_node_after_bid(node_id: str, score: float, task_id: str, battery: float) -> None:
     """Persist the bid score and set status to BIDDING atomically.
 
     Storing *last_score* in DynamoDB ensures that when a competing bid
@@ -143,18 +166,66 @@ def update_node_after_bid(node_id: str, score: float) -> None:
         The unique satellite identifier (DynamoDB partition key).
     score:
         The numeric bid score just submitted to usos-bids.
+    task_id:
+        The current sequence identifier for the task.
+    battery:
+        The newly calculated continuous battery float.
     """
     table = _get_table()
     table.update_item(
         Key={"node_id": node_id},
-        UpdateExpression="SET #s = :s, last_score = :ls",
+        UpdateExpression="SET #s = :s, last_score = :ls, last_task_id = :tid, battery = :b, last_updated = :lu",
         ExpressionAttributeNames={"#s": "status"},
         ExpressionAttributeValues={
             ":s": "BIDDING",
             ":ls": Decimal(str(score)),
+            ":tid": task_id,
+            ":b": Decimal(str(battery)),
+            ":lu": Decimal(str(time.time())),
         },
     )
     logger.info("[%s] Stored last_score=%.2f, status → BIDDING", node_id, score)
+
+def drain_battery_and_execute(node_id: str, battery: float) -> None:
+    """Deduct BATTERY_DRAIN_TASK from the node's battery and mark EXECUTING.
+
+    Uses a DynamoDB conditional update to prevent the battery from dropping
+    below zero even under concurrent invocations. Also increments reputation
+    and sets last_task_time.
+
+    Parameters
+    ----------
+    node_id:
+        The unique satellite identifier (DynamoDB partition key).
+    battery:
+        The calculated continuous battery state.
+    """
+    table = _get_table()
+    
+    # We update the battery to continuous value before draining
+    new_battery = max(0, battery - config.BATTERY_DRAIN_TASK)
+    
+    table.update_item(
+        Key={"node_id": node_id},
+        UpdateExpression=(
+            "SET #s = :s, battery = :new_batt, reputation = reputation + :rep_inc, last_task_time = :ltt, last_updated = :lu"
+        ),
+        ConditionExpression="battery >= :drain",
+        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeValues={
+            ":s": "EXECUTING",
+            ":new_batt": Decimal(str(new_battery)),
+            ":rep_inc": Decimal("1"),
+            ":ltt": Decimal(str(time.time())),
+            ":lu": Decimal(str(time.time())),
+            ":drain": Decimal(str(config.BATTERY_DRAIN_TASK)),
+        },
+    )
+    logger.info(
+        "[%s] Battery drained by %d, status → EXECUTING, reputation +1",
+        node_id,
+        config.BATTERY_DRAIN_TASK,
+    )
 
 
 def drain_battery_and_execute(node_id: str) -> None:
@@ -193,14 +264,15 @@ def drain_battery_and_execute(node_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def publish_bid(node_id: str, score: float, task_location: str) -> None:
+def publish_bid(node_id: str, score: float, task_location: str, task_id: str) -> None:
     """Publish this node's bid to the usos-bids SNS topic.
 
     The bid message is a JSON object understood by all peer nodes:
         {
             "node_id":       "<satellite-id>",
             "score":         <float>,
-            "task_location": "<SECTOR_X>"
+            "task_location": "<SECTOR_X>",
+            "task_id":       "<task-id>"
         }
 
     Parameters
@@ -212,9 +284,11 @@ def publish_bid(node_id: str, score: float, task_location: str) -> None:
     task_location:
         The sector of the task being bid on – echoed so that receivers can
         verify they are comparing bids for the same task.
+    task_id:
+        The sequence ID of the task to prevent processing stale bids.
     """
     message_body = json.dumps(
-        {"node_id": node_id, "score": score, "task_location": task_location}
+        {"node_id": node_id, "score": score, "task_location": task_location, "task_id": task_id}
     )
     _sns.publish(
         TopicArn=config.BIDS_TOPIC_ARN,
@@ -222,10 +296,11 @@ def publish_bid(node_id: str, score: float, task_location: str) -> None:
         Subject="USOS_BID",
     )
     logger.info(
-        "[%s] Published bid score=%.2f for task at %s",
+        "[%s] Published bid score=%.2f for task at %s (task_id: %s)",
         node_id,
         score,
         task_location,
+        task_id
     )
 
 
@@ -233,34 +308,31 @@ def publish_bid(node_id: str, score: float, task_location: str) -> None:
 # Bid score calculator
 # ---------------------------------------------------------------------------
 
+def calculate_current_battery(state) -> float:
+    now = time.time()
+    elapsed_mins = (now - state.get('last_updated', now)) / 60
+    
+    drain = elapsed_mins * config.PASSIVE_DRAIN_RATE
+    recharge = 0
+    if state['position'] in config.SUNLIT_SECTORS:
+        recharge = elapsed_mins * config.SOLAR_RECHARGE_RATE
+        
+    new_battery = min(100, max(0, float(state['battery']) - drain + recharge))
+    return new_battery
 
-def calculate_bid_score(battery: float, position: str, task_location: str) -> float:
-    """Compute a bid score using battery level and proximity to the task.
 
-    Formula
-    ~~~~~~~
-        score = (battery × 0.5) + (100 if position == task_location else 0)
-
-    A node that is already in the task's sector receives a 100-point bonus,
-    strongly favouring close-proximity nodes while still accounting for
-    remaining energy.
-
-    Parameters
-    ----------
-    battery:
-        Current battery level (0-100).
-    position:
-        The node's current orbital sector.
-    task_location:
-        The sector where the task must be performed.
-
-    Returns
-    -------
-    float
-        Numeric bid score; higher is better.
-    """
-    proximity_bonus = 100.0 if position == task_location else 0.0
-    score = (battery * 0.5) + proximity_bonus
+def calculate_bid_score(battery: float, position: str, task_location: str, reputation: int, last_task_time: float) -> float:
+    # Base: Proximity is 40% of the weight
+    proximity_score = 100 if position == task_location else 0
+    
+    # Reliability: Nodes that have done more work are trusted more (up to 20 pts)
+    reputation_bonus = min(20, reputation * 0.5)
+    
+    # Readiness: If it worked in the last 2 mins, it's "fatigued" (-30 pts)
+    cooldown_penalty = 30 if (time.time() - last_task_time) < 120 else 0
+    
+    # Combined Raft-style score
+    score = (battery * 0.5) + proximity_score + reputation_bonus - cooldown_penalty
     return round(score, 4)
 
 
@@ -282,9 +354,10 @@ def handle_task_received(message: dict) -> None:
     ----------
     message:
         Parsed JSON message from the SNS notification.  Expected shape:
-        ``{"type": "TASK", "location": "<SECTOR_X>"}``.
+        ``{"type": "TASK", "location": "<SECTOR_X>", "task_id": "12345"}``.
     """
     task_location: str = message.get("location", "")
+    task_id: str = message.get("task_id", str(time.time()))
     if task_location not in config.SECTORS:
         logger.warning(
             "[%s] Received task with unknown location '%s' – ignoring.",
@@ -295,8 +368,12 @@ def handle_task_received(message: dict) -> None:
 
     # 1. Read current state.
     state = get_node_state(NODE_ID)
-    battery = state["battery"]
+    
+    # Apply continuous battery logic
+    battery = calculate_current_battery(state)
     position = state["position"]
+    reputation = state["reputation"]
+    last_task_time = state["last_task_time"]
 
     logger.info(
         "[%s] Task received for %s. Current state: battery=%.1f, position=%s",
@@ -307,13 +384,13 @@ def handle_task_received(message: dict) -> None:
     )
 
     # 2. Calculate bid score.
-    score = calculate_bid_score(battery, position, task_location)
+    score = calculate_bid_score(battery, position, task_location, reputation, last_task_time)
 
     # 3. Publish bid.
-    publish_bid(NODE_ID, score, task_location)
+    publish_bid(NODE_ID, score, task_location, task_id)
 
     # 4. Persist score + BIDDING status.
-    update_node_after_bid(NODE_ID, score)
+    update_node_after_bid(NODE_ID, score, task_id, battery)
 
 
 def handle_bid_received(message: dict) -> None:
@@ -334,20 +411,34 @@ def handle_bid_received(message: dict) -> None:
     ----------
     message:
         Parsed JSON message from the SNS notification.  Expected shape:
-        ``{"node_id": "<id>", "score": <float>, "task_location": "<SECTOR_X>"}``.
+        ``{"node_id": "<id>", "score": <float>, "task_location": "<SECTOR_X>", "task_id": "12345"}``.
     """
     incoming_node_id: str = message.get("node_id", "")
     incoming_score: float = float(message.get("score", 0.0))
     task_location: str = message.get("task_location", "")
+    incoming_task_id: str = str(message.get("task_id", ""))
 
     # Ignore bids this node published itself.
     if incoming_node_id == NODE_ID:
         logger.info("[%s] Ignoring own bid (self-echo from SNS fan-out).", NODE_ID)
         return
 
-    # Read our stored last_score from DynamoDB.
+    # Read our stored state from DynamoDB.
     state = get_node_state(NODE_ID)
     my_score: float = state["last_score"]
+    my_task_id: str = state["last_task_id"]
+    battery = calculate_current_battery(state)
+    
+    # Raft-inspired: Term/Sequence ID freshness check
+    if my_task_id != incoming_task_id:
+        logger.warning(
+            "[%s] Ignoring stale bid from %s (task_id mismatch: %s != %s).",
+            NODE_ID,
+            incoming_node_id,
+            incoming_task_id,
+            my_task_id
+        )
+        return
 
     logger.info(
         "[%s] Bid received from %s: score=%.2f. My score=%.2f.",
@@ -367,21 +458,22 @@ def handle_bid_received(message: dict) -> None:
             incoming_score,
         )
         try:
-            drain_battery_and_execute(NODE_ID)
+            drain_battery_and_execute(NODE_ID, battery)
         except _dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
             # Battery already too low – gracefully yield.
             logger.warning(
                 "[%s] Not enough battery to execute task. Yielding.", NODE_ID
             )
-            update_node_status(NODE_ID, "IDLE")
+            update_node_status(NODE_ID, "IDLE", battery)
             return
 
-        # Simulate the actual task work.
-        logger.info("[%s] Working on task at %s...", NODE_ID, task_location)
-        time.sleep(3)
-
-        update_node_status(NODE_ID, "IDLE")
-        logger.info("[%s] Task complete. Status → IDLE.", NODE_ID)
+        try:
+            # Simulate the actual task work.
+            logger.info("[%s] Working on task at %s...", NODE_ID, task_location)
+            time.sleep(3)
+        finally:
+            update_node_status(NODE_ID, "IDLE")
+            logger.info("[%s] Task complete. Status → IDLE.", NODE_ID)
 
     else:
         # A peer has a higher or equal score – yield immediately.
@@ -391,7 +483,7 @@ def handle_bid_received(message: dict) -> None:
             my_score,
             incoming_score,
         )
-        update_node_status(NODE_ID, "IDLE")
+        update_node_status(NODE_ID, "IDLE", battery)
 
 
 # ---------------------------------------------------------------------------

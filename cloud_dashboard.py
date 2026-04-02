@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import streamlit.components.v1 as components
 import boto3
 import time
@@ -56,33 +57,37 @@ items = response.get('Items', [])
 nodes = [i for i in items if i['node_id'] != 'satellite-node-default']
 nodes.sort(key=lambda x: x['node_id'])
 
-# --- LAYOUT ---
-col1, col2 = st.columns([1, 2.5])
+current_time = time.time()
+for node in nodes:
+    if current_time - float(node.get('last_updated', 0)) > 60:
+        node['status'] = "STALE / ZOMBIE"
 
-# --- GROUND STATION CONTROLS ---
+# --- LAYOUT (Control Room) ---
+col1, col2, col3 = st.columns([1, 1, 1])
+
 with col1:
-    st.markdown("<div class='metric-box'><h3>Ground Station</h3></div>", unsafe_allow_html=True)
-    target_sector = st.selectbox("Target Sector", ["SECTOR_1", "SECTOR_2", "SECTOR_3", "SECTOR_4", "SECTOR_5", "SECTOR_6"])
-    
-    if st.button("BROADCAST TASK"):
-        sns.publish(
-            TopicArn=TASKS_TOPIC_ARN,
-            Message=json.dumps({"type": "TASK", "location": target_sector})
-        )
-        st.success(f"Signal Transmitted to {target_sector}")
+    st.metric(label="Swarm Health", value="Optimal", delta="85%")
+    st.write("☀️ Solar Charging: **Active** (Sectors 1-3)")
 
-    st.markdown("<br><h4>Live Telemetry</h4>", unsafe_allow_html=True)
-    for node in nodes:
-        status_color = "#fbbf24" if node.get('status') == 'EXECUTING' else "#888"
-        st.markdown(f"""
-        <div class='metric-box' style='border-left: 3px solid {status_color};'>
-            <b>{node['node_id']}</b> - <span style='color:{status_color}'>{node.get('status', 'IDLE')}</span><br>
-            <span style='font-size:12px; color:#aaa;'>Battery: {float(node.get('battery', 0)):.1f}% | Sector: {node.get('position')}</span>
-        </div>
-        """, unsafe_allow_html=True)
+with col2:
+    active_tasks = sum(1 for n in nodes if n.get('status') == 'EXECUTING')
+    st.metric(label="Active Tasks", value=str(active_tasks))
+
+with col3:
+    avg_rep = sum(int(n.get('reputation', 0)) for n in nodes) / max(len(nodes), 1)
+    st.metric(label="Avg. Reputation", value=f"{avg_rep:.1f} pts")
+
+st.markdown("### Satellite Registry")
+df = pd.DataFrame(nodes)
+if not df.empty:
+    st.dataframe(df[['node_id', 'status', 'battery', 'reputation', 'position']], use_container_width=True)
+
+st.markdown("---")
+
+col_sim, col_ctrl = st.columns([2.5, 1])
 
 # --- INTERACTIVE HTML5 CANVAS SIMULATOR ---
-with col2:
+with col_sim:
     # We inject the live Python data into the Javascript using json.dumps
     html_code = f"""
     <!DOCTYPE html>
@@ -177,6 +182,27 @@ with col2:
     </html>
     """
     components.html(html_code, height=520)
+
+with col_ctrl:
+    st.markdown("<div class='metric-box'><h3>Ground Station</h3></div>", unsafe_allow_html=True)
+    target_sector = st.selectbox("Target Sector", ["SECTOR_1", "SECTOR_2", "SECTOR_3", "SECTOR_4", "SECTOR_5", "SECTOR_6"])
+    
+    if st.button("BROADCAST TASK"):
+        sns.publish(
+            TopicArn=TASKS_TOPIC_ARN,
+            Message=json.dumps({"type": "TASK", "location": target_sector, "task_id": str(time.time())})
+        )
+        st.success(f"Signal Transmitted to {target_sector}")
+
+    st.markdown("<br><h4>Live Telemetry</h4>", unsafe_allow_html=True)
+    for node in nodes:
+        status_color = "#fbbf24" if node.get('status') == 'EXECUTING' else ("#ff4444" if "STALE" in node.get('status', '') else "#888")
+        st.markdown(f"""
+        <div class='metric-box' style='border-left: 3px solid {status_color};'>
+            <b>{node['node_id']}</b> - <span style='color:{status_color}'>{node.get('status', 'IDLE')}</span><br>
+            <span style='font-size:12px; color:#aaa;'>Battery: {float(node.get('battery', 0)):.1f}% | Sector: {node.get('position')}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Auto-refresh to keep data synced
 time.sleep(2)

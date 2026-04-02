@@ -89,12 +89,15 @@ def get_node_state(node_id: str) -> dict:
     if item is None:
         logger.info("No existing state found for %s – initialising defaults.", node_id)
         random_battery = float(random.randint(50, config.MAX_BATTERY))
-        random_position = random.choice(config.SECTORS)
+        random_angle = float(random.uniform(0.0, 360.0))
+        sector_idx = int(random_angle // 60) + 1
+        random_position = f"SECTOR_{sector_idx}"
         
         default_state = {
             "node_id": node_id,
             "battery": Decimal(str(random_battery)),
             "position": random_position,
+            "current_angle": Decimal(str(random_angle)),
             "status": "IDLE",
             "last_score": Decimal("0"),
             "last_updated": Decimal(str(time.time())),
@@ -106,6 +109,7 @@ def get_node_state(node_id: str) -> dict:
         return {
             "battery": random_battery,
             "position": random_position,
+            "current_angle": random_angle,
             "status": "IDLE",
             "last_score": 0.0,
             "last_updated": time.time(),
@@ -118,6 +122,7 @@ def get_node_state(node_id: str) -> dict:
     return {
         "battery": float(item.get("battery", 0)),
         "position": str(item.get("position", config.SECTORS[0])),
+        "current_angle": float(item.get("current_angle", 0.0)),
         "status": str(item.get("status", "IDLE")),
         "last_score": float(item.get("last_score", 0)),
         "last_updated": float(item.get("last_updated", time.time())),
@@ -127,7 +132,7 @@ def get_node_state(node_id: str) -> dict:
     }
 
 
-def update_node_status(node_id: str, status: str, battery: float = None) -> None:
+def update_node_status(node_id: str, status: str, battery: float = None, current_angle: float = None, position: str = None) -> None:
     """Update only the *status* field of a node's DynamoDB record.
 
     Parameters
@@ -138,27 +143,37 @@ def update_node_status(node_id: str, status: str, battery: float = None) -> None
         New status string – typically one of IDLE, BIDDING, or EXECUTING.
     battery:
         Optional continuous battery float to sync with DB.
+    current_angle:
+        Optional continuous current angle to sync with DB.
+    position:
+        Optional sector position to sync with DB.
     """
     table = _get_table()
     
     update_expr = "SET #s = :s"
     expr_vals = {":s": status}
     
-    if battery is not None:
-        update_expr += ", battery = :b, last_updated = :lu"
+    if battery is not None and current_angle is not None and position is not None:
+        update_expr += ", battery = :b, current_angle = :ca, #pos = :pos, last_updated = :lu"
         expr_vals[":b"] = Decimal(str(battery))
+        expr_vals[":ca"] = Decimal(str(current_angle))
+        expr_vals[":pos"] = position
         expr_vals[":lu"] = Decimal(str(time.time()))
+
+    expression_attribute_names = {"#s": "status"}
+    if position is not None:
+        expression_attribute_names["#pos"] = "position"
 
     table.update_item(
         Key={"node_id": node_id},
         UpdateExpression=update_expr,
-        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeNames=expression_attribute_names,
         ExpressionAttributeValues=expr_vals,
     )
     logger.info("[%s] Status updated → %s", node_id, status)
 
 
-def update_node_after_bid(node_id: str, score: float, task_id: str, battery: float) -> None:
+def update_node_after_bid(node_id: str, score: float, task_id: str, battery: float, current_angle: float, position: str) -> None:
     """Persist the bid score and set status to BIDDING atomically.
 
     Storing *last_score* in DynamoDB ensures that when a competing bid
@@ -174,23 +189,29 @@ def update_node_after_bid(node_id: str, score: float, task_id: str, battery: flo
         The current sequence identifier for the task.
     battery:
         The newly calculated continuous battery float.
+    current_angle:
+        The newly calculated continuous current angle.
+    position:
+        The sector position.
     """
     table = _get_table()
     table.update_item(
         Key={"node_id": node_id},
-        UpdateExpression="SET #s = :s, last_score = :ls, last_task_id = :tid, battery = :b, last_updated = :lu",
-        ExpressionAttributeNames={"#s": "status"},
+        UpdateExpression="SET #s = :s, last_score = :ls, last_task_id = :tid, battery = :b, current_angle = :ca, #pos = :pos, last_updated = :lu",
+        ExpressionAttributeNames={"#s": "status", "#pos": "position"},
         ExpressionAttributeValues={
             ":s": "BIDDING",
             ":ls": Decimal(str(score)),
             ":tid": task_id,
             ":b": Decimal(str(battery)),
+            ":ca": Decimal(str(current_angle)),
+            ":pos": position,
             ":lu": Decimal(str(time.time())),
         },
     )
     logger.info("[%s] Stored last_score=%.2f, status → BIDDING", node_id, score)
 
-def drain_battery_and_execute(node_id: str, battery: float) -> None:
+def drain_battery_and_execute(node_id: str, battery: float, current_angle: float, position: str) -> None:
     """Deduct BATTERY_DRAIN_TASK from the node's battery and mark EXECUTING.
 
     Uses a DynamoDB conditional update to prevent the battery from dropping
@@ -203,6 +224,10 @@ def drain_battery_and_execute(node_id: str, battery: float) -> None:
         The unique satellite identifier (DynamoDB partition key).
     battery:
         The calculated continuous battery state.
+    current_angle:
+        The calculated continuous current angle.
+    position:
+        The sector position.
     """
     table = _get_table()
     
@@ -212,13 +237,15 @@ def drain_battery_and_execute(node_id: str, battery: float) -> None:
     table.update_item(
         Key={"node_id": node_id},
         UpdateExpression=(
-            "SET #s = :s, battery = :new_batt, reputation = reputation + :rep_inc, last_task_time = :ltt, last_updated = :lu"
+            "SET #s = :s, battery = :new_batt, current_angle = :ca, #pos = :pos, reputation = reputation + :rep_inc, last_task_time = :ltt, last_updated = :lu"
         ),
         ConditionExpression="battery >= :drain",
-        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeNames={"#s": "status", "#pos": "position"},
         ExpressionAttributeValues={
             ":s": "EXECUTING",
             ":new_batt": Decimal(str(new_battery)),
+            ":ca": Decimal(str(current_angle)),
+            ":pos": position,
             ":rep_inc": Decimal("1"),
             ":ltt": Decimal(str(time.time())),
             ":lu": Decimal(str(time.time())),
@@ -281,17 +308,34 @@ def publish_bid(node_id: str, score: float, task_location: str, task_id: str) ->
 # Bid score calculator
 # ---------------------------------------------------------------------------
 
-def calculate_current_battery(state) -> float:
+def update_orbital_state(state):
     now = time.time()
-    elapsed_mins = (now - state.get('last_updated', now)) / 60
+    last_ts = float(state.get('last_updated', now))
+    elapsed_mins = (now - last_ts) / 60.0
     
-    drain = elapsed_mins * config.PASSIVE_DRAIN_RATE
-    recharge = 0
-    if state['position'] in config.SUNLIT_SECTORS:
-        recharge = elapsed_mins * config.SOLAR_RECHARGE_RATE
+    # 1. Update Angle
+    last_angle = float(state.get('current_angle', 0.0))
+    new_angle = (last_angle + (config.ORBITAL_SPEED * elapsed_mins)) % 360.0
+    
+    # 2. Map Angle to Sector Name
+    sector_idx = int(new_angle // 60) + 1
+    new_sector = f"SECTOR_{sector_idx}"
+    
+    # 3. Dynamic Battery Calculation
+    battery = float(state.get('battery', 100.0))
+    # Passive drain happens everywhere
+    battery -= config.PASSIVE_DRAIN_RATE * elapsed_mins
+    
+    # Rapid recharge happens only in the sunlit hemisphere
+    if config.SUNLIT_ANGLE_RANGE[0] <= new_angle <= config.SUNLIT_ANGLE_RANGE[1]:
+        battery += config.SOLAR_RECHARGE_RATE * elapsed_mins
         
-    new_battery = min(100, max(0, float(state['battery']) - drain + recharge))
-    return new_battery
+    return {
+        "battery": min(100.0, max(0.0, battery)),
+        "position": new_sector,
+        "current_angle": new_angle,
+        "last_updated": now
+    }
 
 
 def calculate_bid_score(battery: float, position: str, task_location: str, reputation: int, last_task_time: float) -> float:
@@ -342,18 +386,21 @@ def handle_task_received(message: dict) -> None:
     # 1. Read current state.
     state = get_node_state(NODE_ID)
     
-    # Apply continuous battery logic
-    battery = calculate_current_battery(state)
-    position = state["position"]
+    # Apply continuous orbital and battery logic
+    orbital_state = update_orbital_state(state)
+    battery = orbital_state["battery"]
+    position = orbital_state["position"]
+    current_angle = orbital_state["current_angle"]
     reputation = state["reputation"]
     last_task_time = state["last_task_time"]
 
     logger.info(
-        "[%s] Task received for %s. Current state: battery=%.1f, position=%s",
+        "[%s] Task received for %s. Current state: battery=%.1f, position=%s, angle=%.1f",
         NODE_ID,
         task_location,
         battery,
         position,
+        current_angle
     )
 
     # 2. Calculate bid score.
@@ -363,7 +410,7 @@ def handle_task_received(message: dict) -> None:
     publish_bid(NODE_ID, score, task_location, task_id)
 
     # 4. Persist score + BIDDING status.
-    update_node_after_bid(NODE_ID, score, task_id, battery)
+    update_node_after_bid(NODE_ID, score, task_id, battery, current_angle, position)
 
 
 def handle_bid_received(message: dict) -> None:
@@ -400,7 +447,10 @@ def handle_bid_received(message: dict) -> None:
     state = get_node_state(NODE_ID)
     my_score: float = state["last_score"]
     my_task_id: str = state["last_task_id"]
-    battery = calculate_current_battery(state)
+    orbital_state = update_orbital_state(state)
+    battery = orbital_state["battery"]
+    current_angle = orbital_state["current_angle"]
+    position = orbital_state["position"]
     
     # Raft-inspired: Term/Sequence ID freshness check
     if my_task_id != incoming_task_id:
@@ -431,13 +481,13 @@ def handle_bid_received(message: dict) -> None:
             incoming_score,
         )
         try:
-            drain_battery_and_execute(NODE_ID, battery)
+            drain_battery_and_execute(NODE_ID, battery, current_angle, position)
         except _dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
             # Battery already too low – gracefully yield.
             logger.warning(
                 "[%s] Not enough battery to execute task. Yielding.", NODE_ID
             )
-            update_node_status(NODE_ID, "IDLE", battery)
+            update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
             return
 
         try:
@@ -445,7 +495,7 @@ def handle_bid_received(message: dict) -> None:
             logger.info("[%s] Working on task at %s...", NODE_ID, task_location)
             time.sleep(3)
         finally:
-            update_node_status(NODE_ID, "IDLE")
+            update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
             logger.info("[%s] Task complete. Status → IDLE.", NODE_ID)
 
     else:
@@ -456,7 +506,7 @@ def handle_bid_received(message: dict) -> None:
             my_score,
             incoming_score,
         )
-        update_node_status(NODE_ID, "IDLE", battery)
+        update_node_status(NODE_ID, "IDLE", battery, current_angle, position)
 
 
 # ---------------------------------------------------------------------------

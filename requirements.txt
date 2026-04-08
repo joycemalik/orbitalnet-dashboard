@@ -1,3 +1,5 @@
 streamlit
 boto3
 pandas
+sgp4
+redis

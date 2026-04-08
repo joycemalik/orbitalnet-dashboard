@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>60FPS WebGL Satellite Swarm</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        #ui-panel { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            background: rgba(10, 15, 25, 0.85); 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #1f3a5f;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        h2 { margin-top: 0; font-size: 1.2rem; color: #4dc4ff; }
+        .stat { color: #88aacc; font-size: 0.9rem; margin: 8px 0; }
+        .value { color: #fff; font-weight: bold; }
+        
+        input[type=range] {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+    <!-- Three.js Base -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Orbit Controls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Satellite.js for client-side SGP4 math -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
+</head>
+<body>
+    <div id="ui-panel">
+        <h2>Live Orbital Swarm (Three.js)</h2>
+        <div class="stat">Status: <span id="status" class="value">Loading satellites.txt...</span></div>
+        <div class="stat">Active Satellites: <span id="satCount" class="value">0</span></div>
+        <div class="stat">Sim Time Speed: <span id="speedValue" class="value">1x</span></div>
+        <input type="range" id="timeSpeed" min="1" max="5000" value="1">
+    </div>
+
+    <script>
+        // -------------------------------------------------------
+        // 1. SCENE SETUP (THREE.JS)
+        // -------------------------------------------------------
+        const scene = new THREE.Scene();
+        
+        // 1 Unit = 1000 Kilometers
+        const SCALE = 1000.0;
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.position.set(0, 15, 30); // Positioned outside Earth
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // -------------------------------------------------------
+        // 2. THE EARTH
+        // -------------------------------------------------------
+        const R_EARTH_KM = 6371.0;
+        const R_EARTH = R_EARTH_KM / SCALE;
+
+        // Using a basic wireframe sphere to represent Earth
+        const earthGeo = new THREE.SphereGeometry(R_EARTH, 64, 64);
+        const earthMat = new THREE.MeshBasicMaterial({ 
+            color: 0x004488, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        scene.add(earth);
+
+        // Solid core so lines behind earth are occluded
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x000510 });
+        const core = new THREE.Mesh(earthGeo, coreMat);
+        // Slightly smaller to prevent z-fighting with wireframe
+        core.scale.set(0.99, 0.99, 0.99);
+        scene.add(core);
+
+        // -------------------------------------------------------
+        // 3. SATELLITE DATA LOADING & PARSING
+        // -------------------------------------------------------
+        let particles, positions;
+        const satrecs = []; // Store SGP4 objects
+
+        fetch('satellites.txt')
+            .then(response => response.text())
+            .then(text => {
+                const lines = text.split('\n');
+                
+                // Parse Three-Line format
+                for (let i = 0; i < lines.length; i += 3) {
+                    if (lines[i+1] && lines[i+1].trim().startsWith('1') && lines[i+2]) {
+                        try {
+                            const satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                            satrecs.push(satrec);
+                        } catch (e) {
+                            // Skip invalid TLEs quietly
+                        }
+                    }
+                }
+                
+                document.getElementById('status').innerText = "Online - Animating";
+                document.getElementById('status').style.color = "#00ff88";
+                document.getElementById('satCount').innerText = satrecs.length;
+
+                // Create massive particle system
+                const geometry = new THREE.BufferGeometry();
+                positions = new Float32Array(satrecs.length * 3);
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+                // Blending and styling for cyan glowing dots
+                const material = new THREE.PointsMaterial({ 
+                    color: 0x00ffff, 
+                    size: 0.08,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                particles = new THREE.Points(geometry, material);
+                scene.add(particles);
+                
+                // Start animation loop
+                animate();
+            });
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // -------------------------------------------------------
+        // 4. HIGH-SPEED ANIMATION LOOP
+        // -------------------------------------------------------
+        let simTime = new Date();
+        let lastUpdate = performance.now();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Time scaling slider logic
+            const speedSlider = document.getElementById('timeSpeed');
+            const speed = parseFloat(speedSlider.value);
+            document.getElementById('speedValue').innerText = speed + 'x';
+            
+            const now = performance.now();
+            const deltaMs = now - lastUpdate;
+            lastUpdate = now;
+            
+            // Advance orbital time artificially
+            simTime = new Date(simTime.getTime() + deltaMs * speed);
+
+            // Update Physics
+            if (particles) {
+                const posAttr = particles.geometry.attributes.position;
+                
+                for (let i = 0; i < satrecs.length; i++) {
+                    // Propagate gives us (X,Y,Z) in Earth-Centered Inertial (ECI)
+                    const positionAndVelocity = satellite.propagate(satrecs[i], simTime);
+                    const pos = positionAndVelocity.position;
+                    
+                    if (pos && pos.x && pos.y && pos.z) {
+                        // SGP4 ECI maps closely to: Z is up/north pole.
+                        // Three.js standard is: Y is up.
+                        // So we map: ECI(X) -> Three(X), ECI(Z) -> Three(Y), ECI(-Y) -> Three(Z)
+                        posAttr.array[i*3] = pos.x / SCALE;     // X
+                        posAttr.array[i*3+1] = pos.z / SCALE;   // Y (Up)
+                        posAttr.array[i*3+2] = -pos.y / SCALE;  // Z (Depth)
+                    } else {
+                        // Throw far away if uncomputable or decayed
+                        posAttr.array[i*3] = 0;
+                        posAttr.array[i*3+1] = 0;
+                        posAttr.array[i*3+2] = 0;
+                    }
+                }
+                // Tell GPU to re-upload the buffer layer
+                posAttr.needsUpdate = true;
+            }
+
+            // Render
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>

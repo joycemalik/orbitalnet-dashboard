@@ -31,6 +31,16 @@
             width: 100%;
             margin-top: 10px;
         }
+
+        #sat-info {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .info-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+        .info-label { color: #88aacc; }
+        .info-val { color: #00ff88; font-family: monospace; }
     </style>
     <!-- Three.js Base -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -46,6 +56,13 @@
         <div class="stat">Active Satellites: <span id="satCount" class="value">0</span></div>
         <div class="stat">Sim Time Speed: <span id="speedValue" class="value">1x</span></div>
         <input type="range" id="timeSpeed" min="1" max="5000" value="1">
+        
+        <div id="sat-info">
+            <h3 style="margin:0 0 10px 0; color:#fff;" id="i-name">Sat Name</h3>
+            <div class="info-row"><span class="info-label">Altitude:</span> <span class="info-val" id="i-alt">0</span></div>
+            <div class="info-row"><span class="info-label">Velocity:</span> <span class="info-val" id="i-vel">0</span></div>
+            <div class="info-row"><span class="info-label">Lat / Lng:</span> <span class="info-val" id="i-latlng">0, 0</span></div>
+        </div>
     </div>
 
     <script>
@@ -108,8 +125,9 @@
                 for (let i = 0; i < lines.length; i += 3) {
                     if (lines[i+1] && lines[i+1].trim().startsWith('1') && lines[i+2]) {
                         try {
+                            const name = lines[i].trim();
                             const satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
-                            satrecs.push(satrec);
+                            satrecs.push({ name: name, satrec: satrec });
                         } catch (e) {
                             // Skip invalid TLEs quietly
                         }
@@ -149,7 +167,32 @@
         });
 
         // -------------------------------------------------------
-        // 4. HIGH-SPEED ANIMATION LOOP
+        // 4. INTERACTION (CLICK SATELLITES)
+        // -------------------------------------------------------
+        const raycaster = new THREE.Raycaster();
+        raycaster.params.Points.threshold = 0.5; // Make points easier to click
+        const mouse = new THREE.Vector2();
+        let selectedSatIndex = -1;
+
+        window.addEventListener('click', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            if (particles) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(particles);
+                if (intersects.length > 0) {
+                    selectedSatIndex = intersects[0].index;
+                    document.getElementById('sat-info').style.display = 'block';
+                } else {
+                    selectedSatIndex = -1;
+                    document.getElementById('sat-info').style.display = 'none';
+                }
+            }
+        });
+
+        // -------------------------------------------------------
+        // 5. HIGH-SPEED ANIMATION LOOP
         // -------------------------------------------------------
         let simTime = new Date();
         let lastUpdate = performance.now();
@@ -174,9 +217,11 @@
                 const posAttr = particles.geometry.attributes.position;
                 
                 for (let i = 0; i < satrecs.length; i++) {
+                    const sat = satrecs[i];
                     // Propagate gives us (X,Y,Z) in Earth-Centered Inertial (ECI)
-                    const positionAndVelocity = satellite.propagate(satrecs[i], simTime);
+                    const positionAndVelocity = satellite.propagate(sat.satrec, simTime);
                     const pos = positionAndVelocity.position;
+                    const vel = positionAndVelocity.velocity;
                     
                     if (pos && pos.x && pos.y && pos.z) {
                         // SGP4 ECI maps closely to: Z is up/north pole.
@@ -185,6 +230,23 @@
                         posAttr.array[i*3] = pos.x / SCALE;     // X
                         posAttr.array[i*3+1] = pos.z / SCALE;   // Y (Up)
                         posAttr.array[i*3+2] = -pos.y / SCALE;  // Z (Depth)
+                        
+                        // If this is the selected satellite, update the UI
+                        if (i === selectedSatIndex) {
+                            document.getElementById('i-name').innerText = sat.name;
+                            
+                            const gmst = satellite.gstime(simTime);
+                            const gd = satellite.eciToGeodetic(pos, gmst);
+                            const lat = satellite.degreesLat(gd.latitude).toFixed(4);
+                            const lng = satellite.degreesLong(gd.longitude).toFixed(4);
+                            const alt = gd.height.toFixed(2);
+                            
+                            const vMag = Math.sqrt(vel.x*vel.x + vel.y*vel.y + vel.z*vel.z).toFixed(2);
+                            
+                            document.getElementById('i-alt').innerText = alt + " km";
+                            document.getElementById('i-vel').innerText = vMag + " km/s";
+                            document.getElementById('i-latlng').innerText = lat + "°, " + lng + "°";
+                        }
                     } else {
                         // Throw far away if uncomputable or decayed
                         posAttr.array[i*3] = 0;

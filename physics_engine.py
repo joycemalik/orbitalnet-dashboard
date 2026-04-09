@@ -1,7 +1,9 @@
 from sgp4.api import Satrec, jday
 import redis
 import time
+import json
 from datetime import datetime
+from hal_simulator import MockHAL
 
 # Connect to local Redis
 r = redis.Redis(host='localhost', port=6379, db=0)
@@ -23,6 +25,10 @@ def load_satellites(filepath):
 
 def start_engine():
     fleet = load_satellites('satellites.txt')
+    
+    # Initialize HAL instances for dynamic telemetry
+    hal_instances = {name: MockHAL(name) for name in fleet.keys()}
+    
     print(f"Loaded {len(fleet)} satellites. Booting SGP4 engine...")
     
     while True:
@@ -38,9 +44,19 @@ def start_engine():
             e, position, velocity = sat.sgp4(jd, fr)
             
             if e == 0:
-                # Store coordinates as a string in Redis
-                coord_str = f"{position[0]},{position[1]},{position[2]}"
-                pipe.set(name, coord_str)
+                # 1. Generate dynamic telemetry based on current position
+                telem = hal_instances[name].generate_telemetry(position[2])
+                
+                # 2. Construct the full state JSON
+                state_vector = {
+                    "id": name,
+                    "position": {"x": position[0], "y": position[1], "z": position[2]},
+                    "velocity": {"vx": velocity[0], "vy": velocity[1], "vz": velocity[2]},
+                    "telemetry": telem
+                }
+                
+                # 3. Push to Redis as a JSON string
+                pipe.set(name, json.dumps(state_vector))
                 
         pipe.execute()
         time.sleep(1) # Update at 1 Hertz

@@ -113,8 +113,12 @@
         // -------------------------------------------------------
         // 3. SATELLITE DATA LOADING & PARSING
         // -------------------------------------------------------
-        let particles, positions;
+        let particles, positions, colors;
         const satrecs = []; // Store SGP4 objects
+        let selectedSatIndex = -1;
+        let previousSelectedIndex = -1;
+        const DEFAULT_COLOR = [0.0, 1.0, 1.0]; // cyan
+        const HIGHLIGHT_COLOR = [1.0, 0.82, 0.0]; // yellow
 
         fetch('satellites.txt')
             .then(response => response.text())
@@ -141,15 +145,24 @@
                 // Create massive particle system
                 const geometry = new THREE.BufferGeometry();
                 positions = new Float32Array(satrecs.length * 3);
+                colors = new Float32Array(satrecs.length * 3);
+
+                for (let i = 0; i < satrecs.length; i++) {
+                    colors[i * 3] = DEFAULT_COLOR[0];
+                    colors[i * 3 + 1] = DEFAULT_COLOR[1];
+                    colors[i * 3 + 2] = DEFAULT_COLOR[2];
+                }
+
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
                 // Blending and styling for cyan glowing dots
                 const material = new THREE.PointsMaterial({ 
-                    color: 0x00ffff, 
                     size: 0.08,
                     transparent: true,
                     opacity: 0.8,
-                    blending: THREE.AdditiveBlending
+                    blending: THREE.AdditiveBlending,
+                    vertexColors: true
                 });
                 
                 particles = new THREE.Points(geometry, material);
@@ -170,9 +183,29 @@
         // 4. INTERACTION (CLICK SATELLITES)
         // -------------------------------------------------------
         const raycaster = new THREE.Raycaster();
-        raycaster.params.Points.threshold = 0.5; // Make points easier to click
+        raycaster.params.Points.threshold = 0.05; // Tighten the click radius to avoid picking neighboring satellites
         const mouse = new THREE.Vector2();
-        let selectedSatIndex = -1;
+
+        function highlightSatellite(index) {
+            if (!particles || !colors) return;
+
+            if (previousSelectedIndex >= 0) {
+                colors[previousSelectedIndex * 3] = DEFAULT_COLOR[0];
+                colors[previousSelectedIndex * 3 + 1] = DEFAULT_COLOR[1];
+                colors[previousSelectedIndex * 3 + 2] = DEFAULT_COLOR[2];
+            }
+
+            if (index >= 0) {
+                colors[index * 3] = HIGHLIGHT_COLOR[0];
+                colors[index * 3 + 1] = HIGHLIGHT_COLOR[1];
+                colors[index * 3 + 2] = HIGHLIGHT_COLOR[2];
+            }
+
+            if (particles.geometry.attributes.color) {
+                particles.geometry.attributes.color.needsUpdate = true;
+            }
+            previousSelectedIndex = index;
+        }
 
         window.addEventListener('click', (event) => {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -182,9 +215,19 @@
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObject(particles);
                 if (intersects.length > 0) {
-                    selectedSatIndex = intersects[0].index;
+                    // Three.js sorts by distance to camera, but we want the one closest to the mouse ray
+                    let bestMatch = intersects[0];
+                    for (let i = 1; i < intersects.length; i++) {
+                        if (intersects[i].distanceToRay < bestMatch.distanceToRay) {
+                            bestMatch = intersects[i];
+                        }
+                    }
+                    const index = bestMatch.index;
+                    highlightSatellite(index);
+                    selectedSatIndex = index;
                     document.getElementById('sat-info').style.display = 'block';
                 } else {
+                    highlightSatellite(-1);
                     selectedSatIndex = -1;
                     document.getElementById('sat-info').style.display = 'none';
                 }

@@ -102,7 +102,7 @@ Standard topics deliver to *all* subscribed Lambda functions simultaneously (fan
 
 ### Step 2 – Bid Submission (Proposal)
 
-Each satellite Lambda (Route 1 — `handle_task_received`):
+Each satellite Lambda (Execution Path 1 — `handle_task_received`):
 1. Reads its own `battery` and `position` from DynamoDB.
 2. Computes a bid score:
    $$\text{score} = (\text{battery} \times 0.5) + \begin{cases}100 & \text{if position} = \text{task\_location}\\0 & \text{otherwise}\end{cases}$$
@@ -114,7 +114,7 @@ Each satellite Lambda (Route 1 — `handle_task_received`):
 
 ### Step 3 – Winner Selection (Award / Rejection)
 
-Each satellite Lambda (Route 2 — `handle_bid_received`) fires for every bid:
+Each satellite Lambda (Execution Path 2 — `handle_bid_received`) fires for every bid:
 1. Self-bid messages are **ignored** (a node cannot award itself by reacting to its own bid).
 2. The node reads its own `last_score` from DynamoDB.
 3. **If `my_score > incoming_score`** → this node currently has the highest visible bid:

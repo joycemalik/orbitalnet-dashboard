@@ -3,9 +3,9 @@ import pandas as pd
 import random
 import time
 
-st.set_page_config(page_title="Command Center", layout="wide", initial_sidebar_state="expanded")
-st.title("🎛️ Route 2: /ground-station (The Command Center)")
-st.markdown("If the visualization proves the physics, the ground station proves the operational health of the swarm.")
+st.set_page_config(page_title="Network Operations Center", layout="wide", initial_sidebar_state="expanded")
+st.title("🎛️ View 2: Network Operations Center (NOC)")
+st.markdown("Operational interface for fleet telemetry and asset management.")
 
 st.header("Constellation Health")
 col1, col2, col3 = st.columns(3)
@@ -16,8 +16,8 @@ col3.metric("Total Dead Nodes", "50", "+2")
 
 st.markdown("---")
 
-st.header("The Chaos Panel")
-st.warning("These controls inject massive disruption into the physical and virtual CNP simulation. Use with caution.")
+st.header("Anomaly Injection Interface")
+st.warning("Authorized access only. These controls simulate severe operational anomalies.")
 col_a, col_b, col_c = st.columns(3)
 
 if col_a.button("💥 Kill 10% of Fleet", use_container_width=True):

@@ -17,10 +17,10 @@ is stored in a single DynamoDB table called *SwarmState*, keyed by ``node_id``.
 Contract Net Protocol flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 1. Ground controller publishes a TASK message → usos-tasks.
-2. Every subscribed satellite Lambda fires simultaneously (Route 1).
+2. Every subscribed satellite Lambda fires simultaneously (Execution Path 1).
    Each satellite reads its own state from DynamoDB, computes a bid score,
    publishes the bid to usos-bids, and sets its status to BIDDING.
-3. Every bid on usos-bids triggers every satellite Lambda (Route 2).
+3. Every bid on usos-bids triggers every satellite Lambda (Execution Path 2).
    Each satellite compares the incoming bid score against its own stored
    score.  The node whose score is highest claims the task (EXECUTING),
    drains battery, simulates work, then returns to IDLE.  Losers simply

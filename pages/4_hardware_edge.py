@@ -2,8 +2,8 @@ import streamlit as st
 import random
 
 st.set_page_config(page_title="Hardware Edge", layout="wide", initial_sidebar_state="expanded")
-st.title("🔌 Route 4: /hardware-edge (The Reality Check)")
-st.markdown("This bridges the simulation with reality by isolating the physical microcontrollers you are testing on.")
+st.title("🔌 View 4: HIL Operational Verification")
+st.markdown("Hardware-in-the-Loop (HIL) interface for simulating physical microcontroller integration and telemetry verification.")
 
 col1, col2 = st.columns(2)
 

@@ -308,7 +308,7 @@ with col_sim:
     components.html(html_code, height=520)
 
 with col_ctrl:
-    st.markdown("<div class='metric-box'><h3>Ground Station</h3></div>", unsafe_allow_html=True)
+    st.markdown("<div class='metric-box'><h3>Network Operations Control</h3></div>", unsafe_allow_html=True)
     target_sector = st.selectbox("Target Sector", ["SECTOR_1", "SECTOR_2", "SECTOR_3", "SECTOR_4", "SECTOR_5", "SECTOR_6"])
     
     if st.button("BROADCAST TASK"):

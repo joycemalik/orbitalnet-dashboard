@@ -2,11 +2,11 @@ import streamlit as st
 import json
 import time
 
-st.set_page_config(page_title="The Brain View", layout="wide", initial_sidebar_state="expanded")
-st.title("🧠 Route 3: /under-the-hood (The Brain View)")
-st.markdown("This route exposes the raw intelligence of the operating system.")
+st.set_page_config(page_title="Logic Engine Analytics", layout="wide", initial_sidebar_state="expanded")
+st.title("🧠 View 3: Logic Engine Analytics (LEA)")
+st.markdown("Detailed breakdown of autonomous decision-making logic and realtime behavior analytics.")
 
-st.header("Node Inspector")
+st.header("Decision Engine Inspector")
 st.markdown("Select a specific satellite to view the exact mathematical formula calculating its current bid score in real-time.")
 
 node = st.selectbox("Live Targeting Node", ["STARLINK-1008", "STARLINK-2231", "STARLINK-0912", "STARLINK-3132"])

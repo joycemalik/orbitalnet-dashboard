@@ -4,8 +4,7 @@ import json
 import pandas as pd
 
 # Connect to Redis
-# Using 127.0.0.1 for precise Windows network interface binding
-r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 st.set_page_config(page_title="Logic Engine Analytics", layout="wide", initial_sidebar_state="expanded")
 st.title("🧠 View 3: Logic Engine Analytics (LEA)")

@@ -5,7 +5,7 @@ import time
 import redis
 import json
 
-r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 st.set_page_config(page_title="Network Operations Center", layout="wide", initial_sidebar_state="expanded")
 st.title("🎛️ View 2: Network Operations Center (NOC)")

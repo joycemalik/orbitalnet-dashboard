@@ -336,26 +336,29 @@
         controls.minDistance = 120;
         controls.maxDistance = 600;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.3;
+        controls.autoRotateSpeed = 0.1;
 
-        // ─── LIGHTING ───
-        scene.add(new THREE.AmbientLight(0x334455, 0.6));
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        sunLight.position.set(200, 100, 150);
+        // ─── LIGHTING (Sunlight Simulation) ───
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        sunLight.position.set(2000, 1000, 1500); 
         scene.add(sunLight);
-        const rimLight = new THREE.DirectionalLight(0x0066ff, 0.3);
-        rimLight.position.set(-150, -50, -100);
-        scene.add(rimLight);
+        
+        const moonLight = new THREE.DirectionalLight(0x0066ff, 0.4);
+        moonLight.position.set(-2000, -500, -1000);
+        scene.add(moonLight);
 
-        // ─── EARTH ───
+        // Earth radius in km is ~6371. We use units 80 for rendering.
         const earthGeom = new THREE.SphereGeometry(EARTH_RADIUS, 64, 64);
-        const earthMat  = new THREE.MeshPhongMaterial({
-            color: 0x0a1628,
-            emissive: 0x04101e,
-            specular: 0x222244,
-            shininess: 15,
-            transparent: true,
-            opacity: 0.92,
+        
+        // Load High-Res Texture
+        const textureLoader = new THREE.TextureLoader();
+        const earthTexture  = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+        
+        const earthMat = new THREE.MeshStandardMaterial({
+            map: earthTexture,
+            roughness: 0.7,
+            metalness: 0.1
         });
         const earth = new THREE.Mesh(earthGeom, earthMat);
         scene.add(earth);
@@ -481,9 +484,11 @@
 
             for (let i = 0; i < activeSatCount; i++) {
                 const sat = fleetData[i];
+                // Swap Y and Z because Three.js uses Y as UP, but SGP4 uses Z as UP (North Pole)
                 const px = sat.position.x * SCALE_FACTOR;
-                const py = sat.position.y * SCALE_FACTOR;
-                const pz = sat.position.z * SCALE_FACTOR;
+                const py = sat.position.z * SCALE_FACTOR; 
+                const pz = -sat.position.y * SCALE_FACTOR; 
+
                 const score = sat.current_score || 0.0;
                 const role = sat.role || 'FOLLOWER';
 
@@ -643,7 +648,7 @@
             requestAnimationFrame(animate);
             const elapsed = clock.getElapsedTime();
             satMaterial.uniforms.uTime.value = elapsed;
-            earth.rotation.y += 0.0008;
+            earth.rotation.y += 0.0002;
             controls.update();
             renderer.render(scene, camera);
         }

@@ -6,8 +6,15 @@ from datetime import datetime
 from hal_simulator import MockHAL
 from scoring_engine import compute_final_score
 
-# Connect to local Redis
-r = redis.Redis(host='localhost', port=6379, db=0)
+# Connect to local Redis with resilience settings
+r = redis.Redis(
+    host='localhost', 
+    port=6379, 
+    db=0, 
+    decode_responses=True, 
+    health_check_interval=1, 
+    retry_on_timeout=True
+)
 
 def load_satellites(filepath):
     satellites = {}

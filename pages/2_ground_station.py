@@ -24,13 +24,13 @@ st.header("Anomaly Injection Interface")
 st.warning("Authorized access only. These controls simulate severe operational anomalies.")
 col_a, col_b, col_c = st.columns(3)
 
-if col_a.button("💥 Kill 10% of Fleet", use_container_width=True):
+if col_a.button("💥 Kill 10% of Fleet", width='stretch'):
     st.error("Global Broadcast: 10% of fleet marked OFFLINE in Redis state.")
     
-if col_b.button("☀️ Trigger Solar Storm (2x Drain)", use_container_width=True):
+if col_b.button("☀️ Trigger Solar Storm (2x Drain)", width='stretch'):
     st.warning("Global Broadcast: Environment variables updated. Battery drain doubled.")
     
-if col_c.button("✂️ Cut Network", use_container_width=True):
+if col_c.button("✂️ Cut Network", width='stretch'):
     st.error("Global Broadcast: AWS SNS/MQTT message queues suspended. CNP halted.")
 
 st.markdown("---")
@@ -48,7 +48,7 @@ data = {
 }
 df = pd.DataFrame(data)
 
-st.dataframe(df, use_container_width=True)
+st.dataframe(df, width='stretch')
 
 st.markdown("---")
 st.markdown("### 🎯 Mission Control (Manual Override)")

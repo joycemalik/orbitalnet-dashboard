@@ -63,7 +63,7 @@ if keys:
                     
             if flat_telem:
                 df = pd.DataFrame(list(flat_telem.items()), columns=["Parameter Trigger", "Normalized Value"])
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width='stretch')
             else:
                 st.warning("Telemetry vector empty. Simulation clock may be halted.")
 else:

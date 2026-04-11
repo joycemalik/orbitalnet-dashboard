@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import random
 import time
+import redis
+import json
+
+r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
 st.set_page_config(page_title="Network Operations Center", layout="wide", initial_sidebar_state="expanded")
 st.title("🎛️ View 2: Network Operations Center (NOC)")
@@ -45,3 +49,38 @@ data = {
 df = pd.DataFrame(data)
 
 st.dataframe(df, use_container_width=True)
+
+st.markdown("---")
+st.markdown("### 🎯 Mission Control (Manual Override)")
+
+with st.form("mission_dispatch"):
+    col1, col2 = st.columns(2)
+    with col1:
+        target_x = st.number_input("Target X Coordinate", value=1500.0)
+        target_y = st.number_input("Target Y Coordinate", value=-2000.0)
+        target_z = st.number_input("Target Z Coordinate", value=5000.0)
+        nodes_required = st.slider("Nodes Required (M)", 1, 5, 3)
+    
+    with col2:
+        st.markdown("**Mission Parameter Weights**")
+        w_battery = st.slider("Weight: Battery Preservation", 0.0, 1.0, 0.2)
+        w_speed = st.slider("Weight: Speed/Proximity", 0.0, 1.0, 0.8)
+        w_resolution = st.slider("Weight: Sensor Resolution", 0.0, 1.0, 0.5)
+
+    submitted = st.form_submit_button("Broadcast Request For Proposal (RFP)")
+    
+    if submitted:
+        # Create the Mission Object
+        active_mission = {
+            "status": "OPEN_AUCTION",
+            "target": {"x": target_x, "y": target_y, "z": target_z},
+            "required_nodes": nodes_required,
+            "weights": {
+                "soc": w_battery,
+                "mean_motion": w_speed,
+                "sensor_calibrated": w_resolution
+            }
+        }
+        # Push to Redis so the Consensus Engine sees it
+        r.set("ACTIVE_MISSION", json.dumps(active_mission))
+        st.success("RFP Broadcasted to Fleet! Awaiting Enclave Formation...")

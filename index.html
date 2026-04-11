@@ -441,15 +441,32 @@
 
         // ─── STATE ───
         let fleetData = [];
+        let activeMission = null;
         let activeSatCount = 0;
 
+        // ─── LASERS ───
+        const MAX_LASERS = 10;
+        const laserGeom = new THREE.BufferGeometry();
+        const laserPositions = new Float32Array(MAX_LASERS * 6); // 2 points per line, 3 coords per point
+        laserGeom.setAttribute('position', new THREE.BufferAttribute(laserPositions, 3));
+        const laserMat = new THREE.LineBasicMaterial({
+            color: 0xff0033,
+            transparent: true,
+            opacity: 0.8,
+            linewidth: 2,
+            blending: THREE.AdditiveBlending
+        });
+        const laserLines = new THREE.LineSegments(laserGeom, laserMat);
+        scene.add(laserLines);
+
         // Score → Color mapping
-        function scoreToColor(score) {
-            if (score <= 0.0)  return new THREE.Color(0.6, 0.0, 0.0);   // dead / gatekept → dim red
-            if (score < 1.0)   return new THREE.Color(1.0, 0.2, 0.25);  // critical → red
-            if (score < 2.0)   return new THREE.Color(1.0, 0.65, 0.0);  // warning → amber
-            if (score < 3.0)   return new THREE.Color(0.0, 1.0, 0.53);  // nominal → green
-            return new THREE.Color(0.0, 0.8, 1.0);                      // optimal → cyan
+        function scoreToColor(score, role) {
+            if (role === 'PLANE_LEAD') return new THREE.Color(1.0, 0.84, 0.0);  // Gold for Plane Leads
+            if (score <= 0.0)  return new THREE.Color(1.0, 0.0, 0.0);           // dead / gatekept → bright red
+            if (score < 1.0)   return new THREE.Color(1.0, 0.2, 0.25);          // critical → red
+            if (score < 2.0)   return new THREE.Color(1.0, 0.65, 0.0);          // warning → amber
+            if (score < 3.0)   return new THREE.Color(0.0, 1.0, 0.53);          // nominal → green
+            return new THREE.Color(0.0, 0.8, 1.0);                              // optimal → cyan
         }
 
         // ─── UPDATE SATELLITES ───
@@ -460,23 +477,48 @@
             let topSat = { id: '—', score: -1 };
             let buckets = [0, 0, 0, 0]; // critical, warning, nominal, optimal
 
+            let laserIndex = 0;
+
             for (let i = 0; i < activeSatCount; i++) {
                 const sat = fleetData[i];
                 const px = sat.position.x * SCALE_FACTOR;
                 const py = sat.position.y * SCALE_FACTOR;
                 const pz = sat.position.z * SCALE_FACTOR;
-                const score = sat.current_score || 0;
+                const score = sat.current_score || 0.0;
+                const role = sat.role || 'FOLLOWER';
 
                 positions[i * 3]     = px;
                 positions[i * 3 + 1] = py;
                 positions[i * 3 + 2] = pz;
 
-                const c = scoreToColor(score);
+                const c = scoreToColor(score, role);
                 colors[i * 3]     = c.r;
                 colors[i * 3 + 1] = c.g;
                 colors[i * 3 + 2] = c.b;
 
-                sizes[i] = SAT_BASE_SIZE + score * 0.5;
+                if (role === 'MISSION_ACTIVE') {
+                    sizes[i] = SAT_BASE_SIZE * 4 + score * 0.5;
+                    // Draw a laser if we have a target
+                    if (activeMission && activeMission.target && laserIndex < MAX_LASERS) {
+                        const tx = activeMission.target.x * SCALE_FACTOR;
+                        const ty = activeMission.target.y * SCALE_FACTOR;
+                        const tz = activeMission.target.z * SCALE_FACTOR;
+                        
+                        laserPositions[laserIndex * 6] = px;
+                        laserPositions[laserIndex * 6 + 1] = py;
+                        laserPositions[laserIndex * 6 + 2] = pz;
+                        laserPositions[laserIndex * 6 + 3] = tx; // target
+                        laserPositions[laserIndex * 6 + 4] = ty;
+                        laserPositions[laserIndex * 6 + 5] = tz;
+                        laserIndex++;
+                    }
+                } else if (role === 'PLANE_LEAD') {
+                    sizes[i] = SAT_BASE_SIZE * 3 + score * 0.5;
+                } else if (score <= 0.0) {
+                    sizes[i] = SAT_BASE_SIZE * 1.5;
+                } else {
+                    sizes[i] = SAT_BASE_SIZE + score * 0.5;
+                }
 
                 totalScore += score;
                 if (score > topSat.score) topSat = { id: sat.id, score };
@@ -492,10 +534,17 @@
                 positions[i * 3] = positions[i * 3 + 1] = positions[i * 3 + 2] = 0;
                 sizes[i] = 0;
             }
+            
+            // Hide unused lasers
+            for (let i = laserIndex; i < MAX_LASERS; i++) {
+                laserPositions[i * 6] = laserPositions[i * 6 + 1] = laserPositions[i * 6 + 2] = 0;
+                laserPositions[i * 6 + 3] = laserPositions[i * 6 + 4] = laserPositions[i * 6 + 5] = 0;
+            }
 
             satGeometry.attributes.position.needsUpdate = true;
             satGeometry.attributes.color.needsUpdate    = true;
             satGeometry.attributes.size.needsUpdate     = true;
+            laserGeom.attributes.position.needsUpdate   = true;
 
             // ── Update HUD ──
             document.getElementById('node-count').textContent = activeSatCount;
@@ -563,7 +612,13 @@
             };
 
             ws.onmessage = (event) => {
-                fleetData = JSON.parse(event.data);
+                const data = JSON.parse(event.data);
+                if (Array.isArray(data)) {
+                    fleetData = data;
+                } else {
+                    fleetData = data.satellites || [];
+                    activeMission = data.active_mission;
+                }
                 updateSatellitePositions();
                 if (firstFrame) {
                     firstFrame = false;

@@ -125,7 +125,7 @@ with col3:
 st.markdown("### Satellite Registry")
 df = pd.DataFrame(nodes)
 if not df.empty:
-    st.dataframe(df[['node_id', 'status', 'battery', 'reputation', 'position']], use_container_width=True)
+    st.dataframe(df[['node_id', 'status', 'battery', 'reputation', 'position']], width='stretch')
 
 st.markdown("---")
 

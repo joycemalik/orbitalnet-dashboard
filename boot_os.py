@@ -57,8 +57,10 @@ def boot_system():
         time.sleep(1)
         
         print("Starting Command Center...")
-        # Make sure this points to your actual streamlit file
-        dashboard = subprocess.Popen(["streamlit", "run", "cloud_dashboard.py"]) 
+        # 3. Start the Streamlit Dashboard (The Face)
+        print("Starting Command Center...")
+        # Point to app.py for the full multipage experience
+        dashboard = subprocess.Popen(["streamlit", "run", "app.py"]) 
         processes.append(dashboard)
 
         for p in processes:

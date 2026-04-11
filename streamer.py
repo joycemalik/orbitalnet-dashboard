@@ -4,7 +4,7 @@ import redis.asyncio as redis
 import json
 
 # Connect to the async version of Redis
-r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
 async def broadcast_telemetry(websocket):
     print("UI Connected! Streaming telemetry...")
@@ -22,11 +22,17 @@ async def broadcast_telemetry(websocket):
             # Fetch the live JSON states for these satellites
             raw_data = await r.mget(subset_keys)
             
-            # Filter out Nones and parse JSON
-            payload = []
+            # Fetch active mission state for targeted laser drawing
+            active_mission_raw = await r.get("ACTIVE_MISSION")
+            
+            payload = {
+                "satellites": [],
+                "active_mission": json.loads(active_mission_raw) if active_mission_raw else None
+            }
+            
             for item in raw_data:
                 if item:
-                    payload.append(json.loads(item))
+                    payload["satellites"].append(json.loads(item))
             
             # Shove the massive payload down the WebSocket to the browser
             await websocket.send(json.dumps(payload))
@@ -39,7 +45,7 @@ async def broadcast_telemetry(websocket):
 
 async def main():
     print("Booting WebSocket Bridge on ws://localhost:8765...")
-    async with websockets.serve(broadcast_telemetry, "localhost", 8765):
+    async with websockets.serve(broadcast_telemetry, "127.0.0.1", 8765):
         await asyncio.Future()  # run forever
 
 if __name__ == "__main__":

@@ -2,8 +2,14 @@ import redis
 import json
 import time
 
-# Use 127.0.0.1 instead of localhost for Windows compatibility
-r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
+r = redis.Redis(
+    host='localhost', 
+    port=6379, 
+    db=0, 
+    decode_responses=True, 
+    health_check_interval=1, # Checks if connection is alive
+    retry_on_timeout=True    # Auto-retries instead of crashing
+)
 
 def elect_plane_leaders():
     print("Initiating Swarm Consensus (Plane Lead Election)...")

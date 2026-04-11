@@ -4,44 +4,42 @@ import redis.asyncio as redis
 import json
 
 # Connect to the async version of Redis
-r = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
+r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 async def broadcast_telemetry(websocket):
     print("UI Connected! Streaming telemetry...")
-    try:
-        while True:
-            # For the initial UI test, let's grab a subset to avoid overwhelming the browser
-            # We will grab the first 200 keys for smooth rendering
+    while True:
+        try:
+            # Added a slight delay to stop Windows from panicking over socket spam
+            await asyncio.sleep(0.5) 
+            
             keys = await r.keys('STARLINK-*')
-            subset_keys = keys[:900] 
+            subset_keys = keys[:1000] # Adjust this limit based on your UI performance
             
             if not subset_keys:
-                await asyncio.sleep(1)
                 continue
 
-            # Fetch the live JSON states for these satellites
             raw_data = await r.mget(subset_keys)
             
             # Fetch active mission state for targeted laser drawing
             active_mission_raw = await r.get("ACTIVE_MISSION")
             
             payload = {
-                "satellites": [],
+                "satellites": [json.loads(item) for item in raw_data if item],
                 "active_mission": json.loads(active_mission_raw) if active_mission_raw else None
             }
-            
-            for item in raw_data:
-                if item:
-                    payload["satellites"].append(json.loads(item))
             
             # Shove the massive payload down the WebSocket to the browser
             await websocket.send(json.dumps(payload))
             
-            # Match the 1Hz tick of the physics engine
-            await asyncio.sleep(1)
-            
-    except websockets.exceptions.ConnectionClosed:
-        print("UI Disconnected.")
+        except redis.exceptions.ConnectionError:
+            print("⚠️ Windows network bridge dropped. Auto-reconnecting...")
+            await asyncio.sleep(1) # Wait a second for the socket to clear, then loop again
+            continue
+        except websockets.exceptions.ConnectionClosed:
+            print("UI Disconnected.")
+            break
+
 
 async def main():
     print("Booting WebSocket Bridge on ws://localhost:8765...")

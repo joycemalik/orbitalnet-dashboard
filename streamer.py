@@ -23,14 +23,15 @@ async def broadcast_telemetry(websocket):
                 keys = await r.keys('STARLINK-*')
                 if not keys:
                     continue
-                cached_keys = keys[:1000]
+                cached_keys = keys[:2562]
             
             subset_keys = cached_keys
 
             raw_data = await r.mget(subset_keys)
             
-            # Fetch active mission state for targeted laser drawing
-            active_mission_raw = await r.get("ACTIVE_MISSION")
+            # Fetch ALL active missions from the ledger
+            missions_raw = await r.hgetall("MISSIONS_LEDGER")
+            active_missions = [json.loads(m) for m in missions_raw.values()] if missions_raw else []
             
             # Fetch geographic target mission for Rolling Enclave hand-off
             current_mission_raw = await r.get("CURRENT_MISSION")
@@ -40,7 +41,7 @@ async def broadcast_telemetry(websocket):
             
             payload = {
                 "satellites": [json.loads(item) for item in raw_data if item],
-                "active_mission": json.loads(active_mission_raw) if active_mission_raw else None,
+                "active_missions": active_missions,
                 "current_mission": json.loads(current_mission_raw) if current_mission_raw else None,
                 "sun_lon": float(current_sun_lon) if current_sun_lon else 0.0
             }

@@ -23,7 +23,7 @@ async def broadcast_telemetry(websocket):
                 keys = await r.keys('STARLINK-*')
                 if not keys:
                     continue
-                cached_keys = keys[:2562]
+                cached_keys = keys[:7641]
             
             subset_keys = cached_keys
 

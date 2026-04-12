@@ -504,7 +504,7 @@
         scene.add(orbitRing);
 
         // ─── SATELLITE BUFFER GEOMETRY ───
-        const MAX_SATS = 2562;
+        const MAX_SATS = 7641;
         const satGeometry = new THREE.BufferGeometry();
         const positions   = new Float32Array(MAX_SATS * 3);
         const colors      = new Float32Array(MAX_SATS * 3);
@@ -638,14 +638,19 @@
             return new THREE.Vector3(x, y, z);
         }
 
-        // Score → Color mapping
-        function scoreToColor(score, role) {
-            if (role === 'PLANE_LEAD') return new THREE.Color(1.0, 0.84, 0.0);  // Gold for Plane Leads
-            if (score <= 0.0)  return new THREE.Color(1.0, 0.0, 0.0);           // dead / gatekept → bright red
-            if (score < 1.0)   return new THREE.Color(1.0, 0.2, 0.25);          // critical → red
-            if (score < 2.0)   return new THREE.Color(1.0, 0.65, 0.0);          // warning → amber
-            if (score < 3.0)   return new THREE.Color(0.0, 1.0, 0.53);          // nominal → green
-            return new THREE.Color(0.0, 0.8, 1.0);                              // optimal → cyan
+        // ─── HARDWARE COLOR MAPPING ───
+        // Satellites are colored by their sensor type, not score.
+        // Score-based coloring made every node look identical.
+        function getPayloadColor(payloadType, score) {
+            if (score <= 0.0) return new THREE.Color(0.4, 0.0, 0.0); // Dead / gate-kept: dim red
+            switch (payloadType) {
+                case 'SAR':    return new THREE.Color(0.8, 0.2, 1.0); // Purple  — Radar
+                case 'EO':     return new THREE.Color(0.2, 0.6, 1.0); // Blue    — Optical
+                case 'SIGINT': return new THREE.Color(1.0, 0.8, 0.1); // Yellow  — ELINT
+                case 'MW':     return new THREE.Color(1.0, 0.5, 0.0); // Orange  — Weather
+                case 'RELAY':  return new THREE.Color(0.3, 0.3, 0.3); // Dark grey — Comms
+                default:       return new THREE.Color(0.0, 1.0, 0.53);// Green   — Unknown
+            }
         }
 
         // ─── UPDATE SATELLITES ───
@@ -661,61 +666,65 @@
 
             for (let i = 0; i < activeSatCount; i++) {
                 const sat = fleetData[i];
-                
-                // Use the backend's true lat/lon calculation (Ground Track)
-                // Multiply EARTH_RADIUS by 1.05 to make them float slightly above the atmosphere
-                const pos = latLonToVec3(sat.lat, sat.lon, EARTH_RADIUS * 1.05);
-                
-                const px = pos.x; 
-                const py = pos.y; 
-                const pz = pos.z; 
 
+                const pos = latLonToVec3(sat.lat, sat.lon, EARTH_RADIUS * 1.05);
+                const px = pos.x, py = pos.y, pz = pos.z;
                 const score = sat.current_score || 0.0;
-                const role = sat.role || 'FOLLOWER';
+
+                // ── Fix 1: FRONTEND ENCLAVE RESOLUTION ──
+                // The physics engine overwrites backend roles every second.
+                // Instead, check the authoritative enclave[] list from the Missions Ledger.
+                let role = 'FOLLOWER';
+                let assignedMission = null;
+                for (let m = 0; m < activeMissions.length; m++) {
+                    const miss = activeMissions[m];
+                    if (miss.enclave && miss.enclave.includes(sat.id)) {
+                        role = 'MISSION_ACTIVE';
+                        assignedMission = miss;
+                        break;
+                    }
+                }
                 const isActiveLead = sat.is_active_lead === true;
+                if (isActiveLead) role = 'ACTIVE_LEAD';
 
                 positions[i * 3]     = px;
                 positions[i * 3 + 1] = py;
                 positions[i * 3 + 2] = pz;
 
-                // Active Lead gets a unique bright green color
+                // ── Fix 2: COLOR BY HARDWARE ──
                 let c;
-                if (isActiveLead) {
-                    c = new THREE.Color(0.0, 1.0, 0.5); // Bright green for active lead
+                if (role === 'ACTIVE_LEAD') {
+                    c = new THREE.Color(1.0, 1.0, 1.0);       // White  — Rolling Enclave Lead
+                } else if (role === 'MISSION_ACTIVE') {
+                    c = new THREE.Color(0.0, 1.0, 0.5);       // Bright green — Enclave executing
                 } else {
-                    c = scoreToColor(score, role);
+                    c = getPayloadColor(sat.payload_type, score);
                 }
                 colors[i * 3]     = c.r;
                 colors[i * 3 + 1] = c.g;
                 colors[i * 3 + 2] = c.b;
 
-                // Active Lead is largest and gets tracked for beam drawing
-                if (isActiveLead) {
+                // ── Fix 3: SIZE + LASERS ──
+                if (role === 'ACTIVE_LEAD') {
                     sizes[i] = SAT_BASE_SIZE * 5 + score * 0.5;
                     activeLeadSat = { id: sat.id, score: score, px, py, pz };
                 } else if (role === 'MISSION_ACTIVE') {
-                    sizes[i] = SAT_BASE_SIZE * 4 + score * 0.5;
-                    // Draw a laser from this node to its assigned mission target
-                    const missionId = sat.current_mission_id;
-                    if (missionId && laserIndex < MAX_LASERS) {
-                        const assignedMission = activeMissions.find(m => m.id === missionId);
-                        if (assignedMission && assignedMission.target_lat !== undefined) {
-                            const tPos = latLonToVec3(assignedMission.target_lat, assignedMission.target_lon, EARTH_RADIUS * 1.005);
-                            laserPositions[laserIndex * 6] = px;
-                            laserPositions[laserIndex * 6 + 1] = py;
-                            laserPositions[laserIndex * 6 + 2] = pz;
-                            laserPositions[laserIndex * 6 + 3] = tPos.x;
-                            laserPositions[laserIndex * 6 + 4] = tPos.y;
-                            laserPositions[laserIndex * 6 + 5] = tPos.z;
-                            laserIndex++;
-                        }
+                    sizes[i] = SAT_BASE_SIZE * 5;
+                    // Draw a laser from this enclave node to its mission target
+                    if (assignedMission && assignedMission.target_lat !== undefined && laserIndex < MAX_LASERS) {
+                        const tPos = latLonToVec3(assignedMission.target_lat, assignedMission.target_lon, EARTH_RADIUS * 1.005);
+                        laserPositions[laserIndex * 6]     = px;
+                        laserPositions[laserIndex * 6 + 1] = py;
+                        laserPositions[laserIndex * 6 + 2] = pz;
+                        laserPositions[laserIndex * 6 + 3] = tPos.x;
+                        laserPositions[laserIndex * 6 + 4] = tPos.y;
+                        laserPositions[laserIndex * 6 + 5] = tPos.z;
+                        laserIndex++;
                     }
-                } else if (role === 'PLANE_LEAD') {
-                    sizes[i] = SAT_BASE_SIZE * 3 + score * 0.5;
                 } else if (score <= 0.0) {
-                    sizes[i] = SAT_BASE_SIZE * 1.5;
+                    sizes[i] = SAT_BASE_SIZE * 0.8;           // Dim dead nodes
                 } else {
-                    sizes[i] = SAT_BASE_SIZE + score * 0.5;
+                    sizes[i] = SAT_BASE_SIZE * 1.5;
                 }
 
                 totalScore += score;
@@ -736,7 +745,7 @@
                 allMissions.push(currentMission);
             }
 
-            // Render each mission's target marker
+            // Render each mission's target marker with TRUE mathematical scaling
             for (let m = 0; m < MAX_MISSIONS; m++) {
                 if (m < allMissions.length && allMissions[m].target_lat !== undefined) {
                     const mission = allMissions[m];
@@ -753,13 +762,16 @@
                     missionDots[m].position.copy(targetPos);
                     missionDots[m].visible = true;
 
-                    // Scale marker ring to reflect the mission's operational radius
-                    // 500 km = scale 1.0 (baseline). 2000 km = scale 4.0.
-                    const radiusKm = mission.target_radius || 500;
-                    const visualScale = Math.max(0.4, radiusKm / 500);
-                    missionMarkers[m].scale.set(visualScale, visualScale, visualScale);
+                    // ── TRUE SCALE MATH ──
+                    // Earth real radius: 6371 km. WebGL sphere: EARTH_RADIUS units.
+                    // 1 WebGL unit = 6371 / EARTH_RADIUS km.
+                    // The RingGeometry was created with inner=1.5, outer=2.5 → midpoint ≈2 units wide.
+                    // To display radiusKm correctly: scale = radiusKm / (kmPerUnit * 2.0)
+                    const kmPerUnit = 6371 / EARTH_RADIUS;
+                    const radiusKm  = mission.target_radius || 500;
+                    const exactVisualScale = (radiusKm / kmPerUnit) / 2.0;
+                    missionMarkers[m].scale.set(exactVisualScale, exactVisualScale, exactVisualScale);
 
-                    // Hide the per-mission beam (lasers are drawn per-satellite above)
                     missionBeams[m].visible = false;
                 } else {
                     missionMarkers[m].visible = false;

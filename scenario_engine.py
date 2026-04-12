@@ -12,6 +12,7 @@ SCENARIOS = {
             "isl_throughput": 0.9,
             "soc": 0.4
         },
+        "sensor_required": "SAR",
         "m_required": 3,
         "risk_profile": "HIGH",
         "description": "Continuous high-resolution monitoring of contested maritime chokepoint."
@@ -26,6 +27,7 @@ SCENARIOS = {
             "look_angle": 0.8,
             "soc": 0.8
         },
+        "sensor_required": "MW",
         "m_required": 4,
         "risk_profile": "LOW",
         "description": "Unbroken infrared perimeter tracking of active mega-fire."
@@ -46,8 +48,11 @@ class ScenarioManager:
         active_mission = {
             "status": "OPEN_AUCTION",
             "name": scenario_name,
-            "target": config["target"],
+            "target_lat": config["target_lat"],
+            "target_lon": config["target_lon"],
+            "active": True,
             "required_nodes": config["m_required"],
+            "sensor_required": config.get("sensor_required", "EO"),
             "weights": config["weights"],
             "enclave": []
         }

@@ -5,12 +5,94 @@ import pandas as pd
 import random
 import time
 from scenario_engine import ScenarioManager, SCENARIOS
+from config import get_redis_client
 
 st.set_page_config(layout="wide", page_title="Ground Station | OrbitalNet")
-r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+r = get_redis_client()
 director = ScenarioManager()
 
 st.title("📡 Tactical Ground Station")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 1: Geographic Target Acquisition (writes to CURRENT_MISSION)
+# ═══════════════════════════════════════════════════════════════════════════
+
+st.markdown("---")
+st.markdown("### 🎯 Target Acquisition (Rolling Enclave)")
+st.caption("Select a ground target. The physics engine will continuously elect the best-positioned satellite as Active Lead.")
+
+tgt_col1, tgt_col2 = st.columns([1, 1])
+
+with tgt_col1:
+    # Real-world target examples
+    targets = {
+        "Jaipur (Test Site Alpha)": {"lat": 26.9124, "lon": 75.7873},
+        "Bangalore (Test Site Beta)": {"lat": 12.9716, "lon": 77.5946},
+        "Strait of Hormuz (Maritime)": {"lat": 26.5, "lon": 56.3},
+        "Australian Bushfire Zone": {"lat": -33.8, "lon": 150.9},
+        "Null Island (Reset)": {"lat": 0.0, "lon": 0.0},
+        "Custom Coordinates": None
+    }
+
+    selected_target = st.selectbox("Select Monitoring Target", options=list(targets.keys()))
+
+    if selected_target == "Custom Coordinates":
+        custom_lat = st.number_input("Target Latitude", value=0.0, min_value=-90.0, max_value=90.0, step=0.1)
+        custom_lon = st.number_input("Target Longitude", value=0.0, min_value=-180.0, max_value=180.0, step=0.1)
+        target_coords = {"lat": custom_lat, "lon": custom_lon}
+    else:
+        target_coords = targets[selected_target]
+
+    btn_col1, btn_col2 = st.columns(2)
+    with btn_col1:
+        if st.button("🚀 EXECUTE: Task Swarm", type="primary", width='stretch'):
+            mission_data = {
+                "intent_id": f"MISSION_{int(time.time())}",
+                "target_name": selected_target,
+                "target_lat": target_coords["lat"],
+                "target_lon": target_coords["lon"],
+                "active": True
+            }
+            r.set("CURRENT_MISSION", json.dumps(mission_data))
+            st.success(f"Mission Uploaded. Swarm routing to Lat: {target_coords['lat']:.4f}, Lon: {target_coords['lon']:.4f}")
+
+    with btn_col2:
+        if st.button("🛑 CANCEL MISSION", type="secondary", width='stretch'):
+            r.delete("CURRENT_MISSION")
+            st.warning("Mission cancelled. Fleet returning to idle consensus.")
+
+with tgt_col2:
+    # Show current mission status
+    try:
+        current_mission_raw = r.get("CURRENT_MISSION")
+    except Exception:
+        current_mission_raw = None
+        
+    if current_mission_raw:
+        cm = json.loads(current_mission_raw)
+        st.markdown(f"""
+        <div style='background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3); 
+                    border-radius: 8px; padding: 16px; font-family: monospace;'>
+            <span style='color: #00ff88; font-weight: bold; font-size: 0.9rem;'>● MISSION ACTIVE</span><br>
+            <span style='color: #8899aa; font-size: 0.75rem;'>Intent: {cm.get('intent_id', 'N/A')}</span><br>
+            <span style='color: #c8d6e5; font-size: 0.85rem;'>Target: {cm.get('target_name', 'Custom')}</span><br>
+            <span style='color: #c8d6e5; font-size: 0.85rem;'>Lat: {cm.get('target_lat', 0):.4f} | Lon: {cm.get('target_lon', 0):.4f}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style='background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
+                    border-radius: 8px; padding: 16px; font-family: monospace;'>
+            <span style='color: #5a6e82; font-weight: bold; font-size: 0.9rem;'>○ NO ACTIVE MISSION</span><br>
+            <span style='color: #5a6e82; font-size: 0.75rem;'>Fleet holding idle consensus. Select a target to begin.</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 2: Scenario Deployment (existing — writes to ACTIVE_MISSION)
+# ═══════════════════════════════════════════════════════════════════════════
+
+st.markdown("---")
 
 col1, col2 = st.columns([1, 2])
 

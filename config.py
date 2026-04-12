@@ -10,6 +10,9 @@ reused across different environments without code changes.
 """
 
 import os
+import redis
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
 
 # ---------------------------------------------------------------------------
 # Sector definitions
@@ -72,3 +75,25 @@ BIDS_TOPIC_ARN: str = os.environ.get("BIDS_TOPIC_ARN", "")
 
 TABLE_NAME: str = os.environ.get("TABLE_NAME", "SwarmState")
 """DynamoDB table name used to persist per-node state (battery, position, status)."""
+
+# ---------------------------------------------------------------------------
+# Redis Connection Pool (Native Memurai Windows)
+# ---------------------------------------------------------------------------
+
+# Force 127.0.0.1. Do NOT use "localhost" to avoid Windows IPv6 routing bugs.
+redis_pool = redis.ConnectionPool(
+    host='127.0.0.1',
+    port=6379,
+    db=0,
+    decode_responses=True,
+    max_connections=1000, 
+    health_check_interval=30 
+)
+
+def get_redis_client():
+    retry_strategy = Retry(ExponentialBackoff(cap=10, base=1), 3)
+    return redis.Redis(
+        connection_pool=redis_pool,
+        retry=retry_strategy,
+        retry_on_error=[redis.exceptions.ConnectionError, redis.exceptions.TimeoutError]
+    )

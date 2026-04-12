@@ -2,31 +2,23 @@ import redis
 from redis.exceptions import ConnectionError as RedisConnectionError
 import json
 import time
-
-def create_redis_connection():
-    """Create a fresh Redis connection with retry settings."""
-    return redis.Redis(
-        host='localhost',
-        port=6379,
-        db=0,
-        decode_responses=True,
-        socket_timeout=5,
-        socket_connect_timeout=5,
-        retry_on_timeout=True
-    )
+from config import get_redis_client
 
 def elect_plane_leaders():
     print("Initiating Swarm Consensus (Plane Lead Election)...")
-    r = create_redis_connection()
+    r = get_redis_client()
+    cached_keys = None
     
     while True:
         try:
-            keys = r.keys('STARLINK-*')
-            if not keys:
-                time.sleep(1)
-                continue
+            if not cached_keys:
+                keys = r.keys('STARLINK-*')
+                if not keys:
+                    time.sleep(1)
+                    continue
+                cached_keys = keys
                 
-            raw_data = r.mget(keys)
+            raw_data = r.mget(cached_keys)
             fleet = [json.loads(item) for item in raw_data if item]
             
             # 1. Group Satellites by Orbital Plane
@@ -97,7 +89,7 @@ def elect_plane_leaders():
             print(f"⚠️ Consensus Engine lost Redis connection: {e.__class__.__name__}. Reconnecting in 3s...")
             time.sleep(3)
             try:
-                r = create_redis_connection()
+                r = get_redis_client()
                 r.ping()
                 print("✅ Consensus Engine reconnected to Redis.")
             except Exception:

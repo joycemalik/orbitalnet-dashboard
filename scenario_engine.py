@@ -1,5 +1,6 @@
 import redis
 import json
+import uuid
 
 SCENARIOS = {
     "HORMUZ_OVERWATCH": {
@@ -45,7 +46,10 @@ class ScenarioManager:
         if not config:
             return False
 
+        mission_id = f"SCN-{uuid.uuid4().hex[:6].upper()}"
+
         active_mission = {
+            "id": mission_id,
             "status": "OPEN_AUCTION",
             "name": scenario_name,
             "target_lat": config["target_lat"],
@@ -57,9 +61,9 @@ class ScenarioManager:
             "enclave": []
         }
 
-        # Push to the Redis Brain for Consensus Engine to pick up
-        self.r.set("ACTIVE_MISSION", json.dumps(active_mission))
-        return config["description"]
+        # Push to the MISSIONS_LEDGER hash map for multi-mission support
+        self.r.hset("MISSIONS_LEDGER", mission_id, json.dumps(active_mission))
+        return f"{mission_id}: {config['description']}"
 
     def inject_chaos(self):
         """Simulates EMP or Jamming for the live demo"""

@@ -168,6 +168,87 @@
         .legend-nominal::before  { background: #00ff88 !important; }
         .legend-optimal::before  { background: #00ccff !important; }
 
+        /* ── NOC Mission Panel ── */
+        #noc-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            background: rgba(5, 8, 15, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 18px 22px;
+            border: 1px solid rgba(255, 0, 68, 0.15);
+            border-radius: 12px;
+            min-width: 280px;
+            box-shadow:
+                0 0 30px rgba(255, 0, 68, 0.05),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+            transition: border-color 0.6s ease, box-shadow 0.6s ease;
+        }
+        #noc-panel.mission-active {
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow:
+                0 0 30px rgba(0, 255, 136, 0.08),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        #noc-panel h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ff4466;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.6s ease;
+        }
+        #noc-panel.mission-active h3 {
+            color: #00ff88;
+        }
+        #noc-panel h3::before {
+            content: '';
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: #ff4466;
+            border-radius: 50%;
+            box-shadow: 0 0 6px currentColor;
+            animation: pulse-dot 2s ease-in-out infinite;
+            transition: background 0.6s ease;
+        }
+        #noc-panel.mission-active h3::before {
+            background: #00ff88;
+        }
+        .noc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .noc-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #5a6e82;
+        }
+        .noc-value {
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: #c8d6e5;
+        }
+        #noc-lead {
+            color: #00ff88;
+            font-weight: 700;
+        }
+        #noc-target {
+            color: #ff6b9d;
+        }
+        #noc-status {
+            font-weight: 600;
+        }
+
         /* ── Globe Canvas ── */
         #globeContainer {
             position: fixed;
@@ -259,6 +340,27 @@
     </div>
 
     <!-- HUD Overlay -->
+    <!-- NOC Mission Panel -->
+    <div id="noc-panel">
+        <h3>Mission Status</h3>
+        <div class="noc-row">
+            <span class="noc-label">Status</span>
+            <span class="noc-value" id="noc-status">NO ACTIVE MISSION</span>
+        </div>
+        <div class="noc-row">
+            <span class="noc-label">Target</span>
+            <span class="noc-value" id="noc-target">—</span>
+        </div>
+        <div class="noc-row">
+            <span class="noc-label">Active Lead</span>
+            <span class="noc-value" id="noc-lead">—</span>
+        </div>
+        <div class="noc-row">
+            <span class="noc-label">Lead Score</span>
+            <span class="noc-value" id="noc-lead-score">—</span>
+        </div>
+    </div>
+
     <div id="overlay">
         <h2>OrbitalNet OS</h2>
         <div class="hud-row">
@@ -361,6 +463,8 @@
             metalness: 0.1
         });
         const earth = new THREE.Mesh(earthGeom, earthMat);
+        // Align Prime Meridian (Longitude 0) with the math logic
+        earth.rotation.y = Math.PI; 
         scene.add(earth);
 
         // Atmosphere glow
@@ -445,9 +549,10 @@
         // ─── STATE ───
         let fleetData = [];
         let activeMission = null;
+        let currentMission = null;
         let activeSatCount = 0;
 
-        // ─── LASERS ───
+        // ─── LASERS (existing enclave system) ───
         const MAX_LASERS = 10;
         const laserGeom = new THREE.BufferGeometry();
         const laserPositions = new Float32Array(MAX_LASERS * 6); // 2 points per line, 3 coords per point
@@ -461,6 +566,60 @@
         });
         const laserLines = new THREE.LineSegments(laserGeom, laserMat);
         scene.add(laserLines);
+
+        // ─── GEOGRAPHIC TARGET MARKER (pulsing ring on Earth surface) ───
+        const targetRingGeom = new THREE.RingGeometry(1.5, 2.5, 32);
+        const targetRingMat = new THREE.MeshBasicMaterial({
+            color: 0xff3344,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+        });
+        const targetMarker = new THREE.Mesh(targetRingGeom, targetRingMat);
+        targetMarker.visible = false;
+        scene.add(targetMarker);
+
+        // Inner ping dot
+        const targetDotGeom = new THREE.SphereGeometry(1.0, 16, 16);
+        const targetDotMat = new THREE.MeshBasicMaterial({
+            color: 0xff3344,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+        });
+        const targetDot = new THREE.Mesh(targetDotGeom, targetDotMat);
+        targetDot.visible = false;
+        scene.add(targetDot);
+
+        // ─── SENSOR BEAM (Active Lead → Target) ───
+        const sensorBeamGeom = new THREE.BufferGeometry();
+        const sensorBeamPositions = new Float32Array(6); // 2 points × 3 coords
+        sensorBeamGeom.setAttribute('position', new THREE.BufferAttribute(sensorBeamPositions, 3));
+        const sensorBeamMat = new THREE.LineBasicMaterial({
+            color: 0x00ff88,
+            transparent: true,
+            opacity: 0.7,
+            linewidth: 2,
+            blending: THREE.AdditiveBlending,
+        });
+        const sensorBeam = new THREE.LineSegments(sensorBeamGeom, sensorBeamMat);
+        sensorBeam.visible = false;
+        scene.add(sensorBeam);
+
+        // ─── lat/lon → 3D vector utility (Fixed Mapping) ───
+        function latLonToVec3(lat, lon, radius) {
+            // 1. Convert degrees to radians and adjust for Spherical orientation
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+
+            // 2. Map to X, Y, Z (Y is UP in Three.js standard)
+            const x = -(radius * Math.sin(phi) * Math.cos(theta));
+            const y = (radius * Math.cos(phi));
+            const z = (radius * Math.sin(phi) * Math.sin(theta));
+
+            return new THREE.Vector3(x, y, z);
+        }
 
         // Score → Color mapping
         function scoreToColor(score, role) {
@@ -481,6 +640,7 @@
             let buckets = [0, 0, 0, 0]; // critical, warning, nominal, optimal
 
             let laserIndex = 0;
+            let activeLeadSat = null; // Track the geographic active lead
 
             for (let i = 0; i < activeSatCount; i++) {
                 const sat = fleetData[i];
@@ -491,19 +651,30 @@
 
                 const score = sat.current_score || 0.0;
                 const role = sat.role || 'FOLLOWER';
+                const isActiveLead = sat.is_active_lead === true;
 
                 positions[i * 3]     = px;
                 positions[i * 3 + 1] = py;
                 positions[i * 3 + 2] = pz;
 
-                const c = scoreToColor(score, role);
+                // Active Lead gets a unique bright green color
+                let c;
+                if (isActiveLead) {
+                    c = new THREE.Color(0.0, 1.0, 0.5); // Bright green for active lead
+                } else {
+                    c = scoreToColor(score, role);
+                }
                 colors[i * 3]     = c.r;
                 colors[i * 3 + 1] = c.g;
                 colors[i * 3 + 2] = c.b;
 
-                if (role === 'MISSION_ACTIVE') {
+                // Active Lead is largest and gets tracked for beam drawing
+                if (isActiveLead) {
+                    sizes[i] = SAT_BASE_SIZE * 5 + score * 0.5;
+                    activeLeadSat = { id: sat.id, score: score, px, py, pz };
+                } else if (role === 'MISSION_ACTIVE') {
                     sizes[i] = SAT_BASE_SIZE * 4 + score * 0.5;
-                    // Draw a laser if we have a target
+                    // Draw a laser if we have a target (existing enclave system)
                     if (activeMission && activeMission.target && laserIndex < MAX_LASERS) {
                         const tx = activeMission.target.x * SCALE_FACTOR;
                         const ty = activeMission.target.y * SCALE_FACTOR;
@@ -512,7 +683,7 @@
                         laserPositions[laserIndex * 6] = px;
                         laserPositions[laserIndex * 6 + 1] = py;
                         laserPositions[laserIndex * 6 + 2] = pz;
-                        laserPositions[laserIndex * 6 + 3] = tx; // target
+                        laserPositions[laserIndex * 6 + 3] = tx;
                         laserPositions[laserIndex * 6 + 4] = ty;
                         laserPositions[laserIndex * 6 + 5] = tz;
                         laserIndex++;
@@ -532,6 +703,66 @@
                 else if (score < 2.0) buckets[1]++;
                 else if (score < 3.0) buckets[2]++;
                 else                  buckets[3]++;
+            }
+
+            // ── Geographic Target Marker + Sensor Beam ──
+            const nocPanel = document.getElementById('noc-panel');
+            if (currentMission && currentMission.active) {
+                const targetPos = latLonToVec3(
+                    currentMission.target_lat,
+                    currentMission.target_lon,
+                    EARTH_RADIUS * 1.005  // Slightly above surface
+                );
+
+                // Position the target marker
+                targetMarker.position.copy(targetPos);
+                targetMarker.lookAt(0, 0, 0);  // Face outward from Earth center
+                targetMarker.visible = true;
+
+                targetDot.position.copy(targetPos);
+                targetDot.visible = true;
+
+                // Draw sensor beam from active lead to target
+                if (activeLeadSat) {
+                    sensorBeamPositions[0] = activeLeadSat.px;
+                    sensorBeamPositions[1] = activeLeadSat.py;
+                    sensorBeamPositions[2] = activeLeadSat.pz;
+                    sensorBeamPositions[3] = targetPos.x;
+                    sensorBeamPositions[4] = targetPos.y;
+                    sensorBeamPositions[5] = targetPos.z;
+                    sensorBeamGeom.attributes.position.needsUpdate = true;
+                    sensorBeam.visible = true;
+                } else {
+                    sensorBeam.visible = false;
+                }
+
+                // Update NOC panel
+                nocPanel.classList.add('mission-active');
+                document.getElementById('noc-status').textContent = 'TRACKING';
+                document.getElementById('noc-status').style.color = '#00ff88';
+                document.getElementById('noc-target').textContent =
+                    `${currentMission.target_name || 'Custom'} (${currentMission.target_lat.toFixed(2)}°, ${currentMission.target_lon.toFixed(2)}°)`;
+
+                if (activeLeadSat) {
+                    document.getElementById('noc-lead').textContent = activeLeadSat.id;
+                    document.getElementById('noc-lead-score').textContent = activeLeadSat.score.toFixed(4);
+                } else {
+                    document.getElementById('noc-lead').textContent = 'No LOS';
+                    document.getElementById('noc-lead').style.color = '#ffaa00';
+                    document.getElementById('noc-lead-score').textContent = '—';
+                }
+            } else {
+                // No active geographic mission
+                targetMarker.visible = false;
+                targetDot.visible = false;
+                sensorBeam.visible = false;
+                nocPanel.classList.remove('mission-active');
+                document.getElementById('noc-status').textContent = 'NO ACTIVE MISSION';
+                document.getElementById('noc-status').style.color = '#5a6e82';
+                document.getElementById('noc-target').textContent = '—';
+                document.getElementById('noc-lead').textContent = '—';
+                document.getElementById('noc-lead').style.color = '#00ff88';
+                document.getElementById('noc-lead-score').textContent = '—';
             }
 
             // Hide unused points
@@ -623,6 +854,7 @@
                 } else {
                     fleetData = data.satellites || [];
                     activeMission = data.active_mission;
+                    currentMission = data.current_mission || null;
                 }
                 updateSatellitePositions();
                 if (firstFrame) {
@@ -648,7 +880,23 @@
             requestAnimationFrame(animate);
             const elapsed = clock.getElapsedTime();
             satMaterial.uniforms.uTime.value = elapsed;
-            earth.rotation.y += 0.0002;
+            // earth.rotation.y += 0.0002; // Disabled for static coordinate calibration
+
+            // Animate target marker pulsing
+            if (targetMarker.visible) {
+                const pulse = 0.5 + 0.5 * Math.sin(elapsed * 3.0);
+                targetRingMat.opacity = 0.3 + pulse * 0.5;
+                targetDotMat.opacity = 0.5 + pulse * 0.4;
+                const scale = 0.8 + pulse * 0.4;
+                targetMarker.scale.set(scale, scale, scale);
+            }
+
+            // Animate sensor beam pulsing
+            if (sensorBeam.visible) {
+                const beamPulse = 0.4 + 0.4 * Math.sin(elapsed * 4.0);
+                sensorBeamMat.opacity = beamPulse;
+            }
+
             controls.update();
             renderer.render(scene, camera);
         }

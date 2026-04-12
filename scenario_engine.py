@@ -4,6 +4,8 @@ import json
 SCENARIOS = {
     "HORMUZ_OVERWATCH": {
         "target": {"x": 3500.0, "y": 4000.0, "z": 2600.0},
+        "target_lat": 26.5,    # Strait of Hormuz approximate latitude
+        "target_lon": 56.3,    # Strait of Hormuz approximate longitude
         "weights": {
             "look_angle": 1.0,
             "sensor_calibrated": 0.9,
@@ -16,6 +18,8 @@ SCENARIOS = {
     },
     "WILDFIRE_PROTOCOL": {
         "target": {"x": -2500.0, "y": 4500.0, "z": -4000.0},
+        "target_lat": -33.8,   # Australian bushfire zone approximate latitude
+        "target_lon": 150.9,   # Australian bushfire zone approximate longitude
         "weights": {
             "thermal_margin": 1.0,
             "cloud_cover": 0.9,
@@ -28,16 +32,11 @@ SCENARIOS = {
     }
 }
 
+from config import get_redis_client
+
 class ScenarioManager:
     def __init__(self):
-        self.r = redis.Redis(
-            host='localhost',
-            port=6379,
-            db=0,
-            decode_responses=True,
-            health_check_interval=1,
-            retry_on_timeout=True
-        )
+        self.r = get_redis_client()
 
     def dispatch_mission(self, scenario_name):
         config = SCENARIOS.get(scenario_name)

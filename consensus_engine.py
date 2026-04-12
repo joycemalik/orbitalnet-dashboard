@@ -60,27 +60,39 @@ def elect_plane_leaders():
                 if mission.get("status") == "OPEN_AUCTION":
                     print(f"Detected Open RFP for {mission['required_nodes']} nodes...")
                     
-                    # 1. Only Plane Leaders can bid on missions
-                    eligible_bidders = [sat for sat in fleet if sat.get('role') == 'PLANE_LEAD' and sat['telemetry']['P0_Gatekeepers']['is_task_locked'] == 0.0]
+                    required_sensor = mission.get("sensor_required", "EO") # Default to EO if not specified
+                    
+                    # 1. P0 GATEKEEPER: Filter by hardware capability AND lock status
+                    eligible_bidders = []
+                    for sat in fleet:
+                        # Must be a Plane Lead, must not be locked, AND MUST HAVE THE RIGHT HARDWARE
+                        if (sat.get('role') == 'PLANE_LEAD' and 
+                            sat['telemetry']['P0_Gatekeepers']['is_task_locked'] == 0.0 and
+                            sat.get('payload_type') == required_sensor):
+                            
+                            eligible_bidders.append(sat)
                     
                     # 2. Sort them by their current capability score
                     eligible_bidders.sort(key=lambda x: x.get('current_score', 0.0), reverse=True)
                     
                     # 3. Select the Top M nodes to form the Enclave
                     m_nodes = mission['required_nodes']
-                    winning_team = eligible_bidders[:m_nodes]
                     
-                    # 4. Lock the nodes and change their role
-                    for sat in winning_team:
-                        sat['role'] = 'MISSION_ACTIVE'
-                        sat['telemetry']['P0_Gatekeepers']['is_task_locked'] = 1.0 # Lock them
-                        r.set(sat['id'], json.dumps(sat))
-                    
-                    # 5. Close the Auction
-                    mission['status'] = "EXECUTING"
-                    mission['enclave'] = [sat['id'] for sat in winning_team]
-                    r.set("ACTIVE_MISSION", json.dumps(mission))
-                    print(f"Enclave Formed! Nodes {mission['enclave']} locked for execution.")
+                    if len(eligible_bidders) >= m_nodes:
+                        winning_team = eligible_bidders[:m_nodes]
+                        
+                        # Lock nodes and form enclave
+                        for sat in winning_team:
+                            sat['role'] = 'MISSION_ACTIVE'
+                            sat['telemetry']['P0_Gatekeepers']['is_task_locked'] = 1.0 
+                            r.set(sat['id'], json.dumps(sat))
+                        
+                        mission['status'] = "EXECUTING"
+                        mission['enclave'] = [sat['id'] for sat in winning_team]
+                        r.set("ACTIVE_MISSION", json.dumps(mission))
+                        print(f"Enclave Formed! {m_nodes} {required_sensor} nodes locked.")
+                    else:
+                        print(f"AUCTION FAILED: Not enough {required_sensor} nodes available.")
             
             # Run election every 5 seconds (doesn't need to be 1Hz like physics)
             time.sleep(5)

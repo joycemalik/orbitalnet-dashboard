@@ -4,6 +4,15 @@ import sys
 import redis
 import threading
 
+# Ensure UTF-8 output for emojis in Windows terminal
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Fallback for older python versions
+        import codecs
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+
 def check_memurai():
     print("🧠 Checking native Memurai (Redis) connection...")
     r = redis.Redis(host='127.0.0.1', port=6379)

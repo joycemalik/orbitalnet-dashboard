@@ -13,6 +13,14 @@ director = ScenarioManager()
 
 st.title("📡 Tactical Ground Station")
 
+st.markdown("---")
+st.subheader("⏱️ Chronos Override (Time Control)")
+# 1x = Real Time | 60x = 1 Minute per Second | 3600x = 1 Hour per Second
+time_multiplier = st.slider("Simulation Speed Multiplier", min_value=1, max_value=3600, value=60)
+
+# Instantly push the speed to the physics engine
+r.set("TIME_MULTIPLIER", time_multiplier)
+
 # ═══════════════════════════════════════════════════════════════════════════
 # SECTION 1: Geographic Target Acquisition (writes to CURRENT_MISSION)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -180,9 +188,8 @@ st.markdown("### 🎯 Mission Control (Manual Override)")
 with st.form("mission_dispatch"):
     col1, col2 = st.columns(2)
     with col1:
-        target_x = st.number_input("Target X Coordinate", value=1500.0)
-        target_y = st.number_input("Target Y Coordinate", value=-2000.0)
-        target_z = st.number_input("Target Z Coordinate", value=5000.0)
+        target_lat = st.number_input("Target Latitude", value=26.9) # Jaipur default
+        target_lon = st.number_input("Target Longitude", value=75.8)
         nodes_required = st.slider("Nodes Required (M)", 1, 5, 3)
     
     with col2:
@@ -196,9 +203,12 @@ with st.form("mission_dispatch"):
     if submitted:
         active_mission = {
             "status": "OPEN_AUCTION",
-            "name": "CUSTOM_MISSION",
-            "target": {"x": target_x, "y": target_y, "z": target_z},
+            "name": "TACTICAL_OVERRIDE",
+            "target_lat": target_lat,
+            "target_lon": target_lon,
+            "active": True,
             "required_nodes": nodes_required,
+            "sensor_required": "EO",
             "weights": {
                 "soc": w_battery,
                 "mean_motion": w_speed,

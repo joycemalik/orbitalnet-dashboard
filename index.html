@@ -424,7 +424,7 @@
         const container = document.getElementById('globeContainer');
         const scene     = new THREE.Scene();
         const camera    = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
-        camera.position.set(0, 60, 250);
+        camera.position.set(150, 80, 150); // Move the camera, not the planet!
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -437,7 +437,7 @@
         controls.dampingFactor = 0.06;
         controls.minDistance = 120;
         controls.maxDistance = 600;
-        controls.autoRotate = true;
+        controls.autoRotate = false; 
         controls.autoRotateSpeed = 0.1;
 
         // ─── LIGHTING (Sunlight Simulation) ───
@@ -463,8 +463,8 @@
             metalness: 0.1
         });
         const earth = new THREE.Mesh(earthGeom, earthMat);
-        // Align Prime Meridian (Longitude 0) with the math logic
-        earth.rotation.y = Math.PI; 
+        // Correct the texture offset so Lat 0, Lon 0 is exactly in the Gulf of Guinea
+        earth.rotation.y = -Math.PI / 2; 
         scene.add(earth);
 
         // Atmosphere glow
@@ -607,16 +607,14 @@
         sensorBeam.visible = false;
         scene.add(sensorBeam);
 
-        // ─── lat/lon → 3D vector utility (Fixed Mapping) ───
+        // ─── lat/lon → 3D vector utility (Mathematically Pure Mapping) ───
         function latLonToVec3(lat, lon, radius) {
-            // 1. Convert degrees to radians and adjust for Spherical orientation
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 180) * (Math.PI / 180);
 
-            // 2. Map to X, Y, Z (Y is UP in Three.js standard)
             const x = -(radius * Math.sin(phi) * Math.cos(theta));
-            const y = (radius * Math.cos(phi));
-            const z = (radius * Math.sin(phi) * Math.sin(theta));
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
 
             return new THREE.Vector3(x, y, z);
         }
@@ -644,10 +642,14 @@
 
             for (let i = 0; i < activeSatCount; i++) {
                 const sat = fleetData[i];
-                // Swap Y and Z because Three.js uses Y as UP, but SGP4 uses Z as UP (North Pole)
-                const px = sat.position.x * SCALE_FACTOR;
-                const py = sat.position.z * SCALE_FACTOR; 
-                const pz = -sat.position.y * SCALE_FACTOR; 
+                
+                // Use the backend's true lat/lon calculation (Ground Track)
+                // Multiply EARTH_RADIUS by 1.05 to make them float slightly above the atmosphere
+                const pos = latLonToVec3(sat.lat, sat.lon, EARTH_RADIUS * 1.05);
+                
+                const px = pos.x; 
+                const py = pos.y; 
+                const pz = pos.z; 
 
                 const score = sat.current_score || 0.0;
                 const role = sat.role || 'FOLLOWER';
@@ -855,6 +857,18 @@
                     fleetData = data.satellites || [];
                     activeMission = data.active_mission;
                     currentMission = data.current_mission || null;
+
+                    // --- Daylight Cycle Sync ---
+                    if (data.sun_lon !== undefined) {
+                        // Use the exact same spherical math for the Sun so it aligns perfectly
+                        // Set radius to 2000 so it acts like a distant star
+                        const sunPos = latLonToVec3(0, data.sun_lon, 2000);
+                        sunLight.position.copy(sunPos);
+                        
+                        // Put the moon exactly on the opposite side of the Earth
+                        const moonPos = latLonToVec3(0, data.sun_lon + 180, 2000);
+                        moonLight.position.copy(moonPos);
+                    }
                 }
                 updateSatellitePositions();
                 if (firstFrame) {
@@ -880,6 +894,7 @@
             requestAnimationFrame(animate);
             const elapsed = clock.getElapsedTime();
             satMaterial.uniforms.uTime.value = elapsed;
+            // earth.rotation.y += 0.0002; // Disabled for static coordinate calibration
 
             // Animate target marker pulsing
             if (targetMarker.visible) {

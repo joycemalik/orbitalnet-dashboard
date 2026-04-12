@@ -3,6 +3,11 @@ import websockets
 import redis.asyncio as aioredis
 from redis.exceptions import ConnectionError as RedisConnectionError
 import json
+import logging
+
+# Silence harmless TCP drops and phantom handshakes from the browser
+logging.getLogger("websockets.server").setLevel(logging.ERROR)
+logging.getLogger("websockets.protocol").setLevel(logging.ERROR)
 
 # Connect to the async version of Redis (Memurai) using 127.0.0.1
 r = aioredis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True, max_connections=1000)
@@ -29,11 +34,15 @@ async def broadcast_telemetry(websocket):
             
             # Fetch geographic target mission for Rolling Enclave hand-off
             current_mission_raw = await r.get("CURRENT_MISSION")
+
+            # Fetch sun position for day/night cycle
+            current_sun_lon = await r.get("CURRENT_SUN_LON")
             
             payload = {
                 "satellites": [json.loads(item) for item in raw_data if item],
                 "active_mission": json.loads(active_mission_raw) if active_mission_raw else None,
-                "current_mission": json.loads(current_mission_raw) if current_mission_raw else None
+                "current_mission": json.loads(current_mission_raw) if current_mission_raw else None,
+                "sun_lon": float(current_sun_lon) if current_sun_lon else 0.0
             }
             
             await websocket.send(json.dumps(payload))

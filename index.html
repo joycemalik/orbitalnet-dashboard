@@ -880,7 +880,6 @@
             requestAnimationFrame(animate);
             const elapsed = clock.getElapsedTime();
             satMaterial.uniforms.uTime.value = elapsed;
-            // earth.rotation.y += 0.0002; // Disabled for static coordinate calibration
 
             // Animate target marker pulsing
             if (targetMarker.visible) {

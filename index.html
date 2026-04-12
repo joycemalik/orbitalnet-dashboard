@@ -747,6 +747,12 @@
                     missionDots[m].position.copy(targetPos);
                     missionDots[m].visible = true;
 
+                    // Scale marker ring to reflect the mission's operational radius
+                    // 500 km = scale 1.0 (baseline). 2000 km = scale 4.0.
+                    const radiusKm = mission.target_radius || 500;
+                    const visualScale = Math.max(0.4, radiusKm / 500);
+                    missionMarkers[m].scale.set(visualScale, visualScale, visualScale);
+
                     // Hide the per-mission beam (lasers are drawn per-satellite above)
                     missionBeams[m].visible = false;
                 } else {

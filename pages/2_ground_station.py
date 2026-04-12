@@ -5,7 +5,7 @@ import pandas as pd
 import random
 import time
 import uuid
-from scenario_engine import ScenarioManager, SCENARIOS
+from scenario_engine import ScenarioManager
 from config import get_redis_client
 
 st.set_page_config(layout="wide", page_title="Ground Station | OrbitalNet")
@@ -106,17 +106,22 @@ st.markdown("---")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.markdown("### Mission Deployment")
-    scenario_choice = st.selectbox("Select Mission Profile", list(SCENARIOS.keys()))
-    
-    # Display mission intel
-    st.info(SCENARIOS[scenario_choice]["description"])
-    st.write(f"**Required Nodes (M):** {SCENARIOS[scenario_choice]['m_required']}")
-    st.write(f"**Risk Profile:** {SCENARIOS[scenario_choice]['risk_profile']}")
+    st.markdown("### \U0001f6f0\ufe0f Mission Deployment")
 
-    if st.button("🚀 BROADCAST RFP (Initiate Consensus)", type="primary", width='stretch'):
-        result = director.dispatch_mission(scenario_choice)
-        st.success(f"RFP Broadcasted ({result}). Swarm is evaluating capability math.")
+    # Load the complex scenarios from the Campaign Manager
+    scenario_choice = st.selectbox("Select Mission Profile", list(director.SCENARIOS.keys()))
+    scenario_data = director.SCENARIOS[scenario_choice]
+
+    # Display tactical intel card
+    risk_color = {"EXTREME": "\U0001f7e5", "HIGH": "\U0001f7e0", "MODERATE": "\U0001f7e1", "LOW": "\U0001f7e2"}.get(scenario_data.get('risk_profile', ''), "\u26aa")
+    st.info(scenario_data["description"])
+    st.write(f"**Target:** `{scenario_data['lat']}° N, {scenario_data['lon']}° E`")
+    st.write(f"**Sensor:** `{scenario_data['sensor']}` | **Nodes (M):** `{scenario_data['m_required']}`")
+    st.write(f"**Radius:** `{scenario_data.get('target_radius', 1000)} km` | **Risk:** {risk_color} `{scenario_data.get('risk_profile', '?')}`")
+
+    if st.button("\U0001f6f0\ufe0f BROADCAST TACTICAL RFP", type="primary", width='stretch'):
+        mission_id = director.dispatch_mission(scenario_choice)
+        st.success(f"RFP `{mission_id}` Broadcasted. Swarm routing to coordinates.")
 
     st.markdown("---")
     st.markdown("### Chaos Engineering")
@@ -198,6 +203,7 @@ with st.form("mission_dispatch"):
     with col1:
         target_lat = st.number_input("Target Latitude", value=26.9) # Jaipur default
         target_lon = st.number_input("Target Longitude", value=75.8)
+        zone_radius = st.slider("Operational Radius (km)", 50, 2000, 500)
         nodes_required = st.slider("Nodes Required (M)", 1, 5, 3)
         
         # Hardware Selector
@@ -224,6 +230,7 @@ with st.form("mission_dispatch"):
             "name": f"MONITOR_{sensor_code}",
             "target_lat": target_lat,
             "target_lon": target_lon,
+            "target_radius": zone_radius,
             "active": True,
             "required_nodes": nodes_required,
             "sensor_required": sensor_code,
@@ -236,4 +243,4 @@ with st.form("mission_dispatch"):
         }
         # Use HSET to store multiple missions simultaneously
         r.hset("MISSIONS_LEDGER", mission_id, json.dumps(active_mission))
-        st.success(f"RFP {mission_id} Broadcasted for {sensor_code} satellites!")
+        st.success(f"RFP {mission_id} Broadcasted for {sensor_code} satellites within {zone_radius} km!")

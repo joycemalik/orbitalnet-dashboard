@@ -463,7 +463,7 @@
             metalness: 0.1
         });
         const earth = new THREE.Mesh(earthGeom, earthMat);
-        // Correct the texture offset so Lat 0, Lon 0 is exactly in the Gulf of Guinea
+        // Correct the texture offset so Lat 0, Lon 0 is perfectly aligned
         earth.rotation.y = -Math.PI / 2; 
         scene.add(earth);
 
@@ -501,7 +501,7 @@
         scene.add(orbitRing);
 
         // ─── SATELLITE BUFFER GEOMETRY ───
-        const MAX_SATS = 1000;
+        const MAX_SATS = 9537;
         const satGeometry = new THREE.BufferGeometry();
         const positions   = new Float32Array(MAX_SATS * 3);
         const colors      = new Float32Array(MAX_SATS * 3);
@@ -548,7 +548,7 @@
 
         // ─── STATE ───
         let fleetData = [];
-        let activeMission = null;
+        let activeMissions = [];  // Array of all concurrent missions
         let currentMission = null;
         let activeSatCount = 0;
 
@@ -567,52 +567,64 @@
         const laserLines = new THREE.LineSegments(laserGeom, laserMat);
         scene.add(laserLines);
 
-        // ─── GEOGRAPHIC TARGET MARKER (pulsing ring on Earth surface) ───
-        const targetRingGeom = new THREE.RingGeometry(1.5, 2.5, 32);
-        const targetRingMat = new THREE.MeshBasicMaterial({
-            color: 0xff3344,
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending,
-        });
-        const targetMarker = new THREE.Mesh(targetRingGeom, targetRingMat);
-        targetMarker.visible = false;
-        scene.add(targetMarker);
+        // ─── MULTI-MISSION TARGET MARKERS (pool of reusable markers) ───
+        const MAX_MISSIONS = 10;
+        const MISSION_COLORS = [0xff3344, 0xff8800, 0xffee00, 0x00ffaa, 0x00aaff, 0xaa44ff, 0xff44aa, 0x44ffaa, 0xff6644, 0x4488ff];
+        const missionMarkers = [];
+        const missionDots = [];
+        const missionBeams = [];
 
-        // Inner ping dot
-        const targetDotGeom = new THREE.SphereGeometry(1.0, 16, 16);
-        const targetDotMat = new THREE.MeshBasicMaterial({
-            color: 0xff3344,
-            transparent: true,
-            opacity: 0.9,
-            blending: THREE.AdditiveBlending,
-        });
-        const targetDot = new THREE.Mesh(targetDotGeom, targetDotMat);
-        targetDot.visible = false;
-        scene.add(targetDot);
+        for (let m = 0; m < MAX_MISSIONS; m++) {
+            // Ring marker
+            const ringGeom = new THREE.RingGeometry(1.5, 2.5, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: MISSION_COLORS[m % MISSION_COLORS.length],
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+            });
+            const marker = new THREE.Mesh(ringGeom, ringMat);
+            marker.visible = false;
+            scene.add(marker);
+            missionMarkers.push(marker);
 
-        // ─── SENSOR BEAM (Active Lead → Target) ───
-        const sensorBeamGeom = new THREE.BufferGeometry();
-        const sensorBeamPositions = new Float32Array(6); // 2 points × 3 coords
-        sensorBeamGeom.setAttribute('position', new THREE.BufferAttribute(sensorBeamPositions, 3));
-        const sensorBeamMat = new THREE.LineBasicMaterial({
-            color: 0x00ff88,
-            transparent: true,
-            opacity: 0.7,
-            linewidth: 2,
-            blending: THREE.AdditiveBlending,
-        });
-        const sensorBeam = new THREE.LineSegments(sensorBeamGeom, sensorBeamMat);
-        sensorBeam.visible = false;
-        scene.add(sensorBeam);
+            // Inner dot
+            const dotGeom = new THREE.SphereGeometry(1.0, 16, 16);
+            const dotMat = new THREE.MeshBasicMaterial({
+                color: MISSION_COLORS[m % MISSION_COLORS.length],
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending,
+            });
+            const dot = new THREE.Mesh(dotGeom, dotMat);
+            dot.visible = false;
+            scene.add(dot);
+            missionDots.push(dot);
+
+            // Sensor beam
+            const beamGeom = new THREE.BufferGeometry();
+            const beamPositions = new Float32Array(6);
+            beamGeom.setAttribute('position', new THREE.BufferAttribute(beamPositions, 3));
+            const beamMat = new THREE.LineBasicMaterial({
+                color: MISSION_COLORS[m % MISSION_COLORS.length],
+                transparent: true,
+                opacity: 0.7,
+                linewidth: 2,
+                blending: THREE.AdditiveBlending,
+            });
+            const beam = new THREE.LineSegments(beamGeom, beamMat);
+            beam.visible = false;
+            scene.add(beam);
+            missionBeams.push(beam);
+        }
 
         // ─── lat/lon → 3D vector utility (Mathematically Pure Mapping) ───
         function latLonToVec3(lat, lon, radius) {
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 180) * (Math.PI / 180);
+            const phi   = (90 - lat)  * (Math.PI / 180);
+            const theta = lon * (Math.PI / 180);
 
-            const x = -(radius * Math.sin(phi) * Math.cos(theta));
+            const x = radius * Math.sin(phi) * Math.cos(theta);
             const y = radius * Math.cos(phi);
             const z = radius * Math.sin(phi) * Math.sin(theta);
 
@@ -676,19 +688,20 @@
                     activeLeadSat = { id: sat.id, score: score, px, py, pz };
                 } else if (role === 'MISSION_ACTIVE') {
                     sizes[i] = SAT_BASE_SIZE * 4 + score * 0.5;
-                    // Draw a laser if we have a target (existing enclave system)
-                    if (activeMission && activeMission.target && laserIndex < MAX_LASERS) {
-                        const tx = activeMission.target.x * SCALE_FACTOR;
-                        const ty = activeMission.target.y * SCALE_FACTOR;
-                        const tz = activeMission.target.z * SCALE_FACTOR;
-                        
-                        laserPositions[laserIndex * 6] = px;
-                        laserPositions[laserIndex * 6 + 1] = py;
-                        laserPositions[laserIndex * 6 + 2] = pz;
-                        laserPositions[laserIndex * 6 + 3] = tx;
-                        laserPositions[laserIndex * 6 + 4] = ty;
-                        laserPositions[laserIndex * 6 + 5] = tz;
-                        laserIndex++;
+                    // Draw a laser from this node to its assigned mission target
+                    const missionId = sat.current_mission_id;
+                    if (missionId && laserIndex < MAX_LASERS) {
+                        const assignedMission = activeMissions.find(m => m.id === missionId);
+                        if (assignedMission && assignedMission.target_lat !== undefined) {
+                            const tPos = latLonToVec3(assignedMission.target_lat, assignedMission.target_lon, EARTH_RADIUS * 1.005);
+                            laserPositions[laserIndex * 6] = px;
+                            laserPositions[laserIndex * 6 + 1] = py;
+                            laserPositions[laserIndex * 6 + 2] = pz;
+                            laserPositions[laserIndex * 6 + 3] = tPos.x;
+                            laserPositions[laserIndex * 6 + 4] = tPos.y;
+                            laserPositions[laserIndex * 6 + 5] = tPos.z;
+                            laserIndex++;
+                        }
                     }
                 } else if (role === 'PLANE_LEAD') {
                     sizes[i] = SAT_BASE_SIZE * 3 + score * 0.5;
@@ -707,43 +720,49 @@
                 else                  buckets[3]++;
             }
 
-            // ── Geographic Target Marker + Sensor Beam ──
+            // ── Multi-Mission Target Markers ──
             const nocPanel = document.getElementById('noc-panel');
+            
+            // Merge currentMission (Rolling Enclave) into the missions array for unified rendering
+            const allMissions = [...activeMissions];
             if (currentMission && currentMission.active) {
-                const targetPos = latLonToVec3(
-                    currentMission.target_lat,
-                    currentMission.target_lon,
-                    EARTH_RADIUS * 1.005  // Slightly above surface
-                );
+                allMissions.push(currentMission);
+            }
 
-                // Position the target marker
-                targetMarker.position.copy(targetPos);
-                targetMarker.lookAt(0, 0, 0);  // Face outward from Earth center
-                targetMarker.visible = true;
+            // Render each mission's target marker
+            for (let m = 0; m < MAX_MISSIONS; m++) {
+                if (m < allMissions.length && allMissions[m].target_lat !== undefined) {
+                    const mission = allMissions[m];
+                    const targetPos = latLonToVec3(
+                        mission.target_lat,
+                        mission.target_lon,
+                        EARTH_RADIUS * 1.005
+                    );
 
-                targetDot.position.copy(targetPos);
-                targetDot.visible = true;
+                    missionMarkers[m].position.copy(targetPos);
+                    missionMarkers[m].lookAt(0, 0, 0);
+                    missionMarkers[m].visible = true;
 
-                // Draw sensor beam from active lead to target
-                if (activeLeadSat) {
-                    sensorBeamPositions[0] = activeLeadSat.px;
-                    sensorBeamPositions[1] = activeLeadSat.py;
-                    sensorBeamPositions[2] = activeLeadSat.pz;
-                    sensorBeamPositions[3] = targetPos.x;
-                    sensorBeamPositions[4] = targetPos.y;
-                    sensorBeamPositions[5] = targetPos.z;
-                    sensorBeamGeom.attributes.position.needsUpdate = true;
-                    sensorBeam.visible = true;
+                    missionDots[m].position.copy(targetPos);
+                    missionDots[m].visible = true;
+
+                    // Hide the per-mission beam (lasers are drawn per-satellite above)
+                    missionBeams[m].visible = false;
                 } else {
-                    sensorBeam.visible = false;
+                    missionMarkers[m].visible = false;
+                    missionDots[m].visible = false;
+                    missionBeams[m].visible = false;
                 }
+            }
 
-                // Update NOC panel
+            // Update NOC panel with summary
+            if (allMissions.length > 0) {
                 nocPanel.classList.add('mission-active');
-                document.getElementById('noc-status').textContent = 'TRACKING';
+                document.getElementById('noc-status').textContent = `TRACKING (${allMissions.length})`;
                 document.getElementById('noc-status').style.color = '#00ff88';
+                const first = allMissions[0];
                 document.getElementById('noc-target').textContent =
-                    `${currentMission.target_name || 'Custom'} (${currentMission.target_lat.toFixed(2)}°, ${currentMission.target_lon.toFixed(2)}°)`;
+                    `${first.name || first.target_name || 'Custom'} (${(first.target_lat||0).toFixed(2)}°, ${(first.target_lon||0).toFixed(2)}°)`;
 
                 if (activeLeadSat) {
                     document.getElementById('noc-lead').textContent = activeLeadSat.id;
@@ -754,10 +773,6 @@
                     document.getElementById('noc-lead-score').textContent = '—';
                 }
             } else {
-                // No active geographic mission
-                targetMarker.visible = false;
-                targetDot.visible = false;
-                sensorBeam.visible = false;
                 nocPanel.classList.remove('mission-active');
                 document.getElementById('noc-status').textContent = 'NO ACTIVE MISSION';
                 document.getElementById('noc-status').style.color = '#5a6e82';
@@ -855,17 +870,14 @@
                     fleetData = data;
                 } else {
                     fleetData = data.satellites || [];
-                    activeMission = data.active_mission;
+                    activeMissions = data.active_missions || [];
                     currentMission = data.current_mission || null;
 
                     // --- Daylight Cycle Sync ---
                     if (data.sun_lon !== undefined) {
-                        // Use the exact same spherical math for the Sun so it aligns perfectly
-                        // Set radius to 2000 so it acts like a distant star
                         const sunPos = latLonToVec3(0, data.sun_lon, 2000);
                         sunLight.position.copy(sunPos);
                         
-                        // Put the moon exactly on the opposite side of the Earth
                         const moonPos = latLonToVec3(0, data.sun_lon + 180, 2000);
                         moonLight.position.copy(moonPos);
                     }
@@ -896,20 +908,23 @@
             satMaterial.uniforms.uTime.value = elapsed;
             // earth.rotation.y += 0.0002; // Disabled for static coordinate calibration
 
-            // Animate target marker pulsing
-            if (targetMarker.visible) {
-                const pulse = 0.5 + 0.5 * Math.sin(elapsed * 3.0);
-                targetRingMat.opacity = 0.3 + pulse * 0.5;
-                targetDotMat.opacity = 0.5 + pulse * 0.4;
-                const scale = 0.8 + pulse * 0.4;
-                targetMarker.scale.set(scale, scale, scale);
-            }
+            // Animate target markers pulsing
+            missionMarkers.forEach((marker, m) => {
+                if (marker.visible) {
+                    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 3.0 + m);
+                    const dot = missionDots[m];
+                    
+                    marker.material.opacity = 0.3 + pulse * 0.5;
+                    if (dot) dot.material.opacity = 0.5 + pulse * 0.4;
+                    
+                    const scale = 0.8 + pulse * 0.4;
+                    marker.scale.set(scale, scale, scale);
+                }
+            });
 
-            // Animate sensor beam pulsing
-            if (sensorBeam.visible) {
-                const beamPulse = 0.4 + 0.4 * Math.sin(elapsed * 4.0);
-                sensorBeamMat.opacity = beamPulse;
-            }
+            // Animate laser enclave pulsing
+            const laserPulse = 0.5 + 0.3 * Math.sin(elapsed * 4.0);
+            laserMat.opacity = laserPulse;
 
             controls.update();
             renderer.render(scene, camera);

@@ -405,6 +405,7 @@
         <div class="tip-row"><span>Battery SOC</span><span class="tip-val" id="tip-soc"></span></div>
         <div class="tip-row"><span>Thermal</span><span class="tip-val" id="tip-thermal"></span></div>
         <div class="tip-row"><span>ISL Throughput</span><span class="tip-val" id="tip-isl"></span></div>
+        <div class="tip-row"><span>Payload</span><span class="tip-val" id="tip-payload"></span></div>
     </div>
 
     <div id="globeContainer"></div>
@@ -845,6 +846,9 @@
                     document.getElementById('tip-thermal').textContent = ((gk.thermal_margin || 0) * 100).toFixed(1) + '%';
                     const eff = sat.telemetry?.P2_Efficiency || {};
                     document.getElementById('tip-isl').textContent     = ((eff.isl_throughput || 0) * 100).toFixed(1) + '%';
+                    
+                    // Display hardware classification
+                    document.getElementById('tip-payload').textContent = sat.payload_type || 'UNKNOWN';
                     return;
                 }
             }

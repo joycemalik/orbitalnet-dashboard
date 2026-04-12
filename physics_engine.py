@@ -4,6 +4,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import time
 import json
 import math
+import hashlib
 from datetime import datetime, timezone, timedelta
 from hal_simulator import MockHAL
 from scoring_engine import compute_final_score
@@ -52,10 +53,39 @@ def load_satellites(filepath):
                 satellites[name] = satrec
     return satellites
 
-import random
+# Define primary hardware categories
+PAYLOAD_TYPES = ["EO", "SAR", "MW", "SIGINT", "RELAY"]
 
-# Define the fleet distribution
-PAYLOAD_TYPES = ["EO", "EO", "SAR", "MW", "SIGINT", "RELAY"]
+def classify_satellite(name):
+    """Categorizes hardware payload based on real-world satellite constellations."""
+    name = name.upper()
+    
+    # 1. Ka/Ku-Band Communications
+    if any(x in name for x in ["STARLINK", "ONEWEB", "IRIDIUM", "GLOBALSTAR", "O3B"]):
+        return "RELAY"
+        
+    # 2. Microwave/Weather
+    elif any(x in name for x in ["NOAA", "GOES", "METEOR", "FENGYUN", "METOP"]):
+        return "MW"
+        
+    # 3. Synthetic Aperture Radar (SAR) - Cloud penetrating
+    elif any(x in name for x in ["SENTINEL-1", "RADARSAT", "ICEYE", "CAPELLA", "TERRASAR"]):
+        return "SAR"
+        
+    # 4. Electro-Optical (High-Res Visual)
+    elif any(x in name for x in ["LANDSAT", "SENTINEL-2", "WORLDVIEW", "PLANET", "SKYSAT", "SPOT"]):
+        return "EO"
+        
+    # 5. Signals Intelligence / Military
+    elif any(x in name for x in ["NROL", "USA ", "COSMOS", "YAOGAN"]):
+        return "SIGINT"
+        
+    else:
+        # Fallback: Deterministic assignment for unknown satellites.
+        # Hashing the name guarantees 'SATELLITE X' is always 'SAR', even after a reboot.
+        val = int(hashlib.md5(name.encode()).hexdigest(), 16)
+        types = ["EO", "SAR", "MW", "SIGINT"]
+        return types[val % len(types)]
 
 def start_engine():
     fleet = load_satellites('satellites.txt')
@@ -63,8 +93,8 @@ def start_engine():
     # Initialize HAL instances for dynamic telemetry
     hal_instances = {name: MockHAL(name) for name in fleet.keys()}
     
-    # Assign a permanent hardware tag to each satellite once
-    fleet_hardware = {name: random.choice(PAYLOAD_TYPES) for name in fleet.keys()}
+    # Map every satellite to its realistic hardware payload deterministically
+    fleet_hardware = {name: classify_satellite(name) for name in fleet.keys()}
     
     print(f"Loaded {len(fleet)} satellites. Booting SGP4 engine...")
     

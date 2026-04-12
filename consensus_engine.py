@@ -53,46 +53,48 @@ def elect_plane_leaders():
                 
             print(f"Elected {len(leaders)} Plane Leaders across {len(planes)} active orbital planes.")
             
-            # --- TIER 3 ENCLAVE FORMATION ---
-            mission_data_raw = r.get("ACTIVE_MISSION")
-            if mission_data_raw:
-                mission = json.loads(mission_data_raw)
+            # --- TIER 3: MULTI-MISSION SCHEDULER ---
+            # 1. Get all missions from the Ledger
+            all_missions_raw = r.hgetall("MISSIONS_LEDGER")
+            
+            for mission_id, mission_json in all_missions_raw.items():
+                mission = json.loads(mission_json)
+                
                 if mission.get("status") == "OPEN_AUCTION":
-                    print(f"Detected Open RFP for {mission['required_nodes']} nodes...")
+                    required_sensor = mission.get("sensor_required", "EO")
+                    print(f"Auction open for {mission_id} (Requires: {required_sensor})")
                     
-                    required_sensor = mission.get("sensor_required", "EO") # Default to EO if not specified
-                    
-                    # 1. P0 GATEKEEPER: Filter by hardware capability AND lock status
+                    # 2. P0 GATEKEEPER: Filter by Lock Status AND Hardware Type
                     eligible_bidders = []
                     for sat in fleet:
-                        # Must be a Plane Lead, must not be locked, AND MUST HAVE THE RIGHT HARDWARE
-                        if (sat.get('role') == 'PLANE_LEAD' and 
-                            sat['telemetry']['P0_Gatekeepers']['is_task_locked'] == 0.0 and
-                            sat.get('payload_type') == required_sensor):
-                            
+                        # Defensive check for P0 lock status
+                        is_locked = sat.get('telemetry', {}).get('P0_Gatekeepers', {}).get('is_task_locked', 1.0)
+                        
+                        # Any IDLE satellite with the correct sensor can now bid!
+                        if (is_locked == 0.0 and sat.get('payload_type') == required_sensor):
                             eligible_bidders.append(sat)
                     
-                    # 2. Sort them by their current capability score
+                    # 3. Sort and Select
                     eligible_bidders.sort(key=lambda x: x.get('current_score', 0.0), reverse=True)
-                    
-                    # 3. Select the Top M nodes to form the Enclave
                     m_nodes = mission['required_nodes']
                     
                     if len(eligible_bidders) >= m_nodes:
                         winning_team = eligible_bidders[:m_nodes]
                         
-                        # Lock nodes and form enclave
+                        # Lock nodes
                         for sat in winning_team:
                             sat['role'] = 'MISSION_ACTIVE'
+                            sat['current_mission_id'] = mission_id
                             sat['telemetry']['P0_Gatekeepers']['is_task_locked'] = 1.0 
                             r.set(sat['id'], json.dumps(sat))
                         
+                        # Close Auction
                         mission['status'] = "EXECUTING"
                         mission['enclave'] = [sat['id'] for sat in winning_team]
-                        r.set("ACTIVE_MISSION", json.dumps(mission))
-                        print(f"Enclave Formed! {m_nodes} {required_sensor} nodes locked.")
+                        r.hset("MISSIONS_LEDGER", mission_id, json.dumps(mission))
+                        print(f"Enclave Formed for {mission_id}! {m_nodes} {required_sensor} nodes locked.")
                     else:
-                        print(f"AUCTION FAILED: Not enough {required_sensor} nodes available.")
+                        print(f"AUCTION PENDING for {mission_id}: Not enough {required_sensor} nodes available yet.")
             
             # Run election every 5 seconds (doesn't need to be 1Hz like physics)
             time.sleep(5)

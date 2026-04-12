@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import random
 import time
+import uuid
 from scenario_engine import ScenarioManager, SCENARIOS
 from config import get_redis_client
 
@@ -16,7 +17,7 @@ st.title("📡 Tactical Ground Station")
 st.markdown("---")
 st.subheader("⏱️ Chronos Override (Time Control)")
 # 1x = Real Time | 60x = 1 Minute per Second | 3600x = 1 Hour per Second
-time_multiplier = st.slider("Simulation Speed Multiplier", min_value=1, max_value=3600, value=60)
+time_multiplier = st.slider("Simulation Speed Multiplier", min_value=1, max_value=7200, value=60)
 
 # Instantly push the speed to the physics engine
 r.set("TIME_MULTIPLIER", time_multiplier)
@@ -114,8 +115,8 @@ with col1:
     st.write(f"**Risk Profile:** {SCENARIOS[scenario_choice]['risk_profile']}")
 
     if st.button("🚀 BROADCAST RFP (Initiate Consensus)", type="primary", width='stretch'):
-        director.dispatch_mission(scenario_choice)
-        st.success("RFP Broadcasted. Swarm is evaluating capability math.")
+        result = director.dispatch_mission(scenario_choice)
+        st.success(f"RFP Broadcasted ({result}). Swarm is evaluating capability math.")
 
     st.markdown("---")
     st.markdown("### Chaos Engineering")
@@ -133,36 +134,43 @@ with col1:
 
 with col2:
     st.markdown("### Active Enclave Telemetry")
-    mission_raw = r.get("ACTIVE_MISSION")
+    try:
+        all_missions_raw = r.hgetall("MISSIONS_LEDGER")
+    except Exception:
+        all_missions_raw = {}
     
-    if mission_raw:
-        mission = json.loads(mission_raw)
-        st.write(f"**Mission:** `{mission.get('name', 'CUSTOM')}`")
-        st.write(f"**Current Status:** `{mission['status']}`")
+    if all_missions_raw:
+        for mid, mjson in all_missions_raw.items():
+            mission = json.loads(mjson)
+            status_color = "🟢" if mission['status'] == "EXECUTING" else "🟡" if mission['status'] == "OPEN_AUCTION" else "⚪"
+            with st.expander(f"{status_color} {mid} — {mission.get('name', 'CUSTOM')} [{mission.get('sensor_required', '?')}]", expanded=(mission['status'] == 'EXECUTING')):
+                st.write(f"**Status:** `{mission['status']}`")
+                st.write(f"**Sensor:** `{mission.get('sensor_required', 'EO')}` | **Nodes:** `{mission.get('required_nodes', '?')}`")
+                st.write(f"**Target:** `{mission.get('target_lat', 0):.2f}°, {mission.get('target_lon', 0):.2f}°`")
+                
+                if mission['status'] == "EXECUTING" and mission.get('enclave'):
+                    try:
+                        enclave_data = r.mget(mission['enclave'])
+                        fleet = [json.loads(item) for item in enclave_data if item]
+                        if fleet:
+                            df = pd.DataFrame([{
+                                "Node ID": s['id'],
+                                "Role": s.get('role', 'UNKNOWN'),
+                                "Payload": s.get('payload_type', '?'),
+                                "Score (C_i)": round(s.get('current_score', 0), 4),
+                                "Battery": f"{s['telemetry']['P0_Gatekeepers']['soc'] * 100:.1f}%"
+                            } for s in fleet])
+                            st.dataframe(df, width='stretch')
+                    except Exception:
+                        st.warning("Enclave nodes not responding.")
+                
+                elif mission['status'] == "OPEN_AUCTION":
+                    st.warning("⏳ Auction open. Plane Leads are bidding...")
         
-        if mission['status'] == "EXECUTING" and mission.get('enclave'):
-            st.markdown("#### 🔒 Locked Satellites (Enclave)")
-            
-            # Fetch real-time data for the executing satellites
-            enclave_data = r.mget(mission['enclave'])
-            fleet = [json.loads(item) for item in enclave_data if item]
-            
-            if fleet:
-                df = pd.DataFrame([{
-                    "Node ID": s['id'],
-                    "Role": s.get('role', 'UNKNOWN'),
-                    "Capability Score (C_i)": round(s.get('current_score', 0), 4),
-                    "Battery (SoC)": f"{s['telemetry']['P0_Gatekeepers']['soc'] * 100:.1f}%"
-                } for s in fleet])
-                
-                st.dataframe(df, width='stretch')
-            else:
-                st.warning("Enclave nodes not responding. Possible network fault.")
-                
-        elif mission['status'] == "OPEN_AUCTION":
-            st.warning("⏳ Auction open. Plane Leads are bidding...")
-        else:
-            st.info(f"Mission status: {mission['status']}")
+        # Purge button
+        if st.button("🗑️ Purge All Missions", type="secondary"):
+            r.delete("MISSIONS_LEDGER")
+            st.warning("All missions purged from ledger.")
     else:
         st.write("No active missions. Fleet is holding idle consensus.")
 
@@ -191,6 +199,9 @@ with st.form("mission_dispatch"):
         target_lat = st.number_input("Target Latitude", value=26.9) # Jaipur default
         target_lon = st.number_input("Target Longitude", value=75.8)
         nodes_required = st.slider("Nodes Required (M)", 1, 5, 3)
+        
+        # Hardware Selector
+        sensor_type = st.selectbox("Required Sensor Payload", ["EO (Optical)", "SAR (Radar)", "SIGINT (Signals)", "MW (Weather)"])
     
     with col2:
         st.markdown("**Mission Parameter Weights**")
@@ -201,14 +212,21 @@ with st.form("mission_dispatch"):
     submitted = st.form_submit_button("Broadcast Request For Proposal (RFP)")
     
     if submitted:
+        # Unique Mission ID
+        mission_id = f"OPS-{uuid.uuid4().hex[:6].upper()}"
+        
+        # Extract just the prefix (e.g., "EO", "SAR")
+        sensor_code = sensor_type.split(" ")[0]
+        
         active_mission = {
+            "id": mission_id,
             "status": "OPEN_AUCTION",
-            "name": "TACTICAL_OVERRIDE",
+            "name": f"MONITOR_{sensor_code}",
             "target_lat": target_lat,
             "target_lon": target_lon,
             "active": True,
             "required_nodes": nodes_required,
-            "sensor_required": "EO",
+            "sensor_required": sensor_code,
             "weights": {
                 "soc": w_battery,
                 "mean_motion": w_speed,
@@ -216,5 +234,6 @@ with st.form("mission_dispatch"):
             },
             "enclave": []
         }
-        r.set("ACTIVE_MISSION", json.dumps(active_mission))
-        st.success("RFP Broadcasted to Fleet! Awaiting Enclave Formation...")
+        # Use HSET to store multiple missions simultaneously
+        r.hset("MISSIONS_LEDGER", mission_id, json.dumps(active_mission))
+        st.success(f"RFP {mission_id} Broadcasted for {sensor_code} satellites!")

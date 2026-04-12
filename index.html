@@ -464,8 +464,10 @@
             metalness: 0.1
         });
         const earth = new THREE.Mesh(earthGeom, earthMat);
-        // Correct the texture offset so Lat 0, Lon 0 is perfectly aligned
-        earth.rotation.y = -Math.PI / 2; 
+        // NO rotation needed: Three.js SphereGeometry places the Prime Meridian
+        // at local +X naturally. Our latLonToVec3 also places lon=0 at +X.
+        // Any earth.rotation.y offset would desync the texture from the markers.
+        earth.rotation.y = 0;
         scene.add(earth);
 
         // Atmosphere glow
@@ -620,14 +622,18 @@
             missionBeams.push(beam);
         }
 
-        // ─── lat/lon → 3D vector utility (Mathematically Pure Mapping) ───
+        // ─── lat/lon → 3D vector utility ───
+        // Derived from the THREE.SphereGeometry UV formula:
+        //   x = -R·cos(phi_az)·sin(polar)  →  R·sin(phi)·cos(theta)  ✓
+        //   z =  R·sin(phi_az)·sin(polar)  →  -R·sin(phi)·sin(theta) ← NOTE: negative z
+        // With earth.rotation.y=0, Prime Meridian texture (local +X) == lon=0 marker (+X). ✓
         function latLonToVec3(lat, lon, radius) {
-            const phi   = (90 - lat)  * (Math.PI / 180);
-            const theta = lon * (Math.PI / 180);
+            const phi   = (90 - lat) * (Math.PI / 180);  // polar angle from north
+            const theta = lon        * (Math.PI / 180);  // azimuthal angle
 
-            const x = radius * Math.sin(phi) * Math.cos(theta);
-            const y = radius * Math.cos(phi);
-            const z = radius * Math.sin(phi) * Math.sin(theta);
+            const x =  radius * Math.sin(phi) * Math.cos(theta);
+            const y =  radius * Math.cos(phi);
+            const z = -radius * Math.sin(phi) * Math.sin(theta);  // negative: matches sphere UV
 
             return new THREE.Vector3(x, y, z);
         }

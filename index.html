@@ -408,6 +408,38 @@
         <div class="tip-row"><span>Payload</span><span class="tip-val" id="tip-payload"></span></div>
     </div>
 
+    <!-- Hardware Legend -->
+    <div id="hardware-legend" style="position:fixed;bottom:20px;left:20px;background:rgba(5,8,15,0.88);padding:15px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);z-index:200;font-family:'Courier New',monospace;">
+        <div style="color:#c8d6e5;margin-bottom:9px;font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">&#9632; Hardware Legend</div>
+        <div style="font-size:0.7rem;color:#8899aa;line-height:2.0;">
+            <span style="color:#cc33ff;font-size:1.1em;">&#9679;</span> SAR &nbsp;&mdash; Cloud-Penetrating Radar<br>
+            <span style="color:#3399ff;font-size:1.1em;">&#9679;</span> EO &nbsp;&nbsp;&#8212; Electro-Optical Camera<br>
+            <span style="color:#ffcc1a;font-size:1.1em;">&#9679;</span> SIGINT &#8212; Signals Intelligence<br>
+            <span style="color:#ff8000;font-size:1.1em;">&#9679;</span> MW &nbsp;&nbsp;&#8212; Microwave / Weather<br>
+            <span style="color:#555;font-size:1.1em;">&#9679;</span> RELAY &#8212; Comms Backbone<br>
+            <span style="color:#00ff88;font-size:1.1em;">&#9679;</span> ACTIVE &#8212; Enclave Executing Mission<br>
+            <span style="color:#fff;font-size:1.1em;">&#9679;</span> LEAD &nbsp;&#8212; Rolling Enclave Lead
+        </div>
+    </div>
+
+    <!-- Click-to-Lock Satellite Panel -->
+    <div id="locked-panel" style="display:none;position:fixed;top:20px;right:20px;background:rgba(5,8,15,0.96);padding:20px;border-radius:10px;border:1px solid #00ff88;z-index:300;width:290px;box-shadow:0 0 24px rgba(0,255,136,0.15);font-family:'Courier New',monospace;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <span id="lock-id" style="color:#00ff88;font-size:0.95rem;font-weight:bold;"></span>
+            <button onclick="document.getElementById('locked-panel').style.display='none';lockedSatId=null;" style="background:none;border:none;color:#ff3344;cursor:pointer;font-size:1.1rem;font-weight:bold;padding:0;">&#x2715;</button>
+        </div>
+        <div style="font-size:0.72rem;color:#c8d6e5;line-height:2.0;">
+            <span style="color:#8899aa;">HARDWARE&nbsp;</span><span id="lock-payload" style="color:#ffcc1a;font-weight:bold;"></span><br>
+            <span style="color:#8899aa;">MISSION&nbsp;&nbsp;</span><span id="lock-mission" style="color:#00aaff;"></span><br>
+            <span style="color:#8899aa;">LAT / LON </span><span id="lock-coords"></span><br>
+            <span style="color:#8899aa;">BATTERY&nbsp;&nbsp;</span><span id="lock-soc"></span><br>
+            <span style="color:#8899aa;">THERMAL&nbsp;&nbsp;</span><span id="lock-thermal-l"></span><br>
+            <span style="color:#8899aa;">ISL THRU &nbsp;</span><span id="lock-isl"></span><br>
+            <span style="color:#8899aa;">SCORE C&#7522; </span><span id="lock-score" style="color:#00ff88;font-weight:bold;"></span><br>
+            <span style="color:#8899aa;">ROLE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span id="lock-role"></span>
+        </div>
+    </div>
+
     <div id="globeContainer"></div>
 
     <!-- Three.js from CDN -->
@@ -837,6 +869,9 @@
             document.getElementById('bar-warning').style.flex  = buckets[1] / total;
             document.getElementById('bar-nominal').style.flex  = buckets[2] / total;
             document.getElementById('bar-optimal').style.flex  = buckets[3] / total;
+
+            // Update the locked satellite panel (if one is selected)
+            updateLockedPanel();
         }
 
         // ─── RAYCASTER FOR HOVER TOOLTIP ───
@@ -878,6 +913,76 @@
             }
             tooltip.style.display = 'none';
         });
+
+        // ─── CLICK TO LOCK ───
+        let lockedSatId = null;
+
+        renderer.domElement.addEventListener('click', () => {
+            if (tooltip.style.display === 'block') {
+                lockedSatId = document.getElementById('tip-name').textContent;
+            }
+        });
+
+        function updateLockedPanel() {
+            if (!lockedSatId) return;
+            const sat = fleetData.find(s => s.id === lockedSatId);
+            if (!sat) return;
+
+            document.getElementById('locked-panel').style.display = 'block';
+            document.getElementById('lock-id').textContent = sat.id;
+
+            const payloadColors = { SAR:'#cc33ff', EO:'#3399ff', SIGINT:'#ffcc1a', MW:'#ff8000', RELAY:'#666' };
+            const pColor = payloadColors[sat.payload_type] || '#00ff88';
+            document.getElementById('lock-payload').style.color = pColor;
+            document.getElementById('lock-payload').textContent = sat.payload_type || 'UNKNOWN';
+
+            // Resolve mission from enclave lists
+            let missionName = 'IDLE';
+            let missionColor = '#8899aa';
+            for (let m = 0; m < activeMissions.length; m++) {
+                if (activeMissions[m].enclave && activeMissions[m].enclave.includes(sat.id)) {
+                    missionName = activeMissions[m].name || activeMissions[m].id;
+                    missionColor = '#00ff88';
+                    break;
+                }
+            }
+            const lockMission = document.getElementById('lock-mission');
+            lockMission.textContent = missionName;
+            lockMission.style.color = missionColor;
+
+            document.getElementById('lock-coords').textContent =
+                `${(sat.lat || 0).toFixed(2)}\u00b0 N, ${(sat.lon || 0).toFixed(2)}\u00b0 E`;
+
+            const gk = sat.telemetry?.P0_Gatekeepers || {};
+            const soc = (gk.soc || 0) * 100;
+            const socEl = document.getElementById('lock-soc');
+            socEl.textContent = soc.toFixed(1) + '%';
+            socEl.style.color = soc > 60 ? '#00ff88' : soc > 30 ? '#ffcc1a' : '#ff3344';
+
+            document.getElementById('lock-thermal-l').textContent =
+                ((gk.thermal_margin || 0) * 100).toFixed(1) + '%';
+
+            const eff = sat.telemetry?.P2_Efficiency || {};
+            document.getElementById('lock-isl').textContent =
+                ((eff.isl_throughput || 0) * 100).toFixed(1) + '%';
+
+            document.getElementById('lock-score').textContent =
+                (sat.current_score || 0).toFixed(4);
+
+            // Role badge
+            let roleTxt = 'FOLLOWER';
+            for (let m = 0; m < activeMissions.length; m++) {
+                if (activeMissions[m].enclave && activeMissions[m].enclave.includes(sat.id)) {
+                    roleTxt = 'MISSION ACTIVE';
+                    break;
+                }
+            }
+            if (sat.is_active_lead) roleTxt = 'ACTIVE LEAD';
+            const roleEl = document.getElementById('lock-role');
+            roleEl.textContent = roleTxt;
+            roleEl.style.color = roleTxt === 'MISSION ACTIVE' ? '#00ff88' :
+                                  roleTxt === 'ACTIVE LEAD'   ? '#ffffff' : '#5a6e82';
+        }
 
         // ─── WEBSOCKET ───
         const statusText = document.getElementById('ws-status');

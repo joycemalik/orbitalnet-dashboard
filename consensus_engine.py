@@ -97,6 +97,7 @@ def elect_plane_leaders():
 
                     if len(eligible_bidders) >= m_nodes:
                         winning_team = eligible_bidders[:m_nodes]
+                        winning_ids  = {sat['id'] for sat in winning_team}
 
                         for sat in winning_team:
                             sat['role'] = 'MISSION_ACTIVE'
@@ -108,6 +109,30 @@ def elect_plane_leaders():
                         mission['enclave'] = [sat['id'] for sat in winning_team]
                         r.hset("MISSIONS_LEDGER", mission_id, json.dumps(mission))
                         print(f"[OK] Enclave Formed: {mission_id} -- {m_nodes} x {required_sensor} within {max_view_distance:.0f} km locked.")
+
+                        # --- EXPORT TRANSPARENCY DATA (Auction Forensics) ---
+                        auction_log = {
+                            "mission_id":  mission_id,
+                            "sensor":      required_sensor,
+                            "target_lat":  target_lat,
+                            "target_lon":  target_lon,
+                            "radius":      zone_radius,
+                            "total_bidders": len(eligible_bidders),
+                            "winners":       m_nodes,
+                            "bidders": [
+                                {
+                                    "Node ID":       b['id'],
+                                    "Payload":       b.get('payload_type', '?'),
+                                    "Distance (km)": round(haversine(b.get('lat', 0), b.get('lon', 0), target_lat, target_lon), 1),
+                                    "Battery (%)":   round(b.get('telemetry', {}).get('P0_Gatekeepers', {}).get('soc', 1.0) * 100, 1),
+                                    "Prox Score":    round((max_view_distance - haversine(b.get('lat', 0), b.get('lon', 0), target_lat, target_lon)) / 100, 4),
+                                    "Auction Score": round(b.get('auction_score', 0), 4),
+                                    "Result":        "WON" if b['id'] in winning_ids else "LOST"
+                                }
+                                for b in eligible_bidders
+                            ]
+                        }
+                        r.hset("AUCTION_LOGS", mission_id, json.dumps(auction_log))
                     else:
                         print(f"[PENDING] AUCTION: {mission_id} -- {len(eligible_bidders)}/{m_nodes} {required_sensor} nodes in range.")
 

@@ -24,10 +24,10 @@ st.markdown("""
 st.title("\u2699\ufe0f Swarm Intelligence Forensics")
 st.caption("Breaking the black box. Every decision the swarm makes is logged, scored, and explained here.")
 
-# Auto-refresh toggle
+# Auto-refresh — evaluated AFTER all tabs render (at bottom of script)
 col_r, col_s = st.columns([4, 1])
 with col_s:
-    auto_refresh = st.toggle("Auto-refresh", value=True)
+    auto_refresh = st.toggle("Auto-refresh", value=False)
 
 # ── TABS ────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -114,9 +114,7 @@ with tab1:
                     unsafe_allow_html=True
                 )
 
-    if auto_refresh:
-        time.sleep(3)
-        st.rerun()
+    # (auto-refresh handled at bottom of script)
 
 # ============================================================
 # TAB 2 - AUCTION LEDGER
@@ -457,3 +455,11 @@ with tab4:
         hw_table = pd.DataFrame(hw_rows).sort_values("Count", ascending=False)
         st.markdown("#### Per-Type Operational Readiness")
         st.dataframe(hw_table, width="stretch")
+
+# ============================================================
+# AUTO-REFRESH - runs AFTER all 4 tabs have rendered
+# Default OFF so users can browse freely; enable to get live updates
+# ============================================================
+if auto_refresh:
+    time.sleep(4)
+    st.rerun()

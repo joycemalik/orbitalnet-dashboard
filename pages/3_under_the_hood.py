@@ -2,545 +2,458 @@ import streamlit as st
 import json
 import time
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 from config import get_redis_client
 
-st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="⚙️")
+st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="\u2699\ufe0f")
 
 r = get_redis_client()
 
 st.markdown("""
 <style>
-  .formula-box { background: rgba(0,170,255,0.07); border-left: 3px solid #00aaff;
-  padding: 12px 16px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
-  .won-badge  { background: rgba(0,255,136,0.15); color: #00ff88; padding: 2px 8px;
-  border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
-  .lost-badge { background: rgba(255,51,68,0.12); color: #ff3344; padding: 2px 8px;
-  border-radius: 4px; font-size: 0.8rem; }
-  .mission-executing { border-left: 3px solid #00ff88; padding-left: 10px; }
-  .mission-auction  { border-left: 3px solid #ffcc1a; padding-left: 10px; }
+    .formula-box { background: #0d1117; border: 1px solid #3a4a5a; border-radius: 8px; padding: 16px;
+                   font-family: monospace; font-size: 0.82rem; color: #c8d6e5; white-space: pre; }
+    .metric-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+                   border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+    .won-row { background: rgba(0,255,136,0.08) !important; color: #00ff88 !important; }
+    .lost-row { color: #ff3344 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("⚙️ Swarm Intelligence Forensics")
-st.caption("Breaking the black box. Every number, every decision, in real time.")
+st.title("\u2699\ufe0f Swarm Intelligence Forensics")
+st.caption("Breaking the black box. Every decision the swarm makes is logged, scored, and explained here.")
 
-#  Auto-refresh control  
-col_r1, col_r2 = st.columns([5, 1])
-with col_r2:
-  auto_refresh = st.checkbox("Auto-refresh", value=True)
-if auto_refresh:
-  st.empty()  # placeholder, real refresh via rerun below
+# Auto-refresh toggle
+col_r, col_s = st.columns([4, 1])
+with col_s:
+    auto_refresh = st.toggle("Auto-refresh", value=True)
 
+# ── TABS ────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs([
-  "🎯 Live Bidding Arena",
-  "🧾 Auction Ledger",
-  "🔍 Node Deep Scan",
-  "📊 Fleet Statistics"
+    "\U0001f3af Live Bidding Arena",
+    "\U0001f9fe Auction Ledger",
+    "\U0001f50d Node Deep Scan",
+    "\U0001f4ca Fleet Statistics"
 ])
 
-#  
-# TAB 1  LIVE BIDDING ARENA
-#  
+# ============================================================
+# TAB 1 - LIVE BIDDING ARENA
+# ============================================================
 with tab1:
-  st.markdown("### 🎯 Live Bidding Arena")
-  st.markdown("Every active mission, its current enclave, and how long each satellite has been on contract.")
+    st.markdown("### \U0001f3af Live Bidding Arena")
+    st.markdown("Every active mission, its current enclave, and how long each satellite has been on contract.")
 
-  try:
-  missions_raw = r.hgetall("MISSIONS_LEDGER")
-  logs_raw  = r.hgetall("AUCTION_LOGS")
-  except Exception:
-  missions_raw = {}
-  logs_raw  = {}
+    try:
+        missions_raw = r.hgetall("MISSIONS_LEDGER")
+        logs_raw     = r.hgetall("AUCTION_LOGS")
+    except Exception:
+        missions_raw = {}
+        logs_raw     = {}
 
-  if not missions_raw:
-  st.info("3 No active missions. Go to **Ground Station** and dispatch a scenario.")
-  else:
-  executing = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
-  if json.loads(mj).get("status") == "EXECUTING"]
-  pending  = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
-  if json.loads(mj).get("status") == "OPEN_AUCTION"]
+    if not missions_raw:
+        st.info("No active missions. Go to **Ground Station** and dispatch a scenario.")
+    else:
+        executing = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
+                     if json.loads(mj).get("status") == "EXECUTING"]
+        pending   = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
+                     if json.loads(mj).get("status") == "OPEN_AUCTION"]
 
-  #  Summary bar  
-  c1, c2, c3 = st.columns(3)
-  c1.metric("Missions Executing", len(executing))
-  c2.metric("Auctions Open",  len(pending))
-  c3.metric("Total Missions",  len(missions_raw))
+        # Summary metrics
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Missions Executing",  len(executing))
+        c2.metric("Auctions Open",       len(pending))
+        c3.metric("Total Missions",      len(missions_raw))
 
-  st.markdown("---")
+        st.markdown("---")
 
-  #  EXECUTING missions  
-  if executing:
-  st.markdown("####  Currently Executing Missions")
-  for mission_id, mission in executing:
-  enclave  = mission.get("enclave", [])
-  sensor  = mission.get("sensor_required", "?")
-  lat  = mission.get("target_lat", 0)
-  lon  = mission.get("target_lon", 0)
-  radius  = mission.get("target_radius", 500)
-  req_nodes = mission.get("required_nodes", 1)
-  name  = mission.get("name", mission_id)
+        # ── EXECUTING missions ──────────────────────────────
+        if executing:
+            st.markdown("#### Currently Executing Missions")
+            for mid, mission in executing:
+                sensor  = mission.get("sensor_required", "?")
+                enclave = mission.get("enclave", [])
+                req     = mission.get("required_nodes", 1)
+                st.markdown(
+                    f"<div class='metric-card'>"
+                    f"<b style='color:#00ff88'>\u25cf {mid}</b> &nbsp; "
+                    f"<span style='color:#ffcc1a'>[{sensor}]</span> &nbsp; "
+                    f"Target: {mission.get('target_lat',0):.2f}\u00b0, {mission.get('target_lon',0):.2f}\u00b0 &nbsp;|&nbsp; "
+                    f"Enclave: <b style='color:#3399ff'>{len(enclave)}/{req} nodes</b><br>"
+                    f"<small style='color:#5a6e82'>Zone radius: {mission.get('target_radius',0)} km</small>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+                if enclave:
+                    try:
+                        enclave_data = r.mget(enclave)
+                        fleet = [json.loads(item) for item in enclave_data if item]
+                        if fleet:
+                            df_enc = pd.DataFrame([{
+                                "Node ID":     s["id"],
+                                "Payload":     s.get("payload_type", "?"),
+                                "Score":       round(s.get("current_score", 0), 4),
+                                "Battery (%)": round(s.get("telemetry", {}).get("P0_Gatekeepers", {}).get("soc", 0) * 100, 1),
+                                "Role":        s.get("role", "?"),
+                            } for s in fleet])
+                            st.dataframe(df_enc, width="stretch")
+                    except Exception:
+                        st.caption("Enclave nodes not responding.")
 
-  sensor_color = {"SAR": "#cc33ff", "EO": "#3399ff", "SIGINT": "#ffcc1a",
-  "MW": "#ff8000", "RELAY": "#666"}.get(sensor, "#00ff88")
+        # ── PENDING auctions ────────────────────────────────
+        if pending:
+            st.markdown("#### Open Auctions (Bidding in Progress)")
+            for mid, mission in pending:
+                sensor = mission.get("sensor_required", "?")
+                st.markdown(
+                    f"<div class='metric-card' style='border-color:rgba(255,204,26,0.3)'>"
+                    f"<b style='color:#ffcc1a'>\u25cb {mid}</b> &nbsp; [{sensor}] &nbsp;"
+                    f"Waiting for {mission.get('required_nodes',1)} {sensor} nodes within "
+                    f"{mission.get('target_radius',0)+1000} km"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
 
-  label = (f"{' ' if len(enclave) >= req_nodes else ''} **{name}** "
-  f"| {sensor} | {len(enclave)}/{req_nodes} nodes locked "
-  f"| Target: {lat:.1f}deg, {lon:.1f}deg | Zone: {radius} km")
+    if auto_refresh:
+        time.sleep(3)
+        st.rerun()
 
-  with st.expander(label, expanded=True):
-  # Pull the auction log for this mission
-  log = json.loads(logs_raw.get(mission_id, "{}")) if mission_id in logs_raw else {}
-  all_bidders = log.get("bidders", [])
-  winners_set = set(enclave)
-
-  mc1, mc2, mc3, mc4 = st.columns(4)
-  mc1.metric("Sensor", sensor)
-  mc2.metric("Zone Radius", f"{radius} km")
-  mc3.metric("Nodes Locked", f"{len(enclave)} / {req_nodes}")
-  mc4.metric("Coordination", "Max Vote Distance")
-
-  #  Enclave roster  
-  st.markdown("**  Active Enclave (Nodes Currently Imaging)**")
-  if enclave:
-  now = time.time()
-  roster_rows = []
-  for sat_id in enclave:
-  try:
-  sat_raw = r.get(sat_id)
-  sat = json.loads(sat_raw) if sat_raw else {}
-  except Exception:
-  sat = {}
-
-  gk  = sat.get("telemetry", {}).get("P0_Gatekeepers", {})
-  battery = round(gk.get("soc", 0) * 100, 1)
-  score  = round(sat.get("current_score", 0), 4)
-  lat_s  = round(sat.get("lat", 0), 2)
-  lon_s  = round(sat.get("lon", 0), 2)
-  ptype  = sat.get("payload_type", "?")
-
-  # Get their auction score from the log
-  bid = next((b for b in all_bidders if b.get("Node ID") == sat_id), {})
-  auction_sc = bid.get("Auction Score", "  ")
-  dist_km  = bid.get("Distance (km)", "  ")
-
-  roster_rows.append({
-  "Node ID":  sat_id,
-  "Hardware":  ptype,
-  "Lat / Lon":  f"{lat_s}deg, {lon_s}deg",
-  "Battery (%)":  battery,
-  "C Score":  score,
-  "Auction Score":  auction_sc,
-  "Dist to Target": dist_km,
-  "Status":  " ACTIVE"
-  })
-
-  roster_df = pd.DataFrame(roster_rows)
-
-  def style_roster(row):
-  return ["background-color: rgba(0,255,136,0.07)"] * len(row)
-
-  st.dataframe(roster_df.style.apply(style_roster, axis=1),
-  width='stretch')
-  else:
-  st.warning("Enclave is forming  no satellites locked yet.")
-
-  #  Full bidder history from auction log  
-  if all_bidders:
-  st.markdown("**  Original Auction  Full Bidder Scorecard**")
-  st.caption(f"{len(all_bidders)} satellites competed * Top {req_nodes} by score won")
-
-  df_bid = pd.DataFrame(all_bidders)
-  col_order = ["Result", "Node ID", "Payload", "Distance (km)",
-  "Battery (%)", "Prox Score", "Auction Score"]
-  df_bid = df_bid[[c for c in col_order if c in df_bid.columns]]
-
-  def color_result(val):
-  if val == "WON":  return "background-color:rgba(0,255,136,0.1);color:#00ff88;font-weight:bold"
-  return "color:#ff3344"
-
-  styled = df_bid.style.map(color_result, subset=["Result"])
-  st.dataframe(styled, width='stretch')
-
-  # Margin of victory
-  won  = [b for b in all_bidders if b.get("Result") == "WON"]
-  lost = [b for b in all_bidders if b.get("Result") == "LOST"]
-  if won and lost:
-  best_w = max(won,  key=lambda b: b.get("Auction Score", 0))
-  best_l = max(lost, key=lambda b: b.get("Auction Score", 0))
-  margin = best_w["Auction Score"] - best_l["Auction Score"]
-  st.success(
-  f"**Winning margin:** `{best_w['Node ID']}` scored "
-  f"`{best_w['Auction Score']:.4f}` vs nearest loser "
-  f"`{best_l['Auction Score']:.4f}`  margin `{margin:.4f}`"
-  )
-  else:
-  st.info("Auction log not yet written for this mission. Will appear after first enclave formation.")
-
-  #  PENDING auctions  
-  if pending:
-  st.markdown("####  Open Auctions (Searching for Satellites)")
-  for mission_id, mission in pending:
-  sensor  = mission.get("sensor_required", "?")
-  lat  = mission.get("target_lat", 0)
-  lon  = mission.get("target_lon", 0)
-  radius  = mission.get("target_radius", 500)
-  name  = mission.get("name", mission_id)
-  with st.expander(f" **{name}** | Seeking {mission.get('required_nodes')} -  {sensor} within {radius+1000} km"):
-  st.write(f"**Target:** {lat:.2f}deg, {lon:.2f}deg | **Radius:** {radius} km")
-  st.info("Consensus Engine is scanning the fleet for eligible nodes. Check back in 5 seconds.")
-
-
-#  
-# TAB 2  AUCTION LEDGER (Historical)
-#  
+# ============================================================
+# TAB 2 - AUCTION LEDGER
+# ============================================================
 with tab2:
-  st.markdown("### Contract Net Protocol (CNP)  Historical Auction Records")
-  st.markdown("Every completed auction, permanently logged with full mathematical transparency.")
+    st.markdown("### \U0001f9fe Contract Net Protocol (CNP) - Historical Auction Records")
+    st.markdown("Every completed auction, permanently logged with full mathematical transparency.")
 
-  st.markdown('<div class="formula-box">'
-  '  <b>Normalized Auction Score (max = 1.0):</b><br>'
-  'auction_score = (proximity_score  -  W<sub>prox</sub>) + (battery  -  W<sub>batt</sub>)<br>'
-  'proximity_score = max(0, (max_view_dist  actual_dist) / max_view_dist)  [0.0, 1.0]<br>'
-  'max_view_dist = zone_radius + 1000 km  |  W defaults: proximity=0.7, battery=0.3'
-  '</div>', unsafe_allow_html=True)
+    st.markdown("""
+<div class='formula-box'>Ci Normalized Auction Score (max = 1.0):
+  auction_score = (proximity_score x W_prox) + (battery x W_batt)
+  proximity_score = max(0, (max_view_dist - actual_dist) / max_view_dist)  in [0, 1]
+  max_view_dist = zone_radius + 1000 km  |  W defaults: proximity=0.7, battery=0.3
+</div>""", unsafe_allow_html=True)
 
-  st.markdown("---")
+    st.markdown("---")
 
-  try:
-  logs_raw2 = r.hgetall("AUCTION_LOGS")
-  except Exception:
-  logs_raw2 = {}
+    try:
+        logs_raw2 = r.hgetall("AUCTION_LOGS")
+    except Exception:
+        logs_raw2 = {}
 
-  if not logs_raw2:
-  st.info("3 No completed auctions yet. Dispatch a mission from the Ground Station.")
-  else:
-  for mission_id, log_json in reversed(list(logs_raw2.items())):
-  log  = json.loads(log_json)
-  bidders = log.get("bidders", [])
-  winners = [b for b in bidders if b.get("Result") == "WON"]
-  losers  = [b for b in bidders if b.get("Result") == "LOST"]
+    if not logs_raw2:
+        st.info("No completed auctions yet. Dispatch a mission from the Ground Station.")
+    else:
+        for mission_id, log_json in reversed(list(logs_raw2.items())):
+            log     = json.loads(log_json)
+            bidders = log.get("bidders", [])
+            winners = [b for b in bidders if b.get("Result") == "WON"]
+            losers  = [b for b in bidders if b.get("Result") == "LOST"]
+            sensor  = log.get("sensor", "?")
+            icons   = {"SAR": "[SAR]", "EO": "[EO]", "SIGINT": "[SIG]", "MW": "[MW]", "RELAY": "[RLY]"}
+            icon    = icons.get(sensor, "[?]")
 
-  icons = {"SAR": "[SAR]", "EO": "[EO]", "SIGINT": "[SIG]", "MW": "[MW]", "RELAY": "[RLY]"}
-  icon  = icons.get(log.get("sensor", ""), "[?]")
+            with st.expander(
+                f"{icon} {mission_id} | {sensor} | "
+                f"{log.get('total_bidders',0)} bidders | {log.get('winners',0)} selected",
+                expanded=False
+            ):
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Sensor",        sensor)
+                c2.metric("Target",        f"{log.get('target_lat',0):.2f}\u00b0, {log.get('target_lon',0):.2f}\u00b0")
+                c3.metric("Zone Radius",   f"{log.get('radius',0)} km")
+                c4.metric("Max Slew Dist", f"{log.get('radius',0)+1000} km")
 
-  with st.expander(
-  f"{icon} {mission_id} | {log.get('sensor','?')} | "
-  f"{log.get('total_bidders',0)} bidders | {log.get('winners',0)} selected",
-  expanded=False
-  ):
-  c1, c2, c3, c4 = st.columns(4)
-  c1.metric("Sensor",  log.get("sensor", "?"))
-  c2.metric("Target",  f"{log.get('target_lat',0):.2f}deg, {log.get('target_lon',0):.2f}deg")
-  c3.metric("Zone Radius",  f"{log.get('radius',0)} km")
-  c4.metric("Max Slew Dist",f"{log.get('radius',0)+1000} km")
+                if bidders:
+                    df_bid    = pd.DataFrame(bidders)
+                    col_order = ["Result", "Node ID", "Payload", "Distance (km)", "Battery (%)", "Prox Score", "Auction Score"]
+                    df_bid    = df_bid[[c for c in col_order if c in df_bid.columns]]
 
-  if bidders:
-  df  = pd.DataFrame(bidders)
-  col_order = ["Result","Node ID","Payload","Distance (km)","Battery (%)","Prox Score","Auction Score"]
-  df  = df[[c for c in col_order if c in df.columns]]
+                    def color_result(val):
+                        if val == "WON":
+                            return "background-color:rgba(0,255,136,0.1);color:#00ff88;font-weight:bold"
+                        return "color:#ff3344"
 
-  def style_bid(row):
-  if row.get("Result") == "WON":
-  return ["background-color:rgba(0,255,136,0.08);color:#00ff88;font-weight:bold"
-  if i == 0 else "background-color:rgba(0,255,136,0.04)"
-  for i in range(len(row))]
-  return ["color:#ff3344" if i == 0 else "color:#8899aa" for i in range(len(row))]
+                    styled = df_bid.style.map(color_result, subset=["Result"])
+                    st.dataframe(styled, width="stretch")
 
-  st.dataframe(df.style.apply(style_bid, axis=1), width='stretch')
+                    if winners and losers:
+                        bw     = max(winners, key=lambda b: b.get("Auction Score", 0))
+                        bl     = max(losers,  key=lambda b: b.get("Auction Score", 0))
+                        margin = bw["Auction Score"] - bl["Auction Score"]
+                        st.success(
+                            f"**Winning margin:** {bw['Node ID']} scored `{bw['Auction Score']:.4f}` "
+                            f"vs `{bl['Auction Score']:.4f}` (nearest loser) | delta = `{margin:.4f}`"
+                        )
 
-  if winners and losers:
-  bw = max(winners, key=lambda b: b.get("Auction Score", 0))
-  bl = max(losers,  key=lambda b: b.get("Auction Score", 0))
-  margin = bw["Auction Score"] - bl["Auction Score"]
-  st.success(f"**Winning margin:** {bw['Node ID']} scored `{bw['Auction Score']:.4f}` "
-  f"vs `{bl['Auction Score']:.4f}` (nearest loser) | delta = `{margin:.4f}`")
+        if st.button("Clear Auction Logs"):
+            r.delete("AUCTION_LOGS")
+            st.rerun()
 
-  if st.button("Clear Auction Logs"):
-  r.delete("AUCTION_LOGS")
-  st.rerun()
-
-
-#  
-# TAB 3  NODE DEEP SCAN
-#  
+# ============================================================
+# TAB 3 - NODE DEEP SCAN
+# ============================================================
 with tab3:
-  st.markdown("### 🔍 Node Deep Scan  -  Full Telemetry Vector")
-  st.caption("Select any satellite to inspect every parameter driving its real-time C capability score.")
+    st.markdown("### \U0001f50d Node Deep Scan - Full Telemetry Vector")
+    st.caption("Select any satellite to inspect every parameter driving its real-time Ci capability score.")
 
-  try:
-  # Prioritize mission-active satellites from the ledger for the top of the list
-  mission_sat_ids = set()
-  for mj in r.hvals("MISSIONS_LEDGER"):
-  m = json.loads(mj)
-  mission_sat_ids.update(m.get("enclave", []))
+    try:
+        all_keys = r.keys("STARLINK-*")
+    except Exception:
+        all_keys = []
 
-  sample_keys = list(mission_sat_ids)[:50]
-  sample_keys += [k for k in r.keys('STARLINK-*')[:450] if k not in mission_sat_ids]
-  raw_data = r.mget(sample_keys) if sample_keys else []
-  fleet_ds = [json.loads(item) for item in raw_data if item]
-  except Exception:
-  fleet_ds = []
+    if not all_keys:
+        st.warning("No satellite telemetry in Redis. Ensure the Physics Engine is running.")
+    else:
+        try:
+            missions_raw3 = r.hgetall("MISSIONS_LEDGER")
+        except Exception:
+            missions_raw3 = {}
 
-  if not fleet_ds:
-  st.warning("No telemetry available. Ensure the Physics Engine is running.")
-  else:
-  def sort_ds(s):
-  role = s.get('role', '')
-  if role == 'MISSION_ACTIVE': return 0
-  return 1
-  fleet_ds.sort(key=sort_ds)
+        # Build enclave lookup for role decoration
+        enclave_lookup = {}
+        for mid, mj in missions_raw3.items():
+            m = json.loads(mj)
+            for nid in m.get("enclave", []):
+                enclave_lookup[nid] = m.get("sensor_required", "?")
 
-  options = [f"{s['id']} [{s.get('payload_type','?')}]  {s.get('role','MEMBER')}" for s in fleet_ds]
-  selected = st.selectbox("Select Target Node for Deep Scan", options)
+        try:
+            sample_raw = r.mget(all_keys[:500])
+        except Exception:
+            sample_raw = []
 
-  if selected:
-  sat_id  = selected.split(" ")[0]
-  sat_data = next((s for s in fleet_ds if s['id'] == sat_id), None)
+        sat_list = [json.loads(s) for s in sample_raw if s]
 
-  if sat_data:
-  score = sat_data.get('current_score', 0.0)
-  role  = sat_data.get('role', 'MEMBER')
-  ptype = sat_data.get('payload_type', '?')
-  gk  = sat_data.get('telemetry', {}).get('P0_Gatekeepers', {})
-  battery = gk.get('soc', 0) * 100
+        def label(s):
+            hw   = s.get("payload_type", "?")
+            role = "ACTIVE" if s["id"] in enclave_lookup else s.get("role", "MEMBER")
+            return f"{s['id']} [{hw}] - {role}"
 
-  col1, col2, col3, col4, col5 = st.columns(5)
-  col1.metric("C Score",  f"{score:.4f}")
-  col2.metric("Hardware",  ptype)
-  col3.metric("Role",  role)
-  col4.metric("Battery",  f"{battery:.1f}%")
-  col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}deg, {sat_data.get('lon',0):.2f}deg")
+        options = sorted([label(s) for s in sat_list])
+        chosen  = st.selectbox("Select Target Node for Deep Scan", options)
+        chosen_id = chosen.split(" [")[0]
 
-  st.markdown("---")
-  st.markdown("#### Full Telemetry State Vector")
-  telem = sat_data.get('telemetry', {})
-  rows = []
-  for group, params in telem.items():
-  for k, v in params.items():
-  try:
-  norm_v = max(0, min(float(v), 1.0))
-  filled = int(norm_v * 20)
-  bar = "[" + "#" * filled + "-" * (20 - filled) + "]  " + f"{norm_v:.2f}"
-  except Exception:
-  bar = "[------------------]  N/A"
-  rows.append({
-  "Group":  group.replace('_', ' '),
-  "Parameter": k.replace('_', ' ').title(),
-  "Value":  round(v, 4),
-  "Visual":  bar
-  })
+        sat_raw = r.get(chosen_id)
+        if sat_raw:
+            sat_data = json.loads(sat_raw)
+            hw       = sat_data.get("payload_type", "?")
+            role     = "MISSION_ACTIVE" if chosen_id in enclave_lookup else sat_data.get("role", "MEMBER")
+            battery  = sat_data.get("telemetry", {}).get("P0_Gatekeepers", {}).get("soc", 0) * 100
+            score    = sat_data.get("current_score", 0)
 
-  if rows:
-  st.dataframe(pd.DataFrame(rows), width='stretch')
+            col1, col2, col3, col4, col5 = st.columns(5)
+            col1.metric("Ci Score",    round(score, 4))
+            col2.metric("Hardware",    hw)
+            col3.metric("Role",        role)
+            col4.metric("Battery",     f"{battery:.1f}%")
+            col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}\u00b0, {sat_data.get('lon',0):.2f}\u00b0")
 
-  st.markdown("---")
-  st.markdown("#### Score Composition Formula")
-  st.latex(r"C_i = \sum_{k} w_k \cdot p_k")
-  st.caption("w  -  = parameter weight from scoring engine | p  -  = normalized telemetry value")
+            st.markdown("---")
+            st.markdown("#### Full Telemetry State Vector")
+            telem = sat_data.get("telemetry", {})
+            rows  = []
+            for group, params in telem.items():
+                for k, v in params.items():
+                    try:
+                        norm_v = max(0.0, min(float(v), 1.0))
+                        filled = int(norm_v * 20)
+                        bar    = "[" + "#" * filled + "-" * (20 - filled) + "]  " + f"{norm_v:.2f}"
+                    except Exception:
+                        bar = "[--------------------]  N/A"
+                    rows.append({
+                        "Group":     group.replace("_", " "),
+                        "Parameter": k.replace("_", " ").title(),
+                        "Value":     round(v, 4),
+                        "Visual":    bar
+                    })
 
-  try:
-  all_logs = r.hgetall("AUCTION_LOGS")
-  won_in  = []
-  for mid, lj in all_logs.items():
-  lg = json.loads(lj)
-  match = next((b for b in lg.get("bidders", [])
-  if b.get("Node ID") == sat_id and b.get("Result") == "WON"), None)
-  if match:
-  won_in.append((mid, match))
-  if won_in:
-  st.success(f"  This node won **{len(won_in)}** mission auction(s):")
-  for mid, match in won_in:
-  st.write(f"- **{mid}** | Score: `{match.get('Auction Score','?')}` | Dist: `{match.get('Distance (km)','?')} km`")
-  else:
-  st.info("Node has not won any auction in the current log. (Logs clear between sessions.)")
-  except Exception:
-  pass
+            if rows:
+                st.dataframe(pd.DataFrame(rows), width="stretch")
 
+            st.markdown("---")
+            st.markdown("#### Score Composition Formula")
+            st.latex(r"C_i = \sum_{k} w_k \cdot p_k")
+            st.caption("w_k = parameter weight from scoring engine | p_k = normalized telemetry value")
 
-#  
-# TAB 4  FLEET STATISTICS (Fixed + Charted)
-#  
+            try:
+                score_raw = r.hgetall("SCORING_WEIGHTS")
+                if score_raw:
+                    w_df = pd.DataFrame([{"Parameter": k, "Weight": float(v)} for k, v in score_raw.items()])
+                    st.dataframe(w_df, width="stretch")
+            except Exception:
+                pass
+
+# ============================================================
+# TAB 4 - FLEET STATISTICS
+# ============================================================
 with tab4:
-  st.markdown("### Fleet Statistics - Real-Time Constellation Health")
+    st.markdown("### Fleet Statistics - Real-Time Constellation Health")
 
-  try:
-  #  Get active roles from the authoritative MISSIONS_LEDGER  
-  active_enclave_ids = set()
-  missions_for_stats = {}
-  for mid, mj in r.hgetall("MISSIONS_LEDGER").items():
-  m = json.loads(mj)
-  missions_for_stats[mid] = m
-  if m.get("status") == "EXECUTING":
-  active_enclave_ids.update(m.get("enclave", []))
+    try:
+        all_keys4 = r.keys("STARLINK-*")
+    except Exception:
+        all_keys4 = []
 
-  #  Sample fleet (up to 5000 nodes) for stats  
-  all_keys  = r.keys('STARLINK-*')
-  sample  = all_keys[:5000]
-  raw_fleet  = r.mget(sample) if sample else []
-  full_fleet = [json.loads(item) for item in raw_fleet if item]
-  except Exception:
-  full_fleet = []
-  active_enclave_ids = set()
-  missions_for_stats = {}
+    try:
+        all_missions_raw4 = r.hgetall("MISSIONS_LEDGER")
+    except Exception:
+        all_missions_raw4 = {}
 
-  if not full_fleet:
-  st.warning("No fleet data. Ensure Physics Engine is active.")
-  else:
-  total  = len(full_fleet)
-  n_active = len(active_enclave_ids)
+    # Resolve active satellite IDs from enclaves
+    active_ids = set()
+    for mid, mj in all_missions_raw4.items():
+        m = json.loads(mj)
+        if m.get("status") == "EXECUTING":
+            active_ids.update(m.get("enclave", []))
 
-  by_payload = {}
-  scores  = []
-  batteries  = []
-  isl_vals  = []
-  thermal_vals = []
+    try:
+        sample_raw4 = r.mget(all_keys4[:1000]) if all_keys4 else []
+    except Exception:
+        sample_raw4 = []
 
-  for s in full_fleet:
-  pt = s.get('payload_type', 'UNKNOWN')
-  by_payload[pt] = by_payload.get(pt, 0) + 1
-  scores.append(s.get('current_score', 0))
-  gk = s.get('telemetry', {}).get('P0_Gatekeepers', {})
-  batteries.append(gk.get('soc', 0) * 100)
-  eff = s.get('telemetry', {}).get('P2_Efficiency', {})
-  isl_vals.append(eff.get('isl_throughput', 0) * 100)
-  thermal_vals.append(gk.get('thermal_margin', 0) * 100)
+    fleet_data = [json.loads(s) for s in sample_raw4 if s]
 
-  avg_score  = sum(scores) / len(scores)  if scores  else 0
-  avg_battery = sum(batteries) / len(batteries)  if batteries else 0
-  avg_isl  = sum(isl_vals) / len(isl_vals)  if isl_vals  else 0
+    if not fleet_data:
+        st.warning("No telemetry data available. Ensure the Physics Engine is running.")
+    else:
+        # -- Summary metrics --
+        mc1, mc2, mc3, mc4 = st.columns(4)
+        mc1.metric("Total Nodes Online",   len(fleet_data))
+        mc2.metric("Nodes in Active Role", len(active_ids))
+        avg_bat = sum(
+            s.get("telemetry", {}).get("P0_Gatekeepers", {}).get("soc", 0)
+            for s in fleet_data
+        ) / max(len(fleet_data), 1) * 100
+        mc3.metric("Avg Battery",          f"{avg_bat:.1f}%")
+        avg_score = sum(s.get("current_score", 0) for s in fleet_data) / max(len(fleet_data), 1)
+        mc4.metric("Avg Ci Score",         f"{avg_score:.3f}")
 
-  #  KPI row  
-  k1, k2, k3, k4, k5 = st.columns(5)
-  k1.metric("Visible Nodes",  f"{total:,}")
-  k2.metric("Mission-Active",  n_active,  delta=f"{n_active/total*100:.1f}%" if total else "0%")
-  k3.metric("Avg C Score",  f"{avg_score:.4f}")
-  k4.metric("Avg Battery",  f"{avg_battery:.1f}%")
-  k5.metric("Avg ISL Throughput",f"{avg_isl:.1f}%")
+        st.markdown("---")
 
-  st.markdown("---")
+        # Build per-hardware breakdown
+        hw_counts  = {}
+        hw_scores  = {}
+        hw_battery = {}
+        isl_vals   = []
+        score_vals = []
+        bat_vals   = []
 
-  #  Charts row 1  
-  try:
-  import plotly.graph_objects as go
-  import plotly.express as px
+        for s in fleet_data:
+            hw  = s.get("payload_type", "UNKNOWN")
+            sc  = s.get("current_score", 0)
+            bat = s.get("telemetry", {}).get("P0_Gatekeepers", {}).get("soc", 0) * 100
+            isl = s.get("telemetry", {}).get("P2_Efficiency", {}).get("isl_throughput", 0)
 
-  hw_labels = list(by_payload.keys())
-  hw_values = list(by_payload.values())
-  hw_colors = {"SAR":"#cc33ff","EO":"#3399ff","SIGINT":"#ffcc1a",
-  "MW":"#ff8000","RELAY":"#555555","UNKNOWN":"#00ff88"}
+            hw_counts[hw]  = hw_counts.get(hw, 0) + 1
+            hw_scores[hw]  = hw_scores.get(hw, []) + [sc]
+            hw_battery[hw] = hw_battery.get(hw, []) + [bat]
+            score_vals.append(sc)
+            bat_vals.append(bat)
+            isl_vals.append(isl)
 
-  c1, c2 = st.columns(2)
+        col_l, col_r = st.columns(2)
 
-  with c1:
-  st.markdown("#### Hardware Distribution")
-  fig_hw = go.Figure(go.Pie(
-  labels=hw_labels, values=hw_values,
-  marker_colors=[hw_colors.get(l, "#888") for l in hw_labels],
-  hole=0.55,
-  textinfo="label+percent",
-  textfont_color="white"
-  ))
-  fig_hw.update_layout(
-  paper_bgcolor="rgba(0,0,0,0)",
-  plot_bgcolor="rgba(0,0,0,0)",
-  font_color="white",
-  showlegend=True,
-  legend=dict(font=dict(color="white")),
-  margin=dict(t=10,b=10,l=10,r=10),
-  height=280
-  )
-  st.plotly_chart(fig_hw, width='stretch', config={"displayModeBar": False})
+        with col_l:
+            # Hardware distribution pie
+            fig_hw = go.Figure(go.Pie(
+                labels=list(hw_counts.keys()),
+                values=list(hw_counts.values()),
+                hole=0.4,
+                marker=dict(colors=["#cc33ff", "#3399ff", "#ffcc1a", "#ff8000", "#666666"])
+            ))
+            fig_hw.update_layout(
+                title="Hardware Distribution",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#c8d6e5"),
+                legend=dict(font=dict(color="#c8d6e5")),
+                margin=dict(t=40, b=0, l=0, r=0)
+            )
+            st.plotly_chart(fig_hw, width="stretch", config={"displayModeBar": False})
 
-  with c2:
-  st.markdown("#### C Score Distribution")
-  fig_sc = go.Figure(go.Histogram(
-  x=scores, nbinsx=30,
-  marker_color="#00aaff",
-  marker_line=dict(color="#003366", width=0.5),
-  opacity=0.85
-  ))
-  fig_sc.update_layout(
-  paper_bgcolor="rgba(0,0,0,0)",
-  plot_bgcolor="rgba(5,8,15,0.6)",
-  font_color="white",
-  xaxis=dict(title="C Score", color="white", gridcolor="#1a2a3a"),
-  yaxis=dict(title="Node Count", color="white", gridcolor="#1a2a3a"),
-  margin=dict(t=10,b=10,l=10,r=10),
-  height=280
-  )
-  st.plotly_chart(fig_sc, width='stretch', config={"displayModeBar": False})
+            # Avg Ci score by hardware type
+            avg_scores_by_hw = {k: sum(v)/len(v) for k, v in hw_scores.items()}
+            fig_sc = go.Figure(go.Bar(
+                x=list(avg_scores_by_hw.keys()),
+                y=list(avg_scores_by_hw.values()),
+                marker_color=["#cc33ff", "#3399ff", "#ffcc1a", "#ff8000", "#666666"]
+            ))
+            fig_sc.update_layout(
+                title="Avg Ci Score by Hardware Type",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(5,8,15,0.8)",
+                font=dict(color="#c8d6e5"),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                xaxis=dict(gridcolor="rgba(0,0,0,0)"),
+                margin=dict(t=40, b=0, l=0, r=0)
+            )
+            st.plotly_chart(fig_sc, width="stretch", config={"displayModeBar": False})
 
-  #  Charts row 2  
-  c3, c4 = st.columns(2)
+        with col_r:
+            # Battery health histogram
+            fig_bat = go.Figure(go.Histogram(
+                x=bat_vals,
+                nbinsx=30,
+                marker_color="#3399ff",
+                opacity=0.8
+            ))
+            fig_bat.update_layout(
+                title="Fleet Battery Health Distribution",
+                xaxis_title="State of Charge (%)",
+                yaxis_title="Node Count",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(5,8,15,0.8)",
+                font=dict(color="#c8d6e5"),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                margin=dict(t=40, b=0, l=0, r=0)
+            )
+            st.plotly_chart(fig_bat, width="stretch", config={"displayModeBar": False})
 
-  with c3:
-  st.markdown("#### Battery SOC Distribution")
-  fig_bat = go.Figure(go.Histogram(
-  x=batteries, nbinsx=25,
-  marker_color="#00ff88",
-  marker_line=dict(color="#003322", width=0.5),
-  opacity=0.85
-  ))
-  fig_bat.update_layout(
-  paper_bgcolor="rgba(0,0,0,0)",
-  plot_bgcolor="rgba(5,8,15,0.6)",
-  font_color="white",
-  xaxis=dict(title="Battery %", color="white", gridcolor="#1a2a3a"),
-  yaxis=dict(title="Node Count", color="white", gridcolor="#1a2a3a"),
-  margin=dict(t=10,b=10,l=10,r=10),
-  height=260
-  )
-  st.plotly_chart(fig_bat, width='stretch', config={"displayModeBar": False})
+            # ISL Throughput histogram
+            fig_isl = go.Figure(go.Histogram(
+                x=isl_vals,
+                nbinsx=30,
+                marker_color="#00ff88",
+                opacity=0.8
+            ))
+            fig_isl.update_layout(
+                title="ISL Throughput Distribution",
+                xaxis_title="ISL Throughput (normalized)",
+                yaxis_title="Node Count",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(5,8,15,0.8)",
+                font=dict(color="#c8d6e5"),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                margin=dict(t=40, b=0, l=0, r=0)
+            )
+            st.plotly_chart(fig_isl, width="stretch", config={"displayModeBar": False})
 
-  with c4:
-  st.markdown("#### ISL Throughput Distribution")
-  fig_isl = go.Figure(go.Histogram(
-  x=isl_vals, nbinsx=25,
-  marker_color="#ffcc1a",
-  marker_line=dict(color="#332200", width=0.5),
-  opacity=0.85
-  ))
-  fig_isl.update_layout(
-  paper_bgcolor="rgba(0,0,0,0)",
-  plot_bgcolor="rgba(5,8,15,0.6)",
-  font_color="white",
-  xaxis=dict(title="ISL Throughput %", color="white", gridcolor="#1a2a3a"),
-  yaxis=dict(title="Node Count",  color="white", gridcolor="#1a2a3a"),
-  margin=dict(t=10,b=10,l=10,r=10),
-  height=260
-  )
-  st.plotly_chart(fig_isl, width='stretch', config={"displayModeBar": False})
+        st.markdown("---")
 
-  except ImportError:
-  st.warning("Install plotly for charts: `pip install plotly`")
+        # Bandwidth table per hardware type
+        band_rows = []
+        for hw, scores in hw_scores.items():
+            bats = hw_battery[hw]
+            band_rows.append({
+                "Hardware":      hw,
+                "Node Count":    hw_counts[hw],
+                "Avg Ci Score":  round(sum(scores)/len(scores), 4),
+                "Min Ci":        round(min(scores), 4),
+                "Max Ci":        round(max(scores), 4),
+                "Avg Battery %": round(sum(bats)/len(bats), 1),
+            })
+        band_df = pd.DataFrame(band_rows).sort_values("Node Count", ascending=False)
+        st.markdown("#### Hardware Capability Summary")
+        st.dataframe(band_df, width="stretch")
 
-  #  Score health bands table  
-  st.markdown("---")
-  st.markdown("#### Score Health Band Breakdown")
-  bands = {"  Critical (0  1)":0, " Warning (1  2)":0, " Nominal (2  3)":0, "  Optimal (3+)":0}
-  for s in scores:
-  if s < 1:  bands["  Critical (0  1)"] += 1
-  elif s < 2: bands[" Warning (1  2)"]  += 1
-  elif s < 3: bands[" Nominal (2  3)"]  += 1
-  else:  bands["  Optimal (3+)"]  += 1
-
-  band_df = pd.DataFrame(
-  [(k, v, f"{v/total*100:.1f}%" if total else "0%") for k, v in bands.items()],
-  columns=["Health Band", "Node Count", "% of Fleet"]
-  )
-  st.dataframe(band_df, width='stretch')
-
-  #  Hardware breakdown table (exact counts)  
-  st.markdown("#### Hardware Roster Count")
-  hw_table = pd.DataFrame(
-  sorted([(k, v, f"{v/total*100:.1f}%") for k,v in by_payload.items()], key=lambda x:-x[1]),
-  columns=["Sensor Type", "Count", "% of Fleet"]
-  )
-  st.dataframe(hw_table, width='stretch')
-
-# Auto-refresh every 5 seconds
-if auto_refresh:
-  time.sleep(5)
-  st.rerun()
-
-
+        # per-hardware table
+        hw_rows = []
+        for hw in hw_counts:
+            hw_rows.append({
+                "Type":          hw,
+                "Count":         hw_counts[hw],
+                "Active":        sum(1 for s in fleet_data if s.get("payload_type") == hw and s["id"] in active_ids),
+                "Avg Score":     round(sum(hw_scores[hw])/len(hw_scores[hw]), 4),
+                "Avg Battery %": round(sum(hw_battery[hw])/len(hw_battery[hw]), 1)
+            })
+        hw_table = pd.DataFrame(hw_rows).sort_values("Count", ascending=False)
+        st.markdown("#### Per-Type Operational Readiness")
+        st.dataframe(hw_table, width="stretch")

@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from config import get_redis_client
 
-st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="âš™ï¸")
+st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="⚙️")
 
 r = get_redis_client()
 
@@ -21,7 +21,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("âš™ï¸ Swarm Intelligence Forensics")
+st.title("⚙️ Swarm Intelligence Forensics")
 st.caption("Breaking the black box. Every number, every decision, in real time.")
 
 # â”€â”€ Auto-refresh control â”€â”€
@@ -32,17 +32,17 @@ if auto_refresh:
     st.empty()  # placeholder, real refresh via rerun below
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "ðŸŽ¯ Live Bidding Arena",
-    "ðŸ§¾ Auction Ledger",
-    "ðŸ” Node Deep Scan",
-    "ðŸ“Š Fleet Statistics"
+    "🎯 Live Bidding Arena",
+    "🧾 Auction Ledger",
+    "🔍 Node Deep Scan",
+    "📊 Fleet Statistics"
 ])
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # TAB 1 â€” LIVE BIDDING ARENA
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab1:
-    st.markdown("### ðŸŽ¯ Live Bidding Arena")
+    st.markdown("### 🎯 Live Bidding Arena")
     st.markdown("Every active mission, its current enclave, and how long each satellite has been on contract.")
 
     try:
@@ -53,7 +53,7 @@ with tab1:
         logs_raw     = {}
 
     if not missions_raw:
-        st.info("â³ No active missions. Go to **Ground Station** and dispatch a scenario.")
+        st.info("â³ No active missions. Go to **Ground Station** and dispatch a scenario.")
     else:
         executing = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
                      if json.loads(mj).get("status") == "EXECUTING"]
@@ -83,9 +83,9 @@ with tab1:
                 sensor_color = {"SAR": "#cc33ff", "EO": "#3399ff", "SIGINT": "#ffcc1a",
                                 "MW": "#ff8000", "RELAY": "#666"}.get(sensor, "#00ff88")
 
-                label = (f"{'âœ…' if len(enclave) >= req_nodes else 'âš ï¸'} **{name}** "
+                label = (f"{'âœ…' if len(enclave) >= req_nodes else 'âš ï¸'} **{name}** "
                          f"| {sensor} | {len(enclave)}/{req_nodes} nodes locked "
-                         f"| Target: {lat:.1f}Â°, {lon:.1f}Â° | Zone: {radius} km")
+                         f"| Target: {lat:.1f}°, {lon:.1f}° | Zone: {radius} km")
 
                 with st.expander(label, expanded=True):
                     # Pull the auction log for this mission
@@ -126,7 +126,7 @@ with tab1:
                             roster_rows.append({
                                 "Node ID":        sat_id,
                                 "Hardware":       ptype,
-                                "Lat / Lon":      f"{lat_s}Â°, {lon_s}Â°",
+                                "Lat / Lon":      f"{lat_s}°, {lon_s}°",
                                 "Battery (%)":    battery,
                                 "Cáµ¢ Score":       score,
                                 "Auction Score":  auction_sc,
@@ -146,7 +146,7 @@ with tab1:
 
                     # â”€â”€ Full bidder history from auction log â”€â”€
                     if all_bidders:
-                        st.markdown("**ðŸ† Original Auction â€” Full Bidder Scorecard**")
+                        st.markdown("**ðŸ† Original Auction â€” Full Bidder Scorecard**")
                         st.caption(f"{len(all_bidders)} satellites competed Â· Top {req_nodes} by score won")
 
                         df_bid = pd.DataFrame(all_bidders)
@@ -186,7 +186,7 @@ with tab1:
                 radius  = mission.get("target_radius", 500)
                 name    = mission.get("name", mission_id)
                 with st.expander(f"ðŸŸ¡ **{name}** | Seeking {mission.get('required_nodes')}Ã— {sensor} within {radius+1000} km"):
-                    st.write(f"**Target:** {lat:.2f}Â°, {lon:.2f}Â° | **Radius:** {radius} km")
+                    st.write(f"**Target:** {lat:.2f}°, {lon:.2f}° | **Radius:** {radius} km")
                     st.info("Consensus Engine is scanning the fleet for eligible nodes. Check back in 5 seconds.")
 
 
@@ -212,7 +212,7 @@ with tab2:
         logs_raw2 = {}
 
     if not logs_raw2:
-        st.info("â³ No completed auctions yet. Dispatch a mission from the Ground Station.")
+        st.info("â³ No completed auctions yet. Dispatch a mission from the Ground Station.")
     else:
         for mission_id, log_json in reversed(list(logs_raw2.items())):
             log     = json.loads(log_json)
@@ -230,7 +230,7 @@ with tab2:
             ):
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("Sensor",       log.get("sensor", "?"))
-                c2.metric("Target",       f"{log.get('target_lat',0):.2f}Â°, {log.get('target_lon',0):.2f}Â°")
+                c2.metric("Target",       f"{log.get('target_lat',0):.2f}°, {log.get('target_lon',0):.2f}°")
                 c3.metric("Zone Radius",  f"{log.get('radius',0)} km")
                 c4.metric("Max Slew Dist",f"{log.get('radius',0)+1000} km")
 
@@ -255,7 +255,7 @@ with tab2:
                         st.success(f"**Winning margin:** {bw['Node ID']} â†’ `{bw['Auction Score']:.4f}` "
                                    f"vs `{bl['Auction Score']:.4f}` (nearest loser) | Î” = `{margin:.4f}`")
 
-        if st.button("ðŸ—‘ï¸ Clear Auction Logs"):
+        if st.button("ðŸ—‘ï¸ Clear Auction Logs"):
             r.delete("AUCTION_LOGS")
             st.rerun()
 
@@ -264,7 +264,7 @@ with tab2:
 # TAB 3 â€” NODE DEEP SCAN
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab3:
-    st.markdown("### ðŸ” Node Deep Scan â€” Full Telemetry Vector")
+    st.markdown("### 🔍 Node Deep Scan — Full Telemetry Vector")
     st.caption("Select any satellite to inspect every parameter driving its real-time Cáµ¢ capability score.")
 
     try:
@@ -309,7 +309,7 @@ with tab3:
                 col2.metric("Hardware",   ptype)
                 col3.metric("Role",       role)
                 col4.metric("Battery",    f"{battery:.1f}%")
-                col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}Â°, {sat_data.get('lon',0):.2f}Â°")
+                col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}°, {sat_data.get('lon',0):.2f}°")
 
                 st.markdown("---")
                 st.markdown("#### Full Telemetry State Vector")
@@ -541,4 +541,5 @@ with tab4:
 if auto_refresh:
     time.sleep(5)
     st.rerun()
+
 

@@ -10,204 +10,153 @@ from hal_simulator import MockHAL
 from scoring_engine import compute_final_score
 from config import get_redis_client
 
+
+# ─── DETERMINISTIC SATELLITE CLASSIFIER ───────────────────────────────────────
+# Parses TLE names to assign real-world hardware payloads.
+# Unknown satellites get a hash-based assignment (same every reboot).
+def classify_satellite(name):
+    """Categorizes hardware payload based on real-world satellite constellations."""
+    n = name.upper()
+
+    # 1. Communications / Relay backbone
+    if any(x in n for x in ["STARLINK", "ONEWEB", "IRIDIUM", "GLOBALSTAR", "O3B", "ORBCOMM", "INMARSAT", "SES-"]):
+        return "RELAY"
+
+    # 2. Microwave / Weather
+    elif any(x in n for x in ["NOAA", "GOES", "METEOR", "FENGYUN", "METOP", "DMSP", "TIROS", "SUOMI"]):
+        return "MW"
+
+    # 3. Synthetic Aperture Radar (cloud-penetrating)
+    elif any(x in n for x in ["SENTINEL-1", "RADARSAT", "ICEYE", "CAPELLA", "TERRASAR", "COSMO", "PAZ", "RISAT"]):
+        return "SAR"
+
+    # 4. Electro-Optical (high-res visual)
+    elif any(x in n for x in ["LANDSAT", "SENTINEL-2", "WORLDVIEW", "PLANET", "SKYSAT", "SPOT", "PLEIADES", "GEOEYE", "KOMPSAT"]):
+        return "EO"
+
+    # 5. Signals Intelligence / Military
+    elif any(x in n for x in ["NROL", "USA ", "COSMOS", "YAOGAN", "LACROSSE", "MISTY"]):
+        return "SIGINT"
+
+    else:
+        # Deterministic fallback: hash the name so the assignment is stable across reboots
+        val = int(hashlib.md5(name.encode()).hexdigest(), 16)
+        return ["EO", "SAR", "MW", "SIGINT", "RELAY"][val % 5]
+
+
+# ─── ECI → LAT/LON CONVERSION ─────────────────────────────────────────────────
 def eci_to_latlon(x, y, z, jd):
-    """Converts Earth-Centered Inertial (ECI) to Latitude/Longitude (ECEF) using GMST."""
-    # 1. Calculate GMST (Greenwich Mean Sidereal Time) in degrees
+    """Converts Earth-Centered Inertial (ECI) km → geodetic Lat/Lon (degrees)."""
+    # 1. Greenwich Mean Sidereal Time (degrees)
     t = jd - 2451545.0
     gmst_deg = (280.46061837 + 360.98564736629 * t) % 360.0
     gmst_rad = math.radians(gmst_deg)
 
-    # 2. Calculate Latitude
+    # 2. Rotate ECI → ECEF
+    lon_eci = math.atan2(y, x)          # ECI longitude
+    lon_ecef = lon_eci - gmst_rad       # subtract Earth's rotation
+    lon = math.degrees(lon_ecef) % 360
+    if lon > 180:
+        lon -= 360                       # wrap to [-180, 180]
+
+    # 3. Latitude (same in ECI and ECEF for a spherical model)
     r = math.sqrt(x**2 + y**2 + z**2)
     lat = math.degrees(math.asin(z / r))
-    
-    # 3. Calculate ECI Longitude, then subtract GMST to lock it to the spinning Earth
-    lon_eci = math.atan2(y, x)
-    lon_ecef = math.degrees(lon_eci - gmst_rad)
-    
-    # Normalize to -180 to 180 degrees
-    lon_ecef = (lon_ecef + 180) % 360 - 180
-    
-    return lat, lon_ecef
 
-def calculate_sun_lon(now):
-    """Calculates where the sun is currently shining directly overhead (sub-solar point)."""
-    # The sun is directly over the Prime Meridian (Lon 0) at exactly 12:00 UTC.
-    # The Earth rotates at 15 degrees per hour.
-    utc_hours = now.hour + now.minute/60.0 + now.second/3600.0
-    sun_lon = (12.0 - utc_hours) * 15.0
-    return (sun_lon + 180) % 360 - 180
+    return lat, lon
+
 
 def load_satellites(filepath):
     satellites = {}
     with open(filepath, 'r', encoding='utf-8') as f:
         lines = f.readlines()
-        # Parse TLEs in chunks of 3: Name, Line 1, Line 2
         for i in range(0, len(lines), 3):
-            if i+2 < len(lines):
-                name = lines[i].strip()
-                line1 = lines[i+1].strip()
-                line2 = lines[i+2].strip()
-                # Create SGP4 satellite object
-                satrec = Satrec.twoline2rv(line1, line2)
-                satellites[name] = satrec
+            if i + 2 < len(lines):
+                name  = lines[i].strip()
+                line1 = lines[i + 1].strip()
+                line2 = lines[i + 2].strip()
+                try:
+                    satrec = Satrec.twoline2rv(line1, line2)
+                    satellites[name] = satrec
+                except Exception:
+                    pass
     return satellites
 
-# Define primary hardware categories
-PAYLOAD_TYPES = ["EO", "SAR", "MW", "SIGINT", "RELAY"]
-
-def classify_satellite(name):
-    """Categorizes hardware payload based on real-world satellite constellations."""
-    name = name.upper()
-    
-    # 1. Ka/Ku-Band Communications
-    if any(x in name for x in ["STARLINK", "ONEWEB", "IRIDIUM", "GLOBALSTAR", "O3B"]):
-        return "RELAY"
-        
-    # 2. Microwave/Weather
-    elif any(x in name for x in ["NOAA", "GOES", "METEOR", "FENGYUN", "METOP"]):
-        return "MW"
-        
-    # 3. Synthetic Aperture Radar (SAR) - Cloud penetrating
-    elif any(x in name for x in ["SENTINEL-1", "RADARSAT", "ICEYE", "CAPELLA", "TERRASAR"]):
-        return "SAR"
-        
-    # 4. Electro-Optical (High-Res Visual)
-    elif any(x in name for x in ["LANDSAT", "SENTINEL-2", "WORLDVIEW", "PLANET", "SKYSAT", "SPOT"]):
-        return "EO"
-        
-    # 5. Signals Intelligence / Military
-    elif any(x in name for x in ["NROL", "USA ", "COSMOS", "YAOGAN"]):
-        return "SIGINT"
-        
-    else:
-        # Fallback: Deterministic assignment for unknown satellites.
-        # Hashing the name guarantees 'SATELLITE X' is always 'SAR', even after a reboot.
-        val = int(hashlib.md5(name.encode()).hexdigest(), 16)
-        types = ["EO", "SAR", "MW", "SIGINT"]
-        return types[val % len(types)]
 
 def start_engine():
+    r = get_redis_client()
+
     fleet = load_satellites('satellites.txt')
-    
+    print(f"Loaded {len(fleet)} satellites. Booting SGP4 engine...")
+
+    # Pre-classify all hardware (stable across reboots via deterministic hash)
+    fleet_hardware = {name: classify_satellite(name) for name in fleet.keys()}
+    print(f"Hardware classified: {dict(list({v: sum(1 for h in fleet_hardware.values() if h==v) for v in set(fleet_hardware.values())}.items()))}")
+
     # Initialize HAL instances for dynamic telemetry
     hal_instances = {name: MockHAL(name) for name in fleet.keys()}
-    
-    # Map every satellite to its realistic hardware payload deterministically
-    fleet_hardware = {name: classify_satellite(name) for name in fleet.keys()}
-    
-    print(f"Loaded {len(fleet)} satellites. Booting SGP4 engine...")
-    
-    # Dummy weights for an "Earth Observation" mission
+
+    # Default scoring weights (Earth Observation profile)
     default_weights = {
-        "mean_motion": 0.8, "look_angle": 1.0, "cloud_cover": 0.5, 
+        "mean_motion": 0.8, "look_angle": 1.0, "cloud_cover": 0.5,
         "soc": 0.3, "memory_buffer": 0.7, "isl_throughput": 0.9
     }
 
-    r = get_redis_client()
-
-    # Initialize the simulation clock
+    # Chronos time multiplier (controlled by Ground Station via Redis)
     sim_time = datetime.now(timezone.utc)
-    last_real_time = time.time()
 
     while True:
         try:
-            # Calculate how much real time passed since the last loop
-            current_real_time = time.time()
-            dt = current_real_time - last_real_time
-            last_real_time = current_real_time
-            
-            # Pull the time multiplier from Ground Station (default to 60x for testing)
+            # Read time multiplier from Ground Station
             try:
-                multiplier = int(r.get("TIME_MULTIPLIER") or 60)
+                multiplier = float(r.get("CHRONOS_MULTIPLIER") or 1.0)
             except Exception:
-                multiplier = 60
-                
-            # Advance the simulation clock! (e.g., 1 real second * 3600 = 1 sim hour)
-            sim_time += timedelta(seconds=(dt * multiplier))
-            
-            # SGP4 requires Julian Date
-            jd, fr = jday(sim_time.year, sim_time.month, sim_time.day, sim_time.hour, sim_time.minute, sim_time.second)
-            
-            # Calculate global sun position for this frame
-            current_sun_lon = calculate_sun_lon(sim_time)
+                multiplier = 1.0
 
-            # ── Read the current geographic mission from Redis ──
-            mission_raw = r.get("CURRENT_MISSION")
-            mission = json.loads(mission_raw) if mission_raw else None
+            sim_time += timedelta(seconds=multiplier)
+            now = sim_time
 
-            # Tracking for lead election
-            best_satellite = None
-            highest_score = -999
-            fleet_data = {}
-            
+            jd, fr = jday(now.year, now.month, now.day, now.hour, now.minute, now.second + now.microsecond / 1e6)
+
+            pipe = r.pipeline()
+
             for name, sat in fleet.items():
-                # e is error code, position is (X, Y, Z) in km
                 e, position, velocity = sat.sgp4(jd, fr)
-                
+
                 if e == 0:
-                    # 1. Generate dynamic telemetry based on current position
+                    lat, lon = eci_to_latlon(position[0], position[1], position[2], jd + fr)
+
                     telem = hal_instances[name].generate_telemetry(position[2])
-                    
-                    # Calculate the C_i score in real-time
                     current_score = compute_final_score(telem, default_weights)
-                    
-                    # 2. Convert ECI to Lat/Lon for geographic awareness (Ground Track)
-                    sat_lat, sat_lon = eci_to_latlon(position[0], position[1], position[2], jd + fr)
-                    
-                    # 3. If there is an active geographic mission, calculate Look Angle
-                    if mission and mission.get("active"):
-                        lat_diff = abs(sat_lat - mission["target_lat"])
-                        lon_diff = abs(sat_lon - mission["target_lon"])
-                        
-                        # Satellite is within a 15-degree "Look Window" (roughly overhead)
-                        if lat_diff < 15 and lon_diff < 15:
-                            # Boost score based on proximity (closer is better)
-                            distance_penalty = (lat_diff + lon_diff) * 0.1
-                            mission_score = current_score - distance_penalty
-                            
-                            # Elect the lead
-                            if mission_score > highest_score:
-                                highest_score = mission_score
-                                best_satellite = name
-                    
-                    # 4. Construct the full enriched state JSON
-                    fleet_data[name] = {
-                        "id": name,
-                        "position": {"x": position[0], "y": position[1], "z": position[2]},
-                        "velocity": {"vx": velocity[0], "vy": velocity[1], "vz": velocity[2]},
-                        "lat": round(sat_lat, 4),
-                        "lon": round(sat_lon, 4),
-                        "telemetry": telem,
-                        "payload_type": fleet_hardware[name],
+
+                    state_vector = {
+                        "id":            name,
+                        "position":      {"x": position[0], "y": position[1], "z": position[2]},
+                        "velocity":      {"vx": velocity[0], "vy": velocity[1], "vz": velocity[2]},
+                        "lat":           lat,
+                        "lon":           lon,
+                        "payload_type":  fleet_hardware[name],   # deterministic hardware
+                        "telemetry":     telem,
                         "current_score": current_score,
-                        "is_active_lead": False  # Default; winner flagged after loop
+                        "role":          "MEMBER",                # consensus engine sets MISSION_ACTIVE
                     }
-            
-            # ── The Enclave Logic: Assign the task to the best candidate ──
-            if best_satellite and best_satellite in fleet_data:
-                fleet_data[best_satellite]["is_active_lead"] = True
 
-            # 5. Push all enriched state vectors to Redis using one highly efficient MSET
-            if fleet_data:
-                mset_dict = {name: json.dumps(data) for name, data in fleet_data.items()}
-                mset_dict["CURRENT_SUN_LON"] = current_sun_lon
-                r.mset(mset_dict)
-                    
-            time.sleep(1) # Update at 1 Hertz
+                    pipe.set(name, json.dumps(state_vector))
 
-        except (RedisConnectionError, ConnectionRefusedError, ConnectionResetError, OSError) as e:
-            print(f"⚠️ Physics Engine lost Redis connection: {e.__class__.__name__}. Reconnecting in 2s...")
-            time.sleep(2)
+            pipe.execute()
+            time.sleep(1)  # 1 Hz physics loop
+
+        except (RedisConnectionError, ConnectionRefusedError) as e:
+            print(f"[WARN] Physics Engine lost Redis: {e}. Retrying in 3s...")
+            time.sleep(3)
             try:
                 r = get_redis_client()
-                r.ping()
-                print("✅ Physics Engine reconnected to Redis.")
             except Exception:
-                pass  # Will retry next loop iteration
-        except Exception as e:
-            print(f"⚠️ Physics Engine unexpected error: {e}. Retrying in 1s...")
-            time.sleep(1)
+                pass
+        except Exception as ex:
+            print(f"[ERROR] Physics Engine: {ex}")
+            time.sleep(2)
+
 
 if __name__ == '__main__':
     start_engine()

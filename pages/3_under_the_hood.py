@@ -35,10 +35,11 @@ with tab1:
     """)
 
     st.markdown('<div class="formula-box">'
-        '📐 <b>Auction Score Formula:</b><br>'
-        'auction_score = (proximity_score × 0.7) + (battery × 0.3)<br>'
-        'proximity_score = max(0, (max_view_distance − actual_distance) / 100)<br>'
-        'max_view_distance = operational_radius + 1000 km  (LEO slew margin)'
+        '📐 <b>Normalized Auction Score Formula (max possible = 1.0):</b><br>'
+        'auction_score = (proximity_score × W<sub>prox</sub>) + (battery × W<sub>batt</sub>)<br>'
+        'proximity_score = max(0, (max_view_dist − actual_dist) / max_view_dist) &nbsp; ← normalized [0.0 – 1.0]<br>'
+        'max_view_dist = operational_radius + 1000 km &nbsp; (LEO sensor slew margin)<br>'
+        'W<sub>prox</sub> &amp; W<sub>batt</sub> = commander weights (Ground Station sliders, default 0.7 / 0.3)'
         '</div>', unsafe_allow_html=True)
 
     st.markdown("---")

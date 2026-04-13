@@ -86,10 +86,20 @@ def elect_plane_leaders():
 
                             # Gatekeeper: must be physically close enough to image the target
                             if distance <= max_view_distance:
-                                # Proximity-weighted auction score: closer = better
-                                proximity_score = max(0, (max_view_distance - distance) / 100)
+                                # TRUE NORMALIZATION: proximity strictly in [0.0, 1.0]
+                                # Old: /100 let proximity reach 18.0 vs battery max 0.3 → weights useless
+                                # New: divide by max_view_distance so both axes scale identically
+                                proximity_score = max(0.0, (max_view_distance - distance) / max_view_distance)
+
+                                # Pull dynamic weights set by commander in Ground Station
+                                weights = mission.get("weights", {})
+                                w_proximity = weights.get("mean_motion", 0.7)
+                                w_battery   = weights.get("soc", 0.3)
+
                                 battery = sat.get('telemetry', {}).get('P0_Gatekeepers', {}).get('soc', 1.0)
-                                sat['auction_score'] = (proximity_score * 0.7) + (battery * 0.3)
+
+                                # Perfectly balanced score: max possible = 1.0
+                                sat['auction_score'] = (proximity_score * w_proximity) + (battery * w_battery)
                                 eligible_bidders.append(sat)
 
                     # Sort by combined proximity + battery score
@@ -126,7 +136,7 @@ def elect_plane_leaders():
                                     "Payload":       b.get('payload_type', '?'),
                                     "Distance (km)": round(haversine(b.get('lat', 0), b.get('lon', 0), target_lat, target_lon), 1),
                                     "Battery (%)":   round(b.get('telemetry', {}).get('P0_Gatekeepers', {}).get('soc', 1.0) * 100, 1),
-                                    "Prox Score":    round((max_view_distance - haversine(b.get('lat', 0), b.get('lon', 0), target_lat, target_lon)) / 100, 4),
+                                    "Prox Score":    round(max(0.0, (max_view_distance - haversine(b.get('lat', 0), b.get('lon', 0), target_lat, target_lon)) / max_view_distance), 4),
                                     "Auction Score": round(b.get('auction_score', 0), 4),
                                     "Result":        "WON" if b['id'] in winning_ids else "LOST"
                                 }

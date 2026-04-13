@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import json
 import time
 import pandas as pd
@@ -158,7 +158,7 @@ with tab1:
                             if val == "WON":   return "background-color:rgba(0,255,136,0.1);color:#00ff88;font-weight:bold"
                             return "color:#ff3344"
 
-                        styled = df_bid.style.applymap(color_result, subset=["Result"])
+                        styled = df_bid.style.map(color_result, subset=["Result"])
                         st.dataframe(styled, width='stretch')
 
                         # Margin of victory

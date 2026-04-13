@@ -1,10 +1,10 @@
-import streamlit as st
+﻿import streamlit as st
 import json
 import time
 import pandas as pd
 from config import get_redis_client
 
-st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="⚙️")
+st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="âš™ï¸")
 
 r = get_redis_client()
 
@@ -21,10 +21,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("⚙️ Swarm Intelligence Forensics")
+st.title("âš™ï¸ Swarm Intelligence Forensics")
 st.caption("Breaking the black box. Every number, every decision, in real time.")
 
-# ── Auto-refresh control ──
+# â”€â”€ Auto-refresh control â”€â”€
 col_r1, col_r2 = st.columns([5, 1])
 with col_r2:
     auto_refresh = st.checkbox("Auto-refresh", value=True)
@@ -32,17 +32,17 @@ if auto_refresh:
     st.empty()  # placeholder, real refresh via rerun below
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🎯 Live Bidding Arena",
-    "🧾 Auction Ledger",
-    "🔍 Node Deep Scan",
-    "📊 Fleet Statistics"
+    "ðŸŽ¯ Live Bidding Arena",
+    "ðŸ§¾ Auction Ledger",
+    "ðŸ” Node Deep Scan",
+    "ðŸ“Š Fleet Statistics"
 ])
 
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 1 — LIVE BIDDING ARENA
-# ════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# TAB 1 â€” LIVE BIDDING ARENA
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab1:
-    st.markdown("### 🎯 Live Bidding Arena")
+    st.markdown("### ðŸŽ¯ Live Bidding Arena")
     st.markdown("Every active mission, its current enclave, and how long each satellite has been on contract.")
 
     try:
@@ -53,24 +53,24 @@ with tab1:
         logs_raw     = {}
 
     if not missions_raw:
-        st.info("⏳ No active missions. Go to **Ground Station** and dispatch a scenario.")
+        st.info("â³ No active missions. Go to **Ground Station** and dispatch a scenario.")
     else:
         executing = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
                      if json.loads(mj).get("status") == "EXECUTING"]
         pending   = [(mid, json.loads(mj)) for mid, mj in missions_raw.items()
                      if json.loads(mj).get("status") == "OPEN_AUCTION"]
 
-        # ── Summary bar ──
+        # â”€â”€ Summary bar â”€â”€
         c1, c2, c3 = st.columns(3)
-        c1.metric("🟢 Missions Executing", len(executing))
-        c2.metric("🟡 Auctions Open",      len(pending))
-        c3.metric("📡 Total Missions",     len(missions_raw))
+        c1.metric("ðŸŸ¢ Missions Executing", len(executing))
+        c2.metric("ðŸŸ¡ Auctions Open",      len(pending))
+        c3.metric("ðŸ“¡ Total Missions",     len(missions_raw))
 
         st.markdown("---")
 
-        # ── EXECUTING missions ──
+        # â”€â”€ EXECUTING missions â”€â”€
         if executing:
-            st.markdown("#### 🟢 Currently Executing Missions")
+            st.markdown("#### ðŸŸ¢ Currently Executing Missions")
             for mission_id, mission in executing:
                 enclave   = mission.get("enclave", [])
                 sensor    = mission.get("sensor_required", "?")
@@ -83,9 +83,9 @@ with tab1:
                 sensor_color = {"SAR": "#cc33ff", "EO": "#3399ff", "SIGINT": "#ffcc1a",
                                 "MW": "#ff8000", "RELAY": "#666"}.get(sensor, "#00ff88")
 
-                label = (f"{'✅' if len(enclave) >= req_nodes else '⚠️'} **{name}** "
+                label = (f"{'âœ…' if len(enclave) >= req_nodes else 'âš ï¸'} **{name}** "
                          f"| {sensor} | {len(enclave)}/{req_nodes} nodes locked "
-                         f"| Target: {lat:.1f}°, {lon:.1f}° | Zone: {radius} km")
+                         f"| Target: {lat:.1f}Â°, {lon:.1f}Â° | Zone: {radius} km")
 
                 with st.expander(label, expanded=True):
                     # Pull the auction log for this mission
@@ -99,8 +99,8 @@ with tab1:
                     mc3.metric("Nodes Locked", f"{len(enclave)} / {req_nodes}")
                     mc4.metric("Coordination", "Max Vote Distance")
 
-                    # ── Enclave roster ──
-                    st.markdown("**📡 Active Enclave (Nodes Currently Imaging)**")
+                    # â”€â”€ Enclave roster â”€â”€
+                    st.markdown("**ðŸ“¡ Active Enclave (Nodes Currently Imaging)**")
                     if enclave:
                         now = time.time()
                         roster_rows = []
@@ -120,18 +120,18 @@ with tab1:
 
                             # Get their auction score from the log
                             bid = next((b for b in all_bidders if b.get("Node ID") == sat_id), {})
-                            auction_sc = bid.get("Auction Score", "—")
-                            dist_km    = bid.get("Distance (km)", "—")
+                            auction_sc = bid.get("Auction Score", "â€”")
+                            dist_km    = bid.get("Distance (km)", "â€”")
 
                             roster_rows.append({
                                 "Node ID":        sat_id,
                                 "Hardware":       ptype,
-                                "Lat / Lon":      f"{lat_s}°, {lon_s}°",
+                                "Lat / Lon":      f"{lat_s}Â°, {lon_s}Â°",
                                 "Battery (%)":    battery,
-                                "Cᵢ Score":       score,
+                                "Cáµ¢ Score":       score,
                                 "Auction Score":  auction_sc,
                                 "Dist to Target": dist_km,
-                                "Status":         "🟢 ACTIVE"
+                                "Status":         "ðŸŸ¢ ACTIVE"
                             })
 
                         roster_df = pd.DataFrame(roster_rows)
@@ -140,14 +140,14 @@ with tab1:
                             return ["background-color: rgba(0,255,136,0.07)"] * len(row)
 
                         st.dataframe(roster_df.style.apply(style_roster, axis=1),
-                                     use_container_width=True)
+                                     width='stretch')
                     else:
-                        st.warning("Enclave is forming — no satellites locked yet.")
+                        st.warning("Enclave is forming â€” no satellites locked yet.")
 
-                    # ── Full bidder history from auction log ──
+                    # â”€â”€ Full bidder history from auction log â”€â”€
                     if all_bidders:
-                        st.markdown("**🏆 Original Auction — Full Bidder Scorecard**")
-                        st.caption(f"{len(all_bidders)} satellites competed · Top {req_nodes} by score won")
+                        st.markdown("**ðŸ† Original Auction â€” Full Bidder Scorecard**")
+                        st.caption(f"{len(all_bidders)} satellites competed Â· Top {req_nodes} by score won")
 
                         df_bid = pd.DataFrame(all_bidders)
                         col_order = ["Result", "Node ID", "Payload", "Distance (km)",
@@ -159,7 +159,7 @@ with tab1:
                             return "color:#ff3344"
 
                         styled = df_bid.style.applymap(color_result, subset=["Result"])
-                        st.dataframe(styled, use_container_width=True)
+                        st.dataframe(styled, width='stretch')
 
                         # Margin of victory
                         won  = [b for b in all_bidders if b.get("Result") == "WON"]
@@ -171,36 +171,36 @@ with tab1:
                             st.success(
                                 f"**Winning margin:** `{best_w['Node ID']}` scored "
                                 f"`{best_w['Auction Score']:.4f}` vs nearest loser "
-                                f"`{best_l['Auction Score']:.4f}` — margin `{margin:.4f}`"
+                                f"`{best_l['Auction Score']:.4f}` â€” margin `{margin:.4f}`"
                             )
                     else:
                         st.info("Auction log not yet written for this mission. Will appear after first enclave formation.")
 
-        # ── PENDING auctions ──
+        # â”€â”€ PENDING auctions â”€â”€
         if pending:
-            st.markdown("#### 🟡 Open Auctions (Searching for Satellites)")
+            st.markdown("#### ðŸŸ¡ Open Auctions (Searching for Satellites)")
             for mission_id, mission in pending:
                 sensor  = mission.get("sensor_required", "?")
                 lat     = mission.get("target_lat", 0)
                 lon     = mission.get("target_lon", 0)
                 radius  = mission.get("target_radius", 500)
                 name    = mission.get("name", mission_id)
-                with st.expander(f"🟡 **{name}** | Seeking {mission.get('required_nodes')}× {sensor} within {radius+1000} km"):
-                    st.write(f"**Target:** {lat:.2f}°, {lon:.2f}° | **Radius:** {radius} km")
+                with st.expander(f"ðŸŸ¡ **{name}** | Seeking {mission.get('required_nodes')}Ã— {sensor} within {radius+1000} km"):
+                    st.write(f"**Target:** {lat:.2f}Â°, {lon:.2f}Â° | **Radius:** {radius} km")
                     st.info("Consensus Engine is scanning the fleet for eligible nodes. Check back in 5 seconds.")
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 2 — AUCTION LEDGER (Historical)
-# ════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# TAB 2 â€” AUCTION LEDGER (Historical)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab2:
-    st.markdown("### Contract Net Protocol (CNP) — Historical Auction Records")
+    st.markdown("### Contract Net Protocol (CNP) â€” Historical Auction Records")
     st.markdown("Every completed auction, permanently logged with full mathematical transparency.")
 
     st.markdown('<div class="formula-box">'
-        '📐 <b>Normalized Auction Score (max = 1.0):</b><br>'
-        'auction_score = (proximity_score × W<sub>prox</sub>) + (battery × W<sub>batt</sub>)<br>'
-        'proximity_score = max(0, (max_view_dist − actual_dist) / max_view_dist)  ← [0.0, 1.0]<br>'
+        'ðŸ“ <b>Normalized Auction Score (max = 1.0):</b><br>'
+        'auction_score = (proximity_score Ã— W<sub>prox</sub>) + (battery Ã— W<sub>batt</sub>)<br>'
+        'proximity_score = max(0, (max_view_dist âˆ’ actual_dist) / max_view_dist)  â† [0.0, 1.0]<br>'
         'max_view_dist = zone_radius + 1000 km  |  W defaults: proximity=0.7, battery=0.3'
         '</div>', unsafe_allow_html=True)
 
@@ -212,7 +212,7 @@ with tab2:
         logs_raw2 = {}
 
     if not logs_raw2:
-        st.info("⏳ No completed auctions yet. Dispatch a mission from the Ground Station.")
+        st.info("â³ No completed auctions yet. Dispatch a mission from the Ground Station.")
     else:
         for mission_id, log_json in reversed(list(logs_raw2.items())):
             log     = json.loads(log_json)
@@ -220,17 +220,17 @@ with tab2:
             winners = [b for b in bidders if b.get("Result") == "WON"]
             losers  = [b for b in bidders if b.get("Result") == "LOST"]
 
-            icons = {"SAR": "🔵", "EO": "🟣", "SIGINT": "🟡", "MW": "🟠", "RELAY": "⚫"}
-            icon  = icons.get(log.get("sensor", ""), "⚪")
+            icons = {"SAR": "ðŸ”µ", "EO": "ðŸŸ£", "SIGINT": "ðŸŸ¡", "MW": "ðŸŸ ", "RELAY": "âš«"}
+            icon  = icons.get(log.get("sensor", ""), "âšª")
 
             with st.expander(
                 f"{icon} **{mission_id}** | {log.get('sensor')} | "
-                f"{log.get('total_bidders',0)} bidders → {log.get('winners',0)} selected",
+                f"{log.get('total_bidders',0)} bidders â†’ {log.get('winners',0)} selected",
                 expanded=False
             ):
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("Sensor",       log.get("sensor", "?"))
-                c2.metric("Target",       f"{log.get('target_lat',0):.2f}°, {log.get('target_lon',0):.2f}°")
+                c2.metric("Target",       f"{log.get('target_lat',0):.2f}Â°, {log.get('target_lon',0):.2f}Â°")
                 c3.metric("Zone Radius",  f"{log.get('radius',0)} km")
                 c4.metric("Max Slew Dist",f"{log.get('radius',0)+1000} km")
 
@@ -246,26 +246,26 @@ with tab2:
                                     for i in range(len(row))]
                         return ["color:#ff3344" if i == 0 else "color:#8899aa" for i in range(len(row))]
 
-                    st.dataframe(df.style.apply(style_bid, axis=1), use_container_width=True)
+                    st.dataframe(df.style.apply(style_bid, axis=1), width='stretch')
 
                     if winners and losers:
                         bw = max(winners, key=lambda b: b.get("Auction Score", 0))
                         bl = max(losers,  key=lambda b: b.get("Auction Score", 0))
                         margin = bw["Auction Score"] - bl["Auction Score"]
-                        st.success(f"**Winning margin:** {bw['Node ID']} → `{bw['Auction Score']:.4f}` "
-                                   f"vs `{bl['Auction Score']:.4f}` (nearest loser) | Δ = `{margin:.4f}`")
+                        st.success(f"**Winning margin:** {bw['Node ID']} â†’ `{bw['Auction Score']:.4f}` "
+                                   f"vs `{bl['Auction Score']:.4f}` (nearest loser) | Î” = `{margin:.4f}`")
 
-        if st.button("🗑️ Clear Auction Logs"):
+        if st.button("ðŸ—‘ï¸ Clear Auction Logs"):
             r.delete("AUCTION_LOGS")
             st.rerun()
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 3 — NODE DEEP SCAN
-# ════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# TAB 3 â€” NODE DEEP SCAN
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab3:
-    st.markdown("### 🔍 Node Deep Scan — Full Telemetry Vector")
-    st.caption("Select any satellite to inspect every parameter driving its real-time Cᵢ capability score.")
+    st.markdown("### ðŸ” Node Deep Scan â€” Full Telemetry Vector")
+    st.caption("Select any satellite to inspect every parameter driving its real-time Cáµ¢ capability score.")
 
     try:
         # Prioritize mission-active satellites from the ledger for the top of the list
@@ -290,7 +290,7 @@ with tab3:
             return 1
         fleet_ds.sort(key=sort_ds)
 
-        options = [f"{s['id']} [{s.get('payload_type','?')}] — {s.get('role','MEMBER')}" for s in fleet_ds]
+        options = [f"{s['id']} [{s.get('payload_type','?')}] â€” {s.get('role','MEMBER')}" for s in fleet_ds]
         selected = st.selectbox("Select Target Node for Deep Scan", options)
 
         if selected:
@@ -305,11 +305,11 @@ with tab3:
                 battery = gk.get('soc', 0) * 100
 
                 col1, col2, col3, col4, col5 = st.columns(5)
-                col1.metric("Cᵢ Score",   f"{score:.4f}")
+                col1.metric("Cáµ¢ Score",   f"{score:.4f}")
                 col2.metric("Hardware",   ptype)
                 col3.metric("Role",       role)
                 col4.metric("Battery",    f"{battery:.1f}%")
-                col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}°, {sat_data.get('lon',0):.2f}°")
+                col5.metric("Ground Track", f"{sat_data.get('lat',0):.2f}Â°, {sat_data.get('lon',0):.2f}Â°")
 
                 st.markdown("---")
                 st.markdown("#### Full Telemetry State Vector")
@@ -319,9 +319,9 @@ with tab3:
                     for k, v in params.items():
                         try:
                             norm_v = max(0, min(float(v), 1.0))
-                            bar = "█" * int(norm_v * 20) + "░" * (20 - int(norm_v * 20))
+                            bar = "â–ˆ" * int(norm_v * 20) + "â–‘" * (20 - int(norm_v * 20))
                         except Exception:
-                            bar = "—"
+                            bar = "â€”"
                         rows.append({
                             "Group":     group.replace('_', ' '),
                             "Parameter": k.replace('_', ' ').title(),
@@ -330,12 +330,12 @@ with tab3:
                         })
 
                 if rows:
-                    st.dataframe(pd.DataFrame(rows), use_container_width=True)
+                    st.dataframe(pd.DataFrame(rows), width='stretch')
 
                 st.markdown("---")
                 st.markdown("#### Score Composition Formula")
                 st.latex(r"C_i = \sum_{k} w_k \cdot p_k")
-                st.caption("wₖ = parameter weight from scoring engine | pₖ = normalized telemetry value")
+                st.caption("wâ‚– = parameter weight from scoring engine | pâ‚– = normalized telemetry value")
 
                 try:
                     all_logs = r.hgetall("AUCTION_LOGS")
@@ -347,7 +347,7 @@ with tab3:
                         if match:
                             won_in.append((mid, match))
                     if won_in:
-                        st.success(f"✅ This node won **{len(won_in)}** mission auction(s):")
+                        st.success(f"âœ… This node won **{len(won_in)}** mission auction(s):")
                         for mid, match in won_in:
                             st.write(f"- **{mid}** | Score: `{match.get('Auction Score','?')}` | Dist: `{match.get('Distance (km)','?')} km`")
                     else:
@@ -356,14 +356,14 @@ with tab3:
                     pass
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# TAB 4 — FLEET STATISTICS (Fixed + Charted)
-# ════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# TAB 4 â€” FLEET STATISTICS (Fixed + Charted)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 with tab4:
-    st.markdown("### 📊 Real-Time Constellation Health")
+    st.markdown("### ðŸ“Š Real-Time Constellation Health")
 
     try:
-        # ── Get active roles from the authoritative MISSIONS_LEDGER ──
+        # â”€â”€ Get active roles from the authoritative MISSIONS_LEDGER â”€â”€
         active_enclave_ids = set()
         missions_for_stats = {}
         for mid, mj in r.hgetall("MISSIONS_LEDGER").items():
@@ -372,7 +372,7 @@ with tab4:
             if m.get("status") == "EXECUTING":
                 active_enclave_ids.update(m.get("enclave", []))
 
-        # ── Sample fleet (up to 5000 nodes) for stats ──
+        # â”€â”€ Sample fleet (up to 5000 nodes) for stats â”€â”€
         all_keys   = r.keys('STARLINK-*')
         sample     = all_keys[:5000]
         raw_fleet  = r.mget(sample) if sample else []
@@ -408,17 +408,17 @@ with tab4:
         avg_battery = sum(batteries) / len(batteries)  if batteries else 0
         avg_isl     = sum(isl_vals) / len(isl_vals)    if isl_vals  else 0
 
-        # ── KPI row ──
+        # â”€â”€ KPI row â”€â”€
         k1, k2, k3, k4, k5 = st.columns(5)
         k1.metric("Visible Nodes",     f"{total:,}")
         k2.metric("Mission-Active",    n_active,      delta=f"{n_active/total*100:.1f}%" if total else "0%")
-        k3.metric("Avg Cᵢ Score",     f"{avg_score:.4f}")
+        k3.metric("Avg Cáµ¢ Score",     f"{avg_score:.4f}")
         k4.metric("Avg Battery",       f"{avg_battery:.1f}%")
         k5.metric("Avg ISL Throughput",f"{avg_isl:.1f}%")
 
         st.markdown("---")
 
-        # ── Charts row 1 ──
+        # â”€â”€ Charts row 1 â”€â”€
         try:
             import plotly.graph_objects as go
             import plotly.express as px
@@ -448,10 +448,10 @@ with tab4:
                     margin=dict(t=10,b=10,l=10,r=10),
                     height=280
                 )
-                st.plotly_chart(fig_hw, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig_hw, width='stretch', config={"displayModeBar": False})
 
             with c2:
-                st.markdown("#### Cᵢ Score Distribution")
+                st.markdown("#### Cáµ¢ Score Distribution")
                 fig_sc = go.Figure(go.Histogram(
                     x=scores, nbinsx=30,
                     marker_color="#00aaff",
@@ -462,14 +462,14 @@ with tab4:
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(5,8,15,0.6)",
                     font_color="white",
-                    xaxis=dict(title="Cᵢ Score", color="white", gridcolor="#1a2a3a"),
+                    xaxis=dict(title="Cáµ¢ Score", color="white", gridcolor="#1a2a3a"),
                     yaxis=dict(title="Node Count", color="white", gridcolor="#1a2a3a"),
                     margin=dict(t=10,b=10,l=10,r=10),
                     height=280
                 )
-                st.plotly_chart(fig_sc, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig_sc, width='stretch', config={"displayModeBar": False})
 
-            # ── Charts row 2 ──
+            # â”€â”€ Charts row 2 â”€â”€
             c3, c4 = st.columns(2)
 
             with c3:
@@ -489,7 +489,7 @@ with tab4:
                     margin=dict(t=10,b=10,l=10,r=10),
                     height=260
                 )
-                st.plotly_chart(fig_bat, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig_bat, width='stretch', config={"displayModeBar": False})
 
             with c4:
                 st.markdown("#### ISL Throughput Distribution")
@@ -508,36 +508,37 @@ with tab4:
                     margin=dict(t=10,b=10,l=10,r=10),
                     height=260
                 )
-                st.plotly_chart(fig_isl, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig_isl, width='stretch', config={"displayModeBar": False})
 
         except ImportError:
             st.warning("Install plotly for charts: `pip install plotly`")
 
-        # ── Score health bands table ──
+        # â”€â”€ Score health bands table â”€â”€
         st.markdown("---")
         st.markdown("#### Score Health Band Breakdown")
-        bands = {"🔴 Critical (0–1)":0, "🟠 Warning (1–2)":0, "🟢 Nominal (2–3)":0, "🔵 Optimal (3+)":0}
+        bands = {"ðŸ”´ Critical (0â€“1)":0, "ðŸŸ  Warning (1â€“2)":0, "ðŸŸ¢ Nominal (2â€“3)":0, "ðŸ”µ Optimal (3+)":0}
         for s in scores:
-            if s < 1:   bands["🔴 Critical (0–1)"] += 1
-            elif s < 2: bands["🟠 Warning (1–2)"]  += 1
-            elif s < 3: bands["🟢 Nominal (2–3)"]  += 1
-            else:       bands["🔵 Optimal (3+)"]   += 1
+            if s < 1:   bands["ðŸ”´ Critical (0â€“1)"] += 1
+            elif s < 2: bands["ðŸŸ  Warning (1â€“2)"]  += 1
+            elif s < 3: bands["ðŸŸ¢ Nominal (2â€“3)"]  += 1
+            else:       bands["ðŸ”µ Optimal (3+)"]   += 1
 
         band_df = pd.DataFrame(
             [(k, v, f"{v/total*100:.1f}%" if total else "0%") for k, v in bands.items()],
             columns=["Health Band", "Node Count", "% of Fleet"]
         )
-        st.dataframe(band_df, use_container_width=True)
+        st.dataframe(band_df, width='stretch')
 
-        # ── Hardware breakdown table (exact counts) ──
+        # â”€â”€ Hardware breakdown table (exact counts) â”€â”€
         st.markdown("#### Hardware Roster Count")
         hw_table = pd.DataFrame(
             sorted([(k, v, f"{v/total*100:.1f}%") for k,v in by_payload.items()], key=lambda x:-x[1]),
             columns=["Sensor Type", "Count", "% of Fleet"]
         )
-        st.dataframe(hw_table, use_container_width=True)
+        st.dataframe(hw_table, width='stretch')
 
 # Auto-refresh every 5 seconds
 if auto_refresh:
     time.sleep(5)
     st.rerun()
+

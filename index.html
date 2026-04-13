@@ -880,6 +880,9 @@
         const mouse = new THREE.Vector2();
         const tooltip = document.getElementById('sat-tooltip');
 
+        // Track the currently hovered satellite persistently to avoid click/tooltip race condition
+        let hoveredSat = null;
+
         renderer.domElement.addEventListener('mousemove', (e) => {
             mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -891,6 +894,7 @@
                 const idx = hits[0].index;
                 if (idx < fleetData.length) {
                     const sat = fleetData[idx];
+                    hoveredSat = sat;  // ← store persistently for click handler
                     tooltip.style.display = 'block';
                     tooltip.style.left = (e.clientX + 16) + 'px';
                     tooltip.style.top  = (e.clientY + 16) + 'px';
@@ -905,21 +909,21 @@
                     document.getElementById('tip-thermal').textContent = ((gk.thermal_margin || 0) * 100).toFixed(1) + '%';
                     const eff = sat.telemetry?.P2_Efficiency || {};
                     document.getElementById('tip-isl').textContent     = ((eff.isl_throughput || 0) * 100).toFixed(1) + '%';
-                    
-                    // Display hardware classification
                     document.getElementById('tip-payload').textContent = sat.payload_type || 'UNKNOWN';
                     return;
                 }
             }
+            hoveredSat = null;
             tooltip.style.display = 'none';
         });
 
         // ─── CLICK TO LOCK ───
+        // Use hoveredSat (not tooltip visibility) — avoids race condition with OrbitControls
         let lockedSatId = null;
 
         renderer.domElement.addEventListener('click', () => {
-            if (tooltip.style.display === 'block') {
-                lockedSatId = document.getElementById('tip-name').textContent;
+            if (hoveredSat) {
+                lockedSatId = hoveredSat.id;
             }
         });
 

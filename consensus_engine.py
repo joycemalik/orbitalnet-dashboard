@@ -3,6 +3,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 import json
 import math
 import time
+import random
 from config import get_redis_client
 
 
@@ -135,6 +136,56 @@ def elect_plane_leaders():
                         r.hset("AUCTION_LOGS", mission_id, json.dumps(auction_log))
                     else:
                         print(f"[PENDING] AUCTION: {mission_id} -- {len(eligible_bidders)}/{m_nodes} {required_sensor} nodes in range.")
+
+                # ── TIER 4: ROLLING ENCLAVE + CHAOS ENGINEERING ──
+                elif mission.get("status") == "EXECUTING":
+                    target_lat       = mission.get("target_lat", 0)
+                    target_lon       = mission.get("target_lon", 0)
+                    zone_radius      = mission.get("target_radius", 500)
+                    max_view_distance = zone_radius + 1000
+                    required_nodes   = mission.get("required_nodes", 1)
+                    current_enclave  = mission.get("enclave", [])
+                    surviving_enclave = []
+
+                    # 1. ROLLING ENCLAVE: drop satellites that have flown out of view
+                    for sat_id in current_enclave:
+                        sat_data = next((s for s in fleet if s['id'] == sat_id), None)
+                        if sat_data:
+                            dist = haversine(sat_data.get('lat', 0), sat_data.get('lon', 0), target_lat, target_lon)
+                            if dist <= max_view_distance:
+                                surviving_enclave.append(sat_id)   # still in range
+                            else:
+                                # Unlock the satellite so it can bid on other missions
+                                sat_data['telemetry']['P0_Gatekeepers']['is_task_locked'] = 0.0
+                                sat_data['role'] = 'MEMBER'
+                                r.set(sat_id, json.dumps(sat_data))
+                                print(f"[HANDOFF] {sat_id} flew out of range for {mission_id}. Releasing contract.")
+
+                    # 2. CHAOS ENGINEERING: EMP kill switch from Ground Station
+                    if r.get("TRIGGER_CHAOS") == "1" and surviving_enclave:
+                        kill_count  = max(1, len(surviving_enclave) // 2)
+                        killed_nodes = random.sample(surviving_enclave, kill_count)
+                        for dead_id in killed_nodes:
+                            surviving_enclave.remove(dead_id)
+                            # Mark killed node as locked so it won't instantly re-bid
+                            dead_sat = next((s for s in fleet if s['id'] == dead_id), None)
+                            if dead_sat:
+                                dead_sat['telemetry']['P0_Gatekeepers']['is_task_locked'] = 0.0
+                                dead_sat['role'] = 'MEMBER'
+                                r.set(dead_id, json.dumps(dead_sat))
+                            print(f"[CHAOS] EMP struck {dead_id}! Node offline.")
+
+                    # 3. HEAL THE SWARM: re-open auction if enclave degraded
+                    mission['enclave'] = surviving_enclave
+                    if len(surviving_enclave) < required_nodes:
+                        print(f"[ALERT] {mission_id} enclave degraded ({len(surviving_enclave)}/{required_nodes}). Re-opening auction...")
+                        mission['status'] = "OPEN_AUCTION"
+
+                    r.hset("MISSIONS_LEDGER", mission_id, json.dumps(mission))
+
+            # 4. CLEAR CHAOS TRIGGER (once per election cycle, outside mission loop)
+            if r.get("TRIGGER_CHAOS") == "1":
+                r.delete("TRIGGER_CHAOS")
 
             # Run election every 5 seconds
             time.sleep(5)

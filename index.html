@@ -538,9 +538,12 @@
         // ─── SATELLITE BUFFER GEOMETRY ───
         const MAX_SATS = 7641;
         const satGeometry = new THREE.BufferGeometry();
-        const positions   = new Float32Array(MAX_SATS * 3);
+        const positions   = new Float32Array(MAX_SATS * 3);  // Current (LERP'd) positions
         const colors      = new Float32Array(MAX_SATS * 3);
         const sizes       = new Float32Array(MAX_SATS);
+        // Destination buffers: physics engine writes here at 1Hz
+        // animate() closes the gap at 60fps via LERP
+        const targetPositions = new Float32Array(MAX_SATS * 3);
         satGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         satGeometry.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
         satGeometry.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
@@ -590,8 +593,9 @@
         // ─── LASERS (existing enclave system) ───
         const MAX_LASERS = 10;
         const laserGeom = new THREE.BufferGeometry();
-        const laserPositions = new Float32Array(MAX_LASERS * 6); // 2 points per line, 3 coords per point
+        const laserPositions = new Float32Array(MAX_LASERS * 6); // current (LERP'd)
         laserGeom.setAttribute('position', new THREE.BufferAttribute(laserPositions, 3));
+        const targetLaserPositions = new Float32Array(MAX_LASERS * 6); // destination
         const laserMat = new THREE.LineBasicMaterial({
             color: 0xff0033,
             transparent: true,
@@ -719,9 +723,9 @@
                 const isActiveLead = sat.is_active_lead === true;
                 if (isActiveLead) role = 'ACTIVE_LEAD';
 
-                positions[i * 3]     = px;
-                positions[i * 3 + 1] = py;
-                positions[i * 3 + 2] = pz;
+                targetPositions[i * 3]     = px;
+                targetPositions[i * 3 + 1] = py;
+                targetPositions[i * 3 + 2] = pz;
 
                 // ── Fix 2: COLOR BY HARDWARE ──
                 let c;
@@ -745,12 +749,12 @@
                     // Draw a laser from this enclave node to its mission target
                     if (assignedMission && assignedMission.target_lat !== undefined && laserIndex < MAX_LASERS) {
                         const tPos = latLonToVec3(assignedMission.target_lat, assignedMission.target_lon, EARTH_RADIUS * 1.005);
-                        laserPositions[laserIndex * 6]     = px;
-                        laserPositions[laserIndex * 6 + 1] = py;
-                        laserPositions[laserIndex * 6 + 2] = pz;
-                        laserPositions[laserIndex * 6 + 3] = tPos.x;
-                        laserPositions[laserIndex * 6 + 4] = tPos.y;
-                        laserPositions[laserIndex * 6 + 5] = tPos.z;
+                        targetLaserPositions[laserIndex * 6]     = px;
+                        targetLaserPositions[laserIndex * 6 + 1] = py;
+                        targetLaserPositions[laserIndex * 6 + 2] = pz;
+                        targetLaserPositions[laserIndex * 6 + 3] = tPos.x;
+                        targetLaserPositions[laserIndex * 6 + 4] = tPos.y;
+                        targetLaserPositions[laserIndex * 6 + 5] = tPos.z;
                         laserIndex++;
                     }
                 } else if (score <= 0.0) {
@@ -839,22 +843,22 @@
                 document.getElementById('noc-lead-score').textContent = '—';
             }
 
-            // Hide unused points
+            // Hide unused satellite slots (zero out targets — LERP will follow)
             for (let i = activeSatCount; i < MAX_SATS; i++) {
-                positions[i * 3] = positions[i * 3 + 1] = positions[i * 3 + 2] = 0;
+                targetPositions[i * 3] = targetPositions[i * 3 + 1] = targetPositions[i * 3 + 2] = 0;
                 sizes[i] = 0;
             }
-            
-            // Hide unused lasers
+
+            // Hide unused laser slots (zero out targets)
             for (let i = laserIndex; i < MAX_LASERS; i++) {
-                laserPositions[i * 6] = laserPositions[i * 6 + 1] = laserPositions[i * 6 + 2] = 0;
-                laserPositions[i * 6 + 3] = laserPositions[i * 6 + 4] = laserPositions[i * 6 + 5] = 0;
+                targetLaserPositions[i * 6]     = targetLaserPositions[i * 6 + 1] = targetLaserPositions[i * 6 + 2] = 0;
+                targetLaserPositions[i * 6 + 3] = targetLaserPositions[i * 6 + 4] = targetLaserPositions[i * 6 + 5] = 0;
             }
 
-            satGeometry.attributes.position.needsUpdate = true;
-            satGeometry.attributes.color.needsUpdate    = true;
-            satGeometry.attributes.size.needsUpdate     = true;
-            laserGeom.attributes.position.needsUpdate   = true;
+            // Colors and sizes update immediately (no LERP needed for these)
+            satGeometry.attributes.color.needsUpdate = true;
+            satGeometry.attributes.size.needsUpdate  = true;
+            // NOTE: position.needsUpdate is handled by the LERP loop in animate()
 
             // ── Update HUD ──
             document.getElementById('node-count').textContent = activeSatCount;
@@ -1062,6 +1066,31 @@
             // Animate laser enclave pulsing
             const laserPulse = 0.5 + 0.3 * Math.sin(elapsed * 4.0);
             laserMat.opacity = laserPulse;
+
+            // ── 60FPS LERP: glide satellites & lasers to their 1Hz physics targets ──
+            // Backend stays at 1Hz. GPU closes the visual gap 60x per second.
+            const lerpFactor = 0.12; // 0.05 = slow dreamy glide, 0.2 = snappy
+
+            for (let i = 0; i < activeSatCount * 3; i++) {
+                // First-frame snap: if position is still the origin, teleport instantly
+                // (prevents satellites from streaking outward from Earth's core)
+                if (positions[i] === 0 && targetPositions[i] !== 0) {
+                    positions[i] = targetPositions[i];
+                } else {
+                    positions[i] += (targetPositions[i] - positions[i]) * lerpFactor;
+                }
+            }
+            satGeometry.attributes.position.needsUpdate = true;
+
+            for (let i = 0; i < MAX_LASERS * 6; i++) {
+                if (laserPositions[i] === 0 && targetLaserPositions[i] !== 0) {
+                    laserPositions[i] = targetLaserPositions[i];
+                } else {
+                    laserPositions[i] += (targetLaserPositions[i] - laserPositions[i]) * lerpFactor;
+                }
+            }
+            laserGeom.attributes.position.needsUpdate = true;
+            // ───────────────────────────────
 
             controls.update();
             renderer.render(scene, camera);

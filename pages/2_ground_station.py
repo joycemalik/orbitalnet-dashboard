@@ -23,77 +23,100 @@ time_multiplier = st.slider("Simulation Speed Multiplier", min_value=1, max_valu
 r.set("TIME_MULTIPLIER", time_multiplier)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECTION 1: Geographic Target Acquisition (writes to CURRENT_MISSION)
+# SECTION 1: Quick-Target Acquisition → dispatches into the CNP ledger
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.markdown("---")
 st.markdown("### 🎯 Target Acquisition (Rolling Enclave)")
-st.caption("Select a ground target. The physics engine will continuously elect the best-positioned satellite as Active Lead.")
+st.caption("Select a target and sensor type. The Consensus Engine runs a live CNP auction, forms an enclave, and green lasers snap to the target.")
 
 tgt_col1, tgt_col2 = st.columns([1, 1])
 
 with tgt_col1:
-    # Real-world target examples
     targets = {
-        "Jaipur (Test Site Alpha)": {"lat": 26.9124, "lon": 75.7873},
-        "Bangalore (Test Site Beta)": {"lat": 12.9716, "lon": 77.5946},
-        "Strait of Hormuz (Maritime)": {"lat": 26.5, "lon": 56.3},
-        "Australian Bushfire Zone": {"lat": -33.8, "lon": 150.9},
-        "Null Island (Reset)": {"lat": 0.0, "lon": 0.0},
-        "Custom Coordinates": None
+        "Jaipur (Test Site Alpha)":    {"lat": 26.9124, "lon": 75.7873},
+        "Bangalore (Test Site Beta)":  {"lat": 12.9716, "lon": 77.5946},
+        "Strait of Hormuz (Maritime)": {"lat": 26.5,    "lon": 56.3},
+        "Mumbai (Urban Monitoring)":   {"lat": 19.076,  "lon": 72.877},
+        "Delhi NCR":                   {"lat": 28.6139, "lon": 77.2090},
+        "Australian Bushfire Zone":    {"lat": -33.8,   "lon": 150.9},
+        "South China Sea":             {"lat": 12.0,    "lon": 115.0},
+        "Custom Coordinates":          None
     }
 
     selected_target = st.selectbox("Select Monitoring Target", options=list(targets.keys()))
 
     if selected_target == "Custom Coordinates":
-        custom_lat = st.number_input("Target Latitude", value=0.0, min_value=-90.0, max_value=90.0, step=0.1)
+        custom_lat = st.number_input("Target Latitude",  value=0.0, min_value=-90.0,  max_value=90.0,  step=0.1)
         custom_lon = st.number_input("Target Longitude", value=0.0, min_value=-180.0, max_value=180.0, step=0.1)
         target_coords = {"lat": custom_lat, "lon": custom_lon}
     else:
         target_coords = targets[selected_target]
 
+    quick_sensor   = st.selectbox("Sensor Type", ["SAR", "EO", "SIGINT", "MW"])
+    quick_radius   = st.slider("Zone Radius (km)", 200, 2000, 800, step=100)
+    quick_nodes    = st.slider("Nodes Required", 1, 5, 3)
+
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
         if st.button("🚀 EXECUTE: Task Swarm", type="primary", width='stretch'):
-            mission_data = {
-                "intent_id": f"MISSION_{int(time.time())}",
-                "target_name": selected_target,
-                "target_lat": target_coords["lat"],
-                "target_lon": target_coords["lon"],
-                "active": True
-            }
-            r.set("CURRENT_MISSION", json.dumps(mission_data))
-            st.success(f"Mission Uploaded. Swarm routing to Lat: {target_coords['lat']:.4f}, Lon: {target_coords['lon']:.4f}")
+            if target_coords:
+                mission_id = f"QTA-{uuid.uuid4().hex[:6].upper()}"
+                mission_data = {
+                    "id":              mission_id,
+                    "status":          "OPEN_AUCTION",
+                    "name":            f"QTA_{selected_target.split('(')[0].strip().replace(' ','_').upper()}",
+                    "target_name":     selected_target,
+                    "target_lat":      target_coords["lat"],
+                    "target_lon":      target_coords["lon"],
+                    "target_radius":   quick_radius,
+                    "active":          True,
+                    "required_nodes":  quick_nodes,
+                    "sensor_required": quick_sensor,
+                    "weights":         {"soc": 0.3, "mean_motion": 0.7},
+                    "enclave":         []
+                }
+                # Write to MISSIONS_LEDGER so Consensus Engine picks it up
+                r.hset("MISSIONS_LEDGER", mission_id, json.dumps(mission_data))
+                # Also set legacy CURRENT_MISSION for streamer compatibility
+                r.set("CURRENT_MISSION", json.dumps(mission_data))
+                st.success(f"✅ RFP `{mission_id}` broadcast — {quick_sensor} auction opening for {quick_nodes} nodes within {quick_radius} km of {target_coords['lat']:.2f}°, {target_coords['lon']:.2f}°")
 
     with btn_col2:
-        if st.button("🛑 CANCEL MISSION", type="secondary", width='stretch'):
+        if st.button("🛑 CANCEL ALL", type="secondary", width='stretch'):
             r.delete("CURRENT_MISSION")
-            st.warning("Mission cancelled. Fleet returning to idle consensus.")
+            r.delete("MISSIONS_LEDGER")
+            st.warning("All missions cancelled. Fleet returning to idle.")
 
 with tgt_col2:
-    # Show current mission status
+    # Live status of all CNP missions
     try:
-        current_mission_raw = r.get("CURRENT_MISSION")
+        all_missions_raw2 = r.hgetall("MISSIONS_LEDGER")
     except Exception:
-        current_mission_raw = None
-        
-    if current_mission_raw:
-        cm = json.loads(current_mission_raw)
-        st.markdown(f"""
-        <div style='background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3); 
-                    border-radius: 8px; padding: 16px; font-family: monospace;'>
-            <span style='color: #00ff88; font-weight: bold; font-size: 0.9rem;'>● MISSION ACTIVE</span><br>
-            <span style='color: #8899aa; font-size: 0.75rem;'>Intent: {cm.get('intent_id', 'N/A')}</span><br>
-            <span style='color: #c8d6e5; font-size: 0.85rem;'>Target: {cm.get('target_name', 'Custom')}</span><br>
-            <span style='color: #c8d6e5; font-size: 0.85rem;'>Lat: {cm.get('target_lat', 0):.4f} | Lon: {cm.get('target_lon', 0):.4f}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        all_missions_raw2 = {}
+
+    if all_missions_raw2:
+        for mid2, mj2 in list(all_missions_raw2.items())[:5]:  # show latest 5
+            m2 = json.loads(mj2)
+            status_icon = "🟢" if m2["status"] == "EXECUTING" else "🟡"
+            enclave_count = len(m2.get("enclave", []))
+            req = m2.get("required_nodes", 1)
+            st.markdown(
+                f"<div style='background:rgba(5,8,15,0.7);border:1px solid rgba(255,255,255,0.08);"
+                f"border-radius:6px;padding:10px 14px;margin-bottom:6px;font-family:monospace;font-size:0.75rem;'>"
+                f"{status_icon} <b style='color:#c8d6e5'>{mid2}</b> — {m2.get('name','?')} "
+                f"[<span style='color:#ffcc1a'>{m2.get('sensor_required','?')}</span>]<br>"
+                f"<span style='color:#8899aa'>Enclave: {enclave_count}/{req} nodes &nbsp;|&nbsp; "
+                f"Target: {m2.get('target_lat',0):.2f}°, {m2.get('target_lon',0):.2f}°</span>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
     else:
         st.markdown("""
-        <div style='background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
-                    border-radius: 8px; padding: 16px; font-family: monospace;'>
-            <span style='color: #5a6e82; font-weight: bold; font-size: 0.9rem;'>○ NO ACTIVE MISSION</span><br>
-            <span style='color: #5a6e82; font-size: 0.75rem;'>Fleet holding idle consensus. Select a target to begin.</span>
+        <div style='background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);
+                    border-radius:8px;padding:16px;font-family:monospace;'>
+            <span style='color:#5a6e82;font-weight:bold;font-size:0.9rem;'>○ NO ACTIVE MISSIONS</span><br>
+            <span style='color:#5a6e82;font-size:0.75rem;'>Select a target and click EXECUTE to begin a CNP auction.</span>
         </div>
         """, unsafe_allow_html=True)
 

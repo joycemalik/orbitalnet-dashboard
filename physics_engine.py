@@ -14,36 +14,36 @@ from config import get_redis_client
 # ─── DETERMINISTIC SATELLITE CLASSIFIER ───────────────────────────────────────
 # Parses TLE names to assign real-world hardware payloads.
 # Unknown satellites get a hash-based assignment (same every reboot).
+import hashlib
+
 def classify_satellite(name):
-    """Categorizes hardware payload based on real-world satellite constellations."""
-    n = name.upper()
-
-    # 1. Communications / Relay backbone
-    if any(x in n for x in ["STARLINK", "ONEWEB", "IRIDIUM", "GLOBALSTAR", "O3B", "ORBCOMM", "INMARSAT", "SES-"]):
-        return "RELAY"
-
-    # 2. Microwave / Weather
-    elif any(x in n for x in ["NOAA", "GOES", "METEOR", "FENGYUN", "METOP", "DMSP", "TIROS", "SUOMI"]):
-        return "MW"
-
-    # 3. Synthetic Aperture Radar (cloud-penetrating)
-    elif any(x in n for x in ["SENTINEL-1", "RADARSAT", "ICEYE", "CAPELLA", "TERRASAR", "COSMO", "PAZ", "RISAT"]):
-        return "SAR"
-
-    # 4. Electro-Optical (high-res visual)
-    elif any(x in n for x in ["LANDSAT", "SENTINEL-2", "WORLDVIEW", "PLANET", "SKYSAT", "SPOT", "PLEIADES", "GEOEYE", "KOMPSAT"]):
-        return "EO"
-
-    # 5. Signals Intelligence / Military
-    elif any(x in n for x in ["NROL", "USA ", "COSMOS", "YAOGAN", "LACROSSE", "MISTY"]):
-        return "SIGINT"
-
-    else:
-        # Deterministic fallback: hash the name so the assignment is stable across reboots
+    """Categorizes hardware payload with a forced distribution for Starlink-only datasets."""
+    name = name.upper()
+    
+    # DEMO OVERRIDE: If it's a Starlink, artificially assign it a sensor type based on its name hash
+    if "STARLINK" in name:
         val = int(hashlib.md5(name.encode()).hexdigest(), 16)
-        return ["EO", "SAR", "MW", "SIGINT", "RELAY"][val % 5]
+        # Create a pool: 50% Relay, 20% EO, 20% SAR, 5% MW, 5% SIGINT
+        types = (["RELAY"] * 10) + (["EO"] * 4) + (["SAR"] * 4) + (["MW"] * 1) + (["SIGINT"] * 1)
+        return types[val % len(types)]
+        
+    # --- Standard Classification for mixed datasets ---
+    if any(x in name for x in ["ONEWEB", "IRIDIUM", "GLOBALSTAR", "O3B"]):
+        return "RELAY"
+    elif any(x in name for x in ["NOAA", "GOES", "METEOR", "FENGYUN", "METOP"]):
+        return "MW"
+    elif any(x in name for x in ["SENTINEL-1", "RADARSAT", "ICEYE", "CAPELLA", "TERRASAR"]):
+        return "SAR"
+    elif any(x in name for x in ["LANDSAT", "SENTINEL-2", "WORLDVIEW", "PLANET", "SKYSAT", "SPOT"]):
+        return "EO"
+    elif any(x in name for x in ["NROL", "USA ", "COSMOS", "YAOGAN"]):
+        return "SIGINT"
+    else:
+        val = int(hashlib.md5(name.encode()).hexdigest(), 16)
+        types = ["EO", "SAR", "MW", "SIGINT"]
+        return types[val % len(types)]
 
-
+        
 # ─── ECI → LAT/LON CONVERSION ─────────────────────────────────────────────────
 def eci_to_latlon(x, y, z, jd):
     """Converts Earth-Centered Inertial (ECI) km → geodetic Lat/Lon (degrees)."""

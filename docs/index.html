@@ -108,20 +108,47 @@ h1.title{
 }
 .meta-row span{white-space:nowrap;}
 
-.status{
-  text-align:left;
-  background:var(--status-bg);
-  color:var(--status-ink);
-  border:1px solid var(--rule-strong);
-  border-radius:3px;
-  padding:16px 20px;
-  font-size:13.5px;
-  line-height:1.55;
-  margin:0 0 28px;
+.kicker-q{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:clamp(17px,2.6vw,20px);color:var(--ink);
+  max-width:600px;margin:0 auto 28px;line-height:1.45;text-wrap:balance;
 }
-.status b{font-family:var(--font-display);font-weight:600;}
-.status .labels{margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11.5px;}
-.status .labels b{font-family:var(--font-mono);}
+
+.scenario{
+  text-align:left;background:var(--surface);border:1px solid var(--rule);
+  border-left:4px solid var(--accent);border-radius:3px;
+  padding:20px 22px;margin:0 0 24px;font-size:14.5px;line-height:1.62;
+}
+.scenario .eyebrow{margin:0 0 12px;}
+.scenario .ts{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600;margin-right:4px;}
+.scenario p{margin:0 0 10px;color:var(--ink-soft);}
+.scenario p:last-child{margin-bottom:0;}
+
+.status-panel{
+  background:#1b1a17;color:#e9e4d6;border:1px solid #33312b;border-radius:3px;
+  padding:18px 22px;margin:22px 0 0;font-family:var(--font-mono);font-size:12.5px;
+}
+.sp-head{letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:#e2576f;margin-bottom:10px;}
+.sp-row{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.1);}
+.sp-row span:first-child{color:#b7b2a2;}
+.sp-row span:last-child{font-weight:500;}
+.sp-row:last-of-type{border-bottom:none;}
+.sp-row.sp-result span:last-child{color:#e2576f;font-weight:600;letter-spacing:.04em;}
+.sp-foot{margin-top:10px;font-size:11px;font-style:italic;color:#8d897d;line-height:1.5;}
+
+/* sidenotes: personal, direct-voice annotations set apart from the
+   formal prose. Deliberately inline (not a floated margin column) so
+   the behaviour never changes with viewport width. */
+aside.sidenote{
+  margin:4px 0 18px;padding:11px 16px;background:var(--status-bg);
+  border-left:3px solid var(--accent);border-radius:2px;
+  font-family:var(--font-mono);font-size:12.5px;line-height:1.6;color:var(--status-ink);
+}
+aside.sidenote .tag{color:var(--accent);font-weight:600;margin-right:6px;}
+
+@media (prefers-reduced-motion: reduce){
+  .diagram-wrap *{animation:none !important;}
+}
 
 .abstract{
   text-align:left;
@@ -289,11 +316,49 @@ footer{
   background:var(--surface);border:1px solid var(--rule);border-radius:4px;
   padding:18px clamp(10px,4vw,24px) 14px;margin:14px 0 22px;
 }
-.diagram-wrap svg{width:100%;height:auto;display:block;}
+.diagram-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
 .diagram-cap{
   font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;
   text-transform:uppercase;color:var(--ink-faint);margin:10px 0 0;text-align:center;
 }
+.diagram-note{
+  font-family:var(--font-serif);font-size:11.5px;font-style:italic;
+  color:var(--ink-faint);text-transform:none;letter-spacing:0;
+  text-align:center;margin:3px 0 0;
+}
+
+/* schematic animation: respects prefers-reduced-motion above */
+@keyframes satBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
+.sat-a{animation:satBob 3.4s ease-in-out infinite;}
+.sat-b{animation:satBob 3.4s ease-in-out infinite 1.1s;}
+.sat-c{animation:satBob 3.4s ease-in-out infinite 2.2s;}
+
+@keyframes bidPulse{0%,100%{opacity:.3}50%{opacity:1}}
+.bid-line{animation:bidPulse 2.2s ease-in-out infinite;}
+.bid-line.b{animation-delay:1.1s;}
+
+@keyframes contactBlink{0%,38%{opacity:1}50%,88%{opacity:.12}100%{opacity:1}}
+.contact-line,.contact-badge{animation:contactBlink 3s steps(1) infinite;}
+
+@keyframes switchTravel{0%{transform:translateX(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateX(146px);opacity:0}}
+.switch-dot{animation:switchTravel 3.6s cubic-bezier(.4,0,.2,1) infinite;}
+
+@keyframes beliefShift{
+  0%,100%{transform:scaleY(1);}
+  50%{transform:scaleY(var(--bar-peak,1));}
+}
+.belief-bar{transform-box:fill-box;transform-origin:bottom;animation:beliefShift 4.8s ease-in-out infinite;}
+
+@keyframes windowClose{0%{transform:scaleX(1)}100%{transform:scaleX(.08)}}
+.closing-window{transform-box:fill-box;transform-origin:left;animation:windowClose 5s ease-in infinite;}
+
+@keyframes curveDim{0%{opacity:1}100%{opacity:.25}}
+.fade-curve{animation:curveDim 5s ease-in infinite;}
+
+@keyframes linkBlink{0%,45%{opacity:.9}50%,95%{opacity:.15}100%{opacity:.9}}
+.hil-link{animation:linkBlink 2.4s steps(1) infinite;}
+.hil-link.l2{animation-delay:.8s;}
+.hil-link.l3{animation-delay:1.6s;}
 
 @media (max-width:480px){
   body{font-size:15.5px;}
@@ -310,6 +375,9 @@ footer{
     <h1 class="title">Open-World, Deadline-Aware Hypothesis Discrimination for Distributed Space Observatories</h1>
     <p class="subtitle">Planning follow-up campaigns for fading transients under intermittent connectivity</p>
     <p class="tagline">Short form: Differential Diagnosis for the Sky</p>
+
+    <p class="kicker-q">Can a constellation work out <em>why</em> something is fading &mdash; before the evidence fades along with it?</p>
+
     <div class="meta-row">
       <span>Draft &middot; 24 September 2026</span>
       <span>&middot;</span>
@@ -318,18 +386,29 @@ footer{
       <span>Status: pre-registration, unrun</span>
     </div>
 
-    <div class="status">
-      <b>Reader's note.</b> This document states one precise research gap: a constellation that must plan a multi-step, multi-spacecraft observation campaign to tell competing explanations of a fading event apart, while staying honest that the true explanation may not be in its hypothesis set. OrbitalNet is the distributed substrate that makes the campaign executable; it is not itself the contribution.
-      <div class="labels">
-        <span><b>Verified</b> &mdash; a source was opened while writing this.</span>
-        <span><b>Draft claim</b> &mdash; check against the literature yourself.</span>
-        <span><b>Expected</b> &mdash; a result the experiments are designed to test; nothing here has been demonstrated.</span>
-      </div>
+    <div class="scenario">
+      <p class="eyebrow">The problem</p>
+      <p><span class="ts">02:14 UTC</span>A wide-field survey flags a new transient. At first light it could be a kilonova, a shock-cooling supernova, a relativistic afterglow, or a stellar flare &mdash; in the first hour, the photometry of all four looks almost the same.</p>
+      <p>The measurement that would actually tell them apart exists for a few hours, maybe a day, and then it's gone for good. There is no retake.</p>
+      <p>Six to eight satellites can see the sky region between them. None has the full picture. None can wait for a ground operator to decide. They have to work out, on their own and from whatever they currently believe, which of them should point which instrument where &mdash; next, right now &mdash; and keep doing that as the picture changes and the window closes.</p>
+      <p>That decision &mdash; not the detection, not the classification afterward, but the choice of <em>next measurement</em> under a closing deadline and a hypothesis set that might be incomplete &mdash; is what this project plans for. OrbitalNet is the distributed substrate that makes the campaign executable; it is not itself the contribution. The planning layer on top of it is.</p>
     </div>
 
     <div class="abstract">
       <h2>Abstract</h2>
       <p>Fast optical transients such as kilonovae, shock-cooling supernovae, relativistic afterglows and stellar flares are often indistinguishable in their first hours, yet the measurements that separate them lose value within hours to days as the sources fade. Current follow-up is organised by recipes chosen per assumed class, by classifier-uncertainty ranking of objects, or by distributed allocation toward fixed objectives. None of these plans a sequence of heterogeneous measurements whose purpose is to discriminate competing physical explanations of <em>one</em> event before the discriminating signal disappears, and none accounts for the possibility that the true explanation lies outside the hypothesis set. We formulate follow-up as open-world sequential model discrimination with time-decaying measurement value, executed by spacecraft that hold unequal, intermittently synchronised beliefs. The planner maintains a posterior over <em>K</em> physical models plus an explicit unmodeled alternative represented by a flexible auxiliary model, selects measurements by a utility combining expected discrimination, expected evidence of model inadequacy and opportunity decay, and switches from discrimination to evidence preservation when inadequacy becomes probable. Allocation across spacecraft uses a marginal-gain auction that tolerates stale beliefs. We evaluate on a simulated heterogeneous low-Earth-orbit constellation with physically grounded visibility, slew, sensitivity and contact constraints, using injected transients from published light-curve models and withheld classes as ground-truth anomalies, and replicate the communication layer on an ESP32 hardware-in-the-loop testbed. We test whether the planner reaches correct identification earlier, recovers more early-time information, and flags withheld classes more reliably than reactive, uncertainty-sampling and closed-world information-gain baselines under identical budgets.</p>
+
+      <div class="status-panel">
+        <div class="sp-head">Experiment status</div>
+        <div class="sp-row"><span>Falsifiable hypotheses</span><span>4</span></div>
+        <div class="sp-row"><span>Modeled transient classes</span><span>4</span></div>
+        <div class="sp-row"><span>Withheld (open-world) classes</span><span>3</span></div>
+        <div class="sp-row"><span>Strategies compared</span><span>6</span></div>
+        <div class="sp-row"><span>Simulated events run</span><span>0</span></div>
+        <div class="sp-row"><span>Real-data replay events run</span><span>0</span></div>
+        <div class="sp-row sp-result"><span>Results</span><span>PENDING</span></div>
+        <div class="sp-foot">This counts what's designed, not what's demonstrated. It updates when the experiment is actually run &mdash; nothing above that line is a result.</div>
+      </div>
     </div>
 
     <p class="thesis">We show that a distributed space observatory that keeps an explicit &ldquo;none of the above&rdquo; explanation and accounts for fading signals recovers more of the physically unrecoverable information about fading transients than closed-world or reactive planners under the same constraints.</p>
@@ -341,8 +420,34 @@ footer{
       <h2 class="sec"><span class="num">1</span>Introduction</h2>
       <p class="lead">When an unexplained transient appears, a constellation of heterogeneous instruments must decide, repeatedly and without waiting for the ground, which spacecraft should take which measurement next. The right choice depends on which explanations remain plausible, how fast each explanation predicts the discriminating signal will vanish, what other spacecraft are already doing, and whether any existing explanation fits at all.</p>
       <p>The measurement that separates two hypotheses is often the one available only briefly &mdash; an early ultraviolet colour, the first spectrum before a photosphere cools, a near-infrared epoch before a kilonova fades. A wrong or late choice is not a delay; it is a permanent loss, because wide-field surveys now produce far more candidates than follow-up capacity can serve, which makes the choice of <em>measurement</em>, not just of target, the binding constraint. This is not hypothetical: automated pipelines have mis-flagged a Type IIb supernova as a kilonova candidate for days before spectroscopic confirmation ruled it out.</p>
+    </section>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 640 190" role="img" aria-labelledby="closeTitle closeDesc">
+        <title id="closeTitle">A closing discrimination window</title>
+        <desc id="closeDesc">A schematic fading light curve with a shaded window of high discriminating value that shrinks and then disappears as the source fades.</desc>
+        <g font-family="var(--font-mono)">
+          <line x1="40" y1="150" x2="600" y2="150" style="stroke:var(--rule-strong)" stroke-width="1.5"/>
+          <text x="600" y="168" text-anchor="end" font-size="10" style="fill:var(--ink-faint)">time since trigger &#8594;</text>
+          <text x="40" y="14" font-size="10" style="fill:var(--ink-faint)">brightness</text>
+
+          <rect class="closing-window" x="70" y="24" width="230" height="126" style="fill:var(--accent-soft)"/>
+          <path class="fade-curve" d="M 70 45 C 160 55, 230 95, 300 118 S 460 142, 580 149" fill="none" style="stroke:var(--accent)" stroke-width="2.5"/>
+
+          <text x="110" y="40" font-size="10.5" font-weight="600" style="fill:var(--accent-ink)">discriminating window</text>
+          <text x="420" y="135" font-size="10.5" style="fill:var(--ink-faint)">signal below instrument noise &mdash; no measurement left to take</text>
+        </g>
+      </svg>
+      <p class="diagram-cap">Fig. 1 &middot; A measurement's power to tell hypotheses apart shrinks with the source, then hits zero.</p>
+      <p class="diagram-note">Schematic curve for intuition only &mdash; not a measured or simulated light curve.</p>
+    </div>
+
+    <section>
       <h3 class="sub">Research gap</h3>
       <p>Hypothesis-discriminating observation exists for Earth science and rover geology, but with a closed hypothesis set and a single planner. Distributed spacecraft allocation exists for fixed coverage objectives, with no hypothesis state at all. Misspecification-robust experimental design exists for single experimenters without deadlines. Astronomical follow-up optimisation targets training-set construction or one-shot spectroscopic selection. No located work combines open-world hypothesis discrimination, a fading-value objective, multi-instrument sequencing and decentralised execution in one campaign planner &mdash; and none measures what the combination recovers.</p>
+
+      <aside class="sidenote"><span class="tag">why this gap &mdash;</span> every piece of this already exists somewhere. Earth-observing satellites already discriminate hypotheses (POISE). Rovers already plan in belief space (SHM-POMDP). Constellations already allocate without a ground operator (Starling). What nobody has put in one planner is the combination: several spacecraft, one closing window, and an explicit admission that the real answer might not be on the list. That combination, not any single piece, is the thing worth testing.</aside>
+
       <h3 class="sub">Research question</h3>
       <p>Can a distributed, resource-constrained space observatory plan sequential multi-instrument measurements that discriminate competing physical explanations of a fading transient, and recognise when none of them applies, better than reactive and closed-world planners under identical physical and communication constraints?</p>
     </section>
@@ -414,6 +519,8 @@ footer{
     <section>
       <h2 class="sec"><span class="num">5</span>System formulation</h2>
       <p>OrbitalNet, the distributed substrate, supplies exactly three things to the planner: who can see the target when, who can talk to whom when, and a message layer that survives link gaps. The contribution sits entirely in the belief and utility layers built on top.</p>
+
+      <aside class="sidenote"><span class="tag">keep these separate &mdash;</span> it's easy to read "distributed spacecraft" and assume the contribution is the distribution itself. It isn't. OrbitalNet already propagates orbits and schedules contacts; that part is infrastructure. The new part is what runs on top of it once a transient shows up: the belief, the utility, the auction, the switch. Everything below is about that layer.</aside>
     </section>
 
     <div class="diagram-wrap">
@@ -425,22 +532,28 @@ footer{
 
         <path d="M 60 130 Q 320 40 580 130" fill="none" style="stroke:var(--rule)" stroke-width="1.5" stroke-dasharray="3 4"/>
 
-        <g font-family="var(--font-mono)">
-          <circle cx="140" cy="105" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
-          <circle cx="320" cy="68" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
-          <circle cx="500" cy="105" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
+        <line class="bid-line" x1="149" y1="105" x2="311" y2="70" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <line class="bid-line b" x1="329" y1="70" x2="491" y2="105" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="4 4"/>
 
-          <line x1="149" y1="105" x2="311" y2="70" style="stroke:var(--ink-faint)" stroke-width="1.5" stroke-dasharray="4 4"/>
-          <line x1="329" y1="70" x2="491" y2="105" style="stroke:var(--ink-faint)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <g font-family="var(--font-mono)">
           <text x="225" y="78" text-anchor="middle" font-size="10" style="fill:var(--ink-faint)">bid &#8594;</text>
           <text x="415" y="78" text-anchor="middle" font-size="10" style="fill:var(--ink-faint)">&#8592; bid</text>
 
-          <text x="140" y="128" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT A</text>
-          <text x="320" y="91" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT B</text>
-          <text x="500" y="128" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT C</text>
+          <g class="sat-a">
+            <circle cx="140" cy="105" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
+            <text x="140" y="128" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT A</text>
+          </g>
+          <g class="sat-b">
+            <circle cx="320" cy="68" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
+            <text x="320" y="91" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT B</text>
+          </g>
+          <g class="sat-c">
+            <circle cx="500" cy="105" r="9" style="fill:var(--surface);stroke:var(--accent)" stroke-width="2.5"/>
+            <text x="500" y="128" text-anchor="middle" font-size="10" style="fill:var(--ink-soft)">SAT C</text>
+          </g>
 
-          <line x1="140" y1="114" x2="90" y2="178" style="stroke:var(--accent)" stroke-width="2"/>
-          <rect x="68" y="180" width="44" height="16" rx="2" style="fill:var(--accent)"/>
+          <line class="contact-line" x1="140" y1="114" x2="90" y2="178" style="stroke:var(--accent)" stroke-width="2"/>
+          <rect class="contact-badge" x="68" y="180" width="44" height="16" rx="2" style="fill:var(--accent)"/>
           <text x="90" y="192" text-anchor="middle" font-size="9" style="fill:#fff">GROUND</text>
           <text x="98" y="160" text-anchor="middle" font-size="9.5" style="fill:var(--accent-ink)">contact</text>
 
@@ -448,7 +561,8 @@ footer{
           <text x="320" y="22" text-anchor="middle" font-size="10" style="fill:var(--accent-ink)" letter-spacing="0.4">MARGINAL-GAIN AUCTION</text>
         </g>
       </svg>
-      <p class="diagram-cap">Fig. 1 &middot; Satellites bid their marginal utility over whatever stale beliefs they currently hold; only one has an open ground contact.</p>
+      <p class="diagram-cap">Fig. 2 &middot; Satellites bid their marginal utility over whatever stale beliefs they currently hold; only one has an open ground contact.</p>
+      <p class="diagram-note">Animated schematic of the mechanism, not a recording of simulated motion.</p>
     </div>
 
     <div class="pipeline-wrap">
@@ -487,6 +601,40 @@ footer{
         <div class="tag">eq. 2</div>
       </div>
 
+      <aside class="sidenote"><span class="tag">in plain terms &mdash;</span> h&#8320; isn't a fifth transient class with its own physics. It's a deliberately vague model that fits almost nothing well. The only way it wins the posterior is if kilonova, supernova, afterglow and flare all fit badly at once &mdash; which is exactly the situation where a closed-world planner would otherwise be forced to pick the least-wrong wrong answer and move on.</aside>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 560 170" role="img" aria-labelledby="beliefTitle beliefDesc">
+          <title id="beliefTitle">Toy belief distribution over hypotheses</title>
+          <desc id="beliefDesc">Illustrative bars for four modeled classes and the open-world alternative, gently varying to suggest a posterior that is still unsettled.</desc>
+          <g font-family="var(--font-mono)" font-size="10" style="fill:var(--ink-soft)">
+            <line x1="40" y1="130" x2="520" y2="130" style="stroke:var(--rule-strong)" stroke-width="1.5"/>
+            <g>
+              <rect class="belief-bar" style="--bar-peak:1.12;fill:var(--accent)" x="60" y="60" width="54" height="70"/>
+              <text x="87" y="148" text-anchor="middle">h&#8321; kilonova</text>
+            </g>
+            <g>
+              <rect class="belief-bar" style="--bar-peak:0.85;fill:var(--accent)" x="160" y="80" width="54" height="50" opacity="0.75"/>
+              <text x="187" y="148" text-anchor="middle">h&#8322; SC-SN</text>
+            </g>
+            <g>
+              <rect class="belief-bar" style="--bar-peak:0.9;fill:var(--accent)" x="260" y="95" width="54" height="35" opacity="0.6"/>
+              <text x="287" y="148" text-anchor="middle">h&#8323; afterglow</text>
+            </g>
+            <g>
+              <rect class="belief-bar" style="--bar-peak:1.3;fill:var(--accent)" x="360" y="110" width="54" height="20" opacity="0.45"/>
+              <text x="387" y="148" text-anchor="middle">h&#8324; flare</text>
+            </g>
+            <g>
+              <rect class="belief-bar" style="--bar-peak:0.7;fill:var(--ink-faint)" x="460" y="100" width="54" height="30" opacity="0.8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2"/>
+              <text x="487" y="148" text-anchor="middle">h&#8320; &ldquo;none&rdquo;</text>
+            </g>
+          </g>
+        </svg>
+        <p class="diagram-cap">Fig. 3 &middot; A posterior that hasn't converged &mdash; kilonova and shock-cooling are still close, h&#8320; stays live.</p>
+        <p class="diagram-note">Illustrative toy bars for intuition &mdash; synthetic, not output from the planner or any simulation.</p>
+      </div>
+
       <h3 class="sub">5.2 Actions and feasibility</h3>
       <p>An action a&nbsp;=&nbsp;(spacecraft&nbsp;i, instrument&nbsp;m, band/mode&nbsp;&lambda;, start&nbsp;time&nbsp;t, exposure&nbsp;&Delta;) is feasible only if the orbital layer reports the target visible and outside Sun, Earth-limb and South Atlantic Anomaly exclusion, the slew fits the schedule, and power and storage budgets hold. Measurement noise &sigma;<sub>a</sub> is read from the instrument's limiting-magnitude curve, so a faded source automatically yields an uninformative measurement &mdash; the physical mechanism behind the decay term below.</p>
 
@@ -503,6 +651,8 @@ footer{
         <div class="tag">eq. 3</div>
       </div>
       <p>The first term is the mutual information between the measurement and the class label: how much it separates the remaining explanations. <i>Z</i> is a binary indicator of whether the truth is h&#8320;; the second term is how much the measurement would reveal about model adequacy, following the misspecification-indicator idea from robust Bayesian experimental design (&sect;2). The third term is opportunity decay: the expected information lost if this measurement is postponed to the next feasible slot, averaged over the current posterior &mdash; classes that fade fast make early measurements urgent only while they remain plausible:</p>
+
+      <aside class="sidenote"><span class="tag">read it as three questions &mdash;</span> for each candidate measurement, the planner asks: (1) how much does this narrow down which class it is, (2) how much does this tell me whether I even have the right set of classes, and (3) how much do I lose by waiting one more slot. Add the three, divide by cost, take the highest score. &beta; and &gamma; just set how paranoid (term 2) and how impatient (term 3) the planner is relative to term 1.</aside>
       <div class="eq">
         <div class="math">
           D(a,&nbsp;b<sub>t</sub>) &nbsp;=&nbsp; <span class="rm">&sum;</span><sub>k</sub> b<sub>t</sub>(h<sub>k</sub>) &#8201;[&nbsp; I<sub>k</sub>(Y<sub>a</sub>)&nbsp;&minus;&nbsp;I<sub>k</sub>(Y<sub>a&prime;</sub>)&nbsp;]<sub>+</sub> ,&nbsp;&nbsp; a&prime; = same measurement at the next feasible time
@@ -512,6 +662,8 @@ footer{
 
       <h3 class="sub">5.4 Multi-spacecraft allocation</h3>
       <p>For a fixed class variable and measurements conditionally independent given the class, mutual information is monotone submodular, so greedy batch selection is within a factor (1&nbsp;&minus;&nbsp;1/e) of optimal &mdash; but only for a centralized planner with perfectly shared beliefs. The proposed auction instead lets each spacecraft bid its marginal gain given whatever commitments it has heard about. Stale beliefs break the optimality guarantee; measuring by how much is H4, not a result to hide.</p>
+
+      <aside class="sidenote"><span class="tag">the honest version &mdash;</span> the (1&nbsp;&minus;&nbsp;1/e) guarantee is a textbook result for a planner that knows everything instantly. Nothing here knows everything instantly. The real question &mdash; H4 &mdash; is how much of that guarantee survives once beliefs are stale and links are intermittent. That number isn't picked in advance; it's measured in &sect;6.5, and it's allowed to come back worse than hoped.</aside>
 
       <h3 class="sub">5.5 Mode switch</h3>
       <p>If the posterior on h&#8320; exceeds a threshold &tau; for two consecutive updates, the utility changes: discrimination terms drop out, the planner maximizes coverage in time and wavelength of the auxiliary model, and onboard retention priority for all raw data on the event is raised. &tau; is fixed on a validation split to hit a chosen false-alarm rate on modeled classes, never on the test split.</p>
@@ -527,6 +679,7 @@ footer{
 
             <line x1="206" y1="60" x2="352" y2="60" style="stroke:var(--accent)" stroke-width="2"/>
             <polygon points="352,60 342,55 342,65" style="fill:var(--accent)"/>
+            <circle class="switch-dot" cx="206" cy="60" r="4.5" style="fill:var(--accent-ink)"/>
             <text x="279" y="44" text-anchor="middle" font-size="9.5" style="fill:var(--accent-ink)">P(h&#8320;) &gt; &#964;,</text>
             <text x="279" y="56" text-anchor="middle" font-size="9.5" style="fill:var(--accent-ink)">2 updates running</text>
 
@@ -535,7 +688,8 @@ footer{
             <text x="451" y="72" text-anchor="middle" font-size="9.5" style="fill:var(--accent-ink)">maximize time/&#955; coverage,</text>
           </g>
         </svg>
-        <p class="diagram-cap">Fig. 2 &middot; The one-way switch that trades discrimination for evidence preservation once the open-world term dominates.</p>
+        <p class="diagram-cap">Fig. 4 &middot; The one-way switch that trades discrimination for evidence preservation once the open-world term dominates.</p>
+        <p class="diagram-note">The moving dot paces the transition condition; it is not a timer or a measured delay.</p>
       </div>
 
       <h3 class="sub">5.6 Belief update and communication</h3>
@@ -608,6 +762,8 @@ footer{
 
       <h3 class="sub">6.7 Statistics</h3>
       <p>At least 1,000 injected events per scenario, fixed seeds shared across strategies. Strategies are compared with paired tests (Wilcoxon signed-rank on per-event metrics), medians reported with bootstrap 95% intervals, and multiple comparisons corrected (Holm). Effect sizes are reported alongside p-values, not in place of them. The mode-switch threshold &tau; and the utility weights &beta;,&nbsp;&gamma; are tuned on a validation split of events, never on the test split.</p>
+
+      <aside class="sidenote"><span class="tag">why pre-register this &mdash;</span> &tau;, &beta; and &gamma; are exactly the knobs that could quietly make P look good if tuned after seeing the test results. Locking the validation/test split and the metrics before a single test-seed run is what keeps H1&ndash;H4 falsifiable instead of fittable &mdash; the repository's <code>PREREGISTRATION.md</code> is committed before test seeds are touched, for the same reason.</aside>
     </section>
 
     <section>
@@ -619,6 +775,52 @@ footer{
       <h2 class="sec"><span class="num">8</span>Hardware-in-the-loop testbed</h2>
       <p>The decision layer is replicated on physical hardware to show it survives real asynchronous radios and microcontroller-class compute, with results close to simulation &mdash; not to reproduce flight-qualified radiation tolerance, real RF link budgets, attitude control or flight software, which the testbed explicitly does not claim.</p>
     </section>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 560 190" role="img" aria-labelledby="hilTitle hilDesc">
+        <title id="hilTitle">Hardware-in-the-loop testbed topology</title>
+        <desc id="hilDesc">Several ESP32 nodes linked by ESP-NOW radio, with a Raspberry Pi acting as sky oracle and ground station.</desc>
+        <g font-family="var(--font-mono)" font-size="10">
+          <line class="hil-link l1" x1="110" y1="60" x2="220" y2="60" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <line class="hil-link l2" x1="220" y1="60" x2="330" y2="60" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <line class="hil-link l3" x1="330" y1="60" x2="440" y2="60" style="stroke:var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+          <g>
+            <rect x="70" y="35" width="80" height="50" rx="4" style="fill:var(--surface);stroke:var(--rule-strong)" stroke-width="1.5"/>
+            <text x="110" y="56" text-anchor="middle" style="fill:var(--ink)">ESP32</text>
+            <text x="110" y="70" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">node A</text>
+          </g>
+          <g>
+            <rect x="180" y="35" width="80" height="50" rx="4" style="fill:var(--surface);stroke:var(--rule-strong)" stroke-width="1.5"/>
+            <text x="220" y="56" text-anchor="middle" style="fill:var(--ink)">ESP32</text>
+            <text x="220" y="70" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">node B</text>
+          </g>
+          <g>
+            <rect x="290" y="35" width="80" height="50" rx="4" style="fill:var(--surface);stroke:var(--rule-strong)" stroke-width="1.5"/>
+            <text x="330" y="56" text-anchor="middle" style="fill:var(--ink)">ESP32</text>
+            <text x="330" y="70" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">node C</text>
+          </g>
+          <g>
+            <rect x="400" y="30" width="90" height="60" rx="4" style="fill:var(--accent-soft);stroke:var(--accent)" stroke-width="1.5"/>
+            <text x="445" y="54" text-anchor="middle" style="fill:var(--accent-ink)">Raspberry</text>
+            <text x="445" y="67" text-anchor="middle" style="fill:var(--accent-ink)">Pi</text>
+            <text x="445" y="80" text-anchor="middle" font-size="8.5" style="fill:var(--accent-ink)">sky oracle / ground</text>
+          </g>
+
+          <line x1="110" y1="85" x2="110" y2="140" style="stroke:var(--rule-strong)" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="220" y1="85" x2="220" y2="140" style="stroke:var(--rule-strong)" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="330" y1="85" x2="330" y2="140" style="stroke:var(--rule-strong)" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <text x="110" y="155" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">belief +</text>
+          <text x="110" y="166" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">bid logic</text>
+          <text x="220" y="155" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">belief +</text>
+          <text x="220" y="166" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">bid logic</text>
+          <text x="330" y="155" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">belief +</text>
+          <text x="330" y="166" text-anchor="middle" font-size="9" style="fill:var(--ink-faint)">bid logic</text>
+        </g>
+      </svg>
+      <p class="diagram-cap">Fig. 5 &middot; Each node runs the planner's belief and bidding logic on-device; links blink independently to stand in for intermittent, lossy ESP-NOW contact.</p>
+      <p class="diagram-note">Topology sketch of the planned testbed &mdash; link blinking is illustrative, not a captured radio trace.</p>
+    </div>
 
     <div class="tbl-wrap">
       <table>
@@ -637,6 +839,9 @@ footer{
     <section>
       <h2 class="sec"><span class="num">9</span>Expected results, limitations &amp; validity</h2>
       <p>Nothing in this section is demonstrated; these are the predictions the experiments above are built to confirm or refute.</p>
+
+      <aside class="sidenote"><span class="tag">read this section as predictions, not results &mdash;</span> every bullet below is a guess the pre-registered experiment is built to check, written down before the experiment runs so it can be scored honestly afterward. If P loses to B3 on modeled classes, or the auction collapses at every contact fraction, that's not a bug in the writeup &mdash; it's the point of running the experiment at all.</aside>
+
       <h3 class="sub">9.1 Expected results</h3>
       <ul>
         <li>P is expected to beat B0&ndash;B2 clearly on time to identification, since none of them use physics likelihoods to choose discriminating bands.</li>
@@ -673,6 +878,8 @@ footer{
       <h2 class="sec"><span class="num">10</span>Reproducibility &amp; future work</h2>
       <p>The release will include the simulator, class forward models (or scripts that fetch them), orbital elements, contact schedules, every strategy's code, the analysis notebooks producing each figure, ESP32 firmware and the wiring diagram, under an open licence with a tagged, DOI-archived version.</p>
       <p>Planned extensions: scaling to larger hypothesis libraries; shadow-mode integration with a real alert stream alongside a partner follow-up network (planner advises, humans act); learned, amortized design policies to reduce onboard compute; inadequacy-driven onboard retention as a second paper; and, for an eventual flight path, radiation-tolerant compute, real link budgets and a hosted-payload or rideshare demonstration.</p>
+
+      <aside class="sidenote"><span class="tag">where this stands right now &mdash;</span> everything above the Experiment Status panel at the top of this page is design: the hypotheses, the utility, the auction, the testbed plan. None of it has been run yet. That's not a hedge, it's the actual current state, and it's exactly what the panel says. The next real milestone is the first simulated run against B0&ndash;B3 &mdash; when that happens, this page gets rewritten with numbers instead of predictions.</aside>
     </section>
 
     <section class="refs">

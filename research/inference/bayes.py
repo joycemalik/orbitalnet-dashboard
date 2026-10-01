@@ -13,7 +13,8 @@ Equation implemented (per measurement y_k at time t_k):
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Callable
 
 import numpy as np
 
@@ -30,29 +31,37 @@ class ClosedWorldBelief:
     """Joint log-posterior over (class, amplitude), stored as log-probabilities
     for numerical stability. Rows = classes (in `classes` order), columns =
     `amplitude_grid`.
+
+    `flux_fn_resolver` maps a class name to its f(t, amplitude) flux function;
+    it defaults to Phase 1's two-class resolver, but Phase 2+ passes
+    `transients.models.modeled_flux_fn_p2` to use the 4-class hypothesis
+    space without duplicating this class.
     """
 
     classes: tuple[str, ...]
     amplitude_grid: np.ndarray
     log_joint: np.ndarray  # shape (n_classes, n_amplitudes), not yet guaranteed normalized
+    flux_fn_resolver: Callable[[str], Callable] = field(default=modeled_flux_fn, repr=False, compare=False)
 
     @classmethod
     def with_uniform_prior(cls, classes: tuple[str, ...] = MODELED_CLASSES,
-                            amplitude_grid: np.ndarray | None = None) -> "ClosedWorldBelief":
+                            amplitude_grid: np.ndarray | None = None,
+                            flux_fn_resolver: Callable[[str], Callable] = modeled_flux_fn) -> "ClosedWorldBelief":
         if amplitude_grid is None:
             amplitude_grid = default_amplitude_grid()
         n_classes, n_amp = len(classes), len(amplitude_grid)
         log_prior = np.full((n_classes, n_amp), -np.log(n_classes * n_amp))
-        return cls(classes=classes, amplitude_grid=amplitude_grid, log_joint=log_prior)
+        return cls(classes=classes, amplitude_grid=amplitude_grid, log_joint=log_prior,
+                    flux_fn_resolver=flux_fn_resolver)
 
     def copy(self) -> "ClosedWorldBelief":
-        return ClosedWorldBelief(self.classes, self.amplitude_grid, self.log_joint.copy())
+        return ClosedWorldBelief(self.classes, self.amplitude_grid, self.log_joint.copy(), self.flux_fn_resolver)
 
     def log_likelihood_grid(self, t: float, y: float, sigma: float) -> np.ndarray:
         """log p(y | h, A) for every (h, A) cell, at measurement time t."""
         out = np.empty_like(self.log_joint)
         for i, cls in enumerate(self.classes):
-            f = modeled_flux_fn(cls)
+            f = self.flux_fn_resolver(cls)
             means = f(np.full_like(self.amplitude_grid, t), self.amplitude_grid)
             out[i, :] = -0.5 * np.log(2 * np.pi * sigma ** 2) - 0.5 * ((y - means) / sigma) ** 2
         return out

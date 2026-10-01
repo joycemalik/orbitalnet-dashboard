@@ -20,7 +20,21 @@ its inputs).
 from __future__ import annotations
 
 import numpy as np
-from scipy.special import logsumexp
+
+
+def _logsumexp(a: np.ndarray, axis: int = -1) -> np.ndarray:
+    """Plain-numpy logsumexp along one axis. `scipy.special.logsumexp` is
+    mathematically equivalent but, as of the scipy version this project
+    pins, its array-API-compat dispatch layer has enough per-call Python
+    overhead that calling it thousands of times per event (as the batched
+    EIG estimator does) was the dominant cost in Phase 2 — a 200-event
+    validation run took ~2.4 hours before this fix. See research/LOG.md
+    Phase 2 entry. Equivalent in every case this module calls it with: no
+    all -inf slices (every group always has at least one finite-probability
+    cell)."""
+    m = np.max(a, axis=axis, keepdims=True)
+    s = np.sum(np.exp(a - m), axis=axis, keepdims=True)
+    return np.squeeze(m + np.log(s), axis=axis)
 
 
 def _log_normal_pdf(y: np.ndarray, mean: np.ndarray, sigma) -> np.ndarray:
@@ -39,7 +53,7 @@ def _group_logsumexp(log_values: np.ndarray, group_idx: np.ndarray, n_groups: in
     unusably past a few dozen events."""
     out = np.empty(log_values.shape[:-1] + (n_groups,))
     for g in range(n_groups):
-        out[..., g] = logsumexp(log_values[..., group_idx == g], axis=-1)
+        out[..., g] = _logsumexp(log_values[..., group_idx == g], axis=-1)
     return out
 
 
@@ -82,7 +96,7 @@ def expected_information_gain(
     # log_joint[y_idx, cell] = log_weights[cell] + log N(y; means[cell], sigma)
     log_normal = _log_normal_pdf(y_grid[:, None], means[None, :], sigma_arr[None, :])
     log_joint = log_weights[None, :] + log_normal
-    log_p_y = logsumexp(log_joint, axis=1)  # (n_y,)
+    log_p_y = _logsumexp(log_joint, axis=1)  # (n_y,)
     p_y = np.exp(log_p_y)
 
     log_post_given_y = log_joint - log_p_y[:, None]  # (n_y, n_cells)
@@ -94,3 +108,41 @@ def expected_information_gain(
     expected_post_entropy = np.trapezoid(entropy_given_y * p_y, y_grid) / total_mass
 
     return float(h_prior - expected_post_entropy)
+
+
+def expected_information_gain_batch(
+    log_weights: np.ndarray,
+    means_batch: np.ndarray,
+    sigma_batch,
+    group_idx: np.ndarray,
+    n_groups: int,
+    n_y: int = 301,
+    pad_sigmas: float = 8.0,
+) -> np.ndarray:
+    """Same quantity as `expected_information_gain`, evaluated for many
+    candidates at once: `means_batch` has shape (n_candidates, n_cells).
+    Phase 2+ has one candidate per feasible (time, satellite) cell — often
+    dozens to hundreds per planning step — so this exists to avoid a Python
+    loop over candidates (the same class of bug fixed in Phase 1, see
+    research/LOG.md; evaluating all candidates in one vectorized call keeps
+    Phase 2+ tractable)."""
+    h_prior = group_entropy(log_weights, group_idx, n_groups)
+
+    sigma_arr = np.broadcast_to(np.asarray(sigma_batch, dtype=float), means_batch.shape)  # (n_cand, n_cells)
+    lo = np.min(means_batch - pad_sigmas * sigma_arr)
+    hi = np.max(means_batch + pad_sigmas * sigma_arr)
+    y_grid = np.linspace(lo, hi, n_y)
+
+    log_normal = _log_normal_pdf(y_grid[None, :, None], means_batch[:, None, :], sigma_arr[:, None, :])
+    log_joint = log_weights[None, None, :] + log_normal                # (n_cand, n_y, n_cells)
+    log_p_y = _logsumexp(log_joint, axis=2)                             # (n_cand, n_y)
+    p_y = np.exp(log_p_y)
+
+    log_post_given_y = log_joint - log_p_y[:, :, None]
+    group_log_probs_given_y = _group_logsumexp(log_post_given_y, group_idx, n_groups)  # (n_cand, n_y, n_groups)
+    entropy_given_y = _entropy_from_log_probs(group_log_probs_given_y)                  # (n_cand, n_y)
+
+    total_mass = np.trapezoid(p_y, y_grid, axis=1)
+    expected_post_entropy = np.trapezoid(entropy_given_y * p_y, y_grid, axis=1) / total_mass
+
+    return h_prior - expected_post_entropy

@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Differential Diagnosis for the Sky</title>
+<meta name="description" content="Open-world, deadline-aware hypothesis discrimination for distributed space observatories: planning follow-up campaigns for fading transients under intermittent connectivity.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: journal front matter (title/status/abstract) in one centered
+   column; body sections flow in a two-column academic layout on wide
+   viewports, collapsing to one column under 900px. Equations, the big
+   tables, the pipeline diagram and the title block span both columns. */
+:root{
+  --bg:#faf9f5;
+  --surface:#ffffff;
+  --ink:#1c1b19;
+  --ink-soft:#514e48;
+  --ink-faint:#86827a;
+  --rule:#ddd8cc;
+  --rule-strong:#c7c0ae;
+  --accent:#8a1430;
+  --accent-ink:#5e0e20;
+  --accent-soft:#f6e7ea;
+  --status-bg:#f1ede1;
+  --status-ink:#5a5440;
+  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --font-serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171614; --surface:#1e1c19; --ink:#efece3; --ink-soft:#c6c1b5;
+    --ink-faint:#8d897d; --rule:#36332c; --rule-strong:#4a4639;
+    --accent:#e2576f; --accent-ink:#f3899a; --accent-soft:#2c1a20;
+    --status-bg:#262319; --status-ink:#cdc5a8; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171614; --surface:#1e1c19; --ink:#efece3; --ink-soft:#c6c1b5;
+  --ink-faint:#8d897d; --rule:#36332c; --rule-strong:#4a4639;
+  --accent:#e2576f; --accent-ink:#f3899a; --accent-soft:#2c1a20;
+  --status-bg:#262319; --status-ink:#cdc5a8; color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-serif);
+  font-size:16.5px;
+  line-height:1.62;
+  padding:0 20px;
+}
+::selection{background:var(--accent-soft);color:var(--accent-ink);}
+
+.page{max-width:1180px;margin:0 auto;padding:48px 0 96px;}
+
+/* ---------- front matter ---------- */
+.frontmatter{max-width:760px;margin:0 auto 56px;text-align:center;}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 20px;
+}
+h1.title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(28px,4.4vw,42px);
+  line-height:1.18;
+  letter-spacing:-.01em;
+  margin:0 0 14px;
+  text-wrap:balance;
+}
+.subtitle{
+  font-family:var(--font-serif);
+  font-style:italic;
+  font-size:clamp(16px,2vw,19px);
+  color:var(--ink-soft);
+  margin:0 0 18px;
+  text-wrap:balance;
+}
+.tagline{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-weight:500;
+  font-size:15px;
+  color:var(--accent);
+  margin:0 0 22px;
+}
+.meta-row{
+  display:flex;justify-content:center;gap:18px;flex-wrap:wrap;
+  font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  padding:12px 0;margin:0 0 28px;
+}
+.meta-row span{white-space:nowrap;}
+
+.status{
+  text-align:left;
+  background:var(--status-bg);
+  color:var(--status-ink);
+  border:1px solid var(--rule-strong);
+  border-radius:3px;
+  padding:16px 20px;
+  font-size:13.5px;
+  line-height:1.55;
+  margin:0 0 28px;
+}
+.status b{font-family:var(--font-display);font-weight:600;}
+.status .labels{margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11.5px;}
+.status .labels b{font-family:var(--font-mono);}
+
+.abstract{
+  text-align:left;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:26px 28px;
+}
+.abstract h2{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 12px;
+}
+.abstract p{margin:0;font-size:15.5px;color:var(--ink-soft);}
+
+.thesis{
+  max-width:620px;margin:32px auto 0;text-align:center;
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:18px;line-height:1.5;color:var(--ink);
+}
+.thesis::before,.thesis::after{content:'"';color:var(--accent);}
+
+/* ---------- body ---------- */
+.body-columns{
+  column-count:2;column-gap:52px;
+  max-width:1180px;margin:0 auto;
+}
+@media (max-width:900px){ .body-columns{column-count:1;} }
+
+section{break-inside:avoid-column;margin:0 0 6px;}
+section + section{margin-top:4px;}
+
+h2.sec{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:21px;
+  letter-spacing:-.005em;
+  margin:36px 0 6px;
+  padding-top:14px;
+  border-top:2px solid var(--ink);
+  break-after:avoid;
+}
+h2.sec .num{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:8px;}
+h3.sub{
+  font-family:var(--font-serif);font-weight:700;font-size:15.5px;
+  margin:20px 0 6px;break-after:avoid;
+}
+p{margin:0 0 13px;text-align:left;hyphens:auto;}
+p.lead{font-size:16px;}
+.col-span{column-span:all;}
+
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px;}
+
+ul,ol{margin:0 0 14px;padding-left:22px;}
+li{margin:0 0 7px;}
+ol.hyp-list{list-style:none;padding-left:0;counter-reset:hyp;}
+ol.hyp-list li{counter-increment:hyp;}
+
+.hyp{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-left:4px solid var(--accent);
+  border-radius:2px;
+  padding:14px 16px;
+  margin:0 0 14px;
+  break-inside:avoid;
+}
+.hyp .htag{
+  font-family:var(--font-mono);font-weight:500;font-size:12px;
+  color:var(--accent);letter-spacing:.04em;display:block;margin-bottom:4px;
+}
+.hyp p{margin:0;font-size:14.5px;}
+.hyp .falsify{
+  margin-top:8px;font-size:12.5px;color:var(--ink-faint);font-style:italic;
+}
+
+/* equation blocks */
+.eq{
+  column-span:all;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--ink);
+  padding:16px 22px;
+  margin:10px 0 18px;
+  display:flex;align-items:center;gap:18px;
+  break-inside:avoid;
+}
+.eq .math{
+  font-family:var(--font-serif);font-style:italic;font-size:15.5px;
+  flex:1;overflow-x:auto;line-height:1.9;
+}
+.eq .math .rm{font-style:normal;}
+.eq .tag{
+  font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);
+  white-space:nowrap;
+}
+.math sub,.math sup{font-style:normal;}
+
+/* pipeline diagram */
+.pipeline-wrap{column-span:all;margin:14px 0 22px;}
+.pipeline{display:flex;gap:2px;align-items:stretch;overflow-x:auto;padding:4px 2px 10px;}
+.pstep{
+  flex:0 0 auto;width:132px;background:var(--surface);border:1px solid var(--rule-strong);
+  border-radius:5px;padding:10px 11px;font-size:11.5px;line-height:1.35;
+}
+.pstep .pnum{
+  display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border-radius:50%;background:var(--accent);color:#fff;font-family:var(--font-mono);
+  font-size:9px;margin-bottom:6px;
+}
+.pstep b{display:block;font-size:12px;margin-bottom:2px;}
+.pstep small{display:block;color:var(--ink-faint);font-size:10px;margin-top:3px;}
+.parrow{flex:0 0 auto;display:flex;align-items:center;color:var(--accent);font-size:17px;padding:0 1px;}
+.ploop{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
+  text-align:right;margin:-4px 2px 10px;
+}
+.pbranch{
+  font-size:12.5px;color:var(--ink-soft);background:var(--accent-soft);
+  border-left:3px solid var(--accent);padding:9px 13px;border-radius:2px;
+}
+.pbranch b{color:var(--accent-ink);}
+
+/* tables */
+.tbl-wrap{column-span:all;overflow-x:auto;margin:8px 0 20px;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+caption{
+  caption-side:top;text-align:left;font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-faint);padding-bottom:8px;
+}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top;}
+thead th{
+  font-family:var(--font-mono);font-weight:500;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);
+  border-bottom:1.5px solid var(--ink);
+}
+tbody tr:hover{background:var(--accent-soft);}
+td.lbl{font-family:var(--font-mono);font-weight:500;color:var(--accent);white-space:nowrap;}
+
+.note{
+  font-size:12.5px;color:var(--ink-faint);font-style:italic;margin:-6px 0 18px;
+}
+
+blockquote{
+  margin:0 0 14px;padding:4px 0 4px 16px;border-left:2px solid var(--rule-strong);
+  color:var(--ink-soft);font-size:14px;
+}
+
+.refs{column-span:all;}
+.refs ol{list-style:none;counter-reset:ref;padding-left:0;columns:2;column-gap:40px;}
+@media (max-width:700px){ .refs ol{columns:1;} }
+.refs li{
+  counter-increment:ref;font-size:13px;color:var(--ink-soft);
+  margin:0 0 9px;padding-left:26px;position:relative;break-inside:avoid;
+}
+.refs li::before{
+  content:"["counter(ref)"]";position:absolute;left:0;top:0;
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);
+}
+
+footer{
+  column-span:all;margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="frontmatter">
+    <p class="eyebrow">Draft manuscript &middot; Space Autonomy &amp; Time-Domain Astrophysics</p>
+    <h1 class="title">Open-World, Deadline-Aware Hypothesis Discrimination for Distributed Space Observatories</h1>
+    <p class="subtitle">Planning follow-up campaigns for fading transients under intermittent connectivity</p>
+    <p class="tagline">Short form: Differential Diagnosis for the Sky</p>
+    <div class="meta-row">
+      <span>Draft &middot; 24 September 2026</span>
+      <span>&middot;</span>
+      <span>Target venue: IWPSS / AIAA JAIS</span>
+      <span>&middot;</span>
+      <span>Status: pre-registration, unrun</span>
+    </div>
+
+    <div class="status">
+      <b>Reader's note.</b> This document states one precise research gap: a constellation that must plan a multi-step, multi-spacecraft observation campaign to tell competing explanations of a fading event apart, while staying honest that the true explanation may not be in its hypothesis set. OrbitalNet is the distributed substrate that makes the campaign executable; it is not itself the contribution.
+      <div class="labels">
+        <span><b>Verified</b> &mdash; a source was opened while writing this.</span>
+        <span><b>Draft claim</b> &mdash; check against the literature yourself.</span>
+        <span><b>Expected</b> &mdash; a result the experiments are designed to test; nothing here has been demonstrated.</span>
+      </div>
+    </div>
+
+    <div class="abstract">
+      <h2>Abstract</h2>
+      <p>Fast optical transients such as kilonovae, shock-cooling supernovae, relativistic afterglows and stellar flares are often indistinguishable in their first hours, yet the measurements that separate them lose value within hours to days as the sources fade. Current follow-up is organised by recipes chosen per assumed class, by classifier-uncertainty ranking of objects, or by distributed allocation toward fixed objectives. None of these plans a sequence of heterogeneous measurements whose purpose is to discriminate competing physical explanations of <em>one</em> event before the discriminating signal disappears, and none accounts for the possibility that the true explanation lies outside the hypothesis set. We formulate follow-up as open-world sequential model discrimination with time-decaying measurement value, executed by spacecraft that hold unequal, intermittently synchronised beliefs. The planner maintains a posterior over <em>K</em> physical models plus an explicit unmodeled alternative represented by a flexible auxiliary model, selects measurements by a utility combining expected discrimination, expected evidence of model inadequacy and opportunity decay, and switches from discrimination to evidence preservation when inadequacy becomes probable. Allocation across spacecraft uses a marginal-gain auction that tolerates stale beliefs. We evaluate on a simulated heterogeneous low-Earth-orbit constellation with physically grounded visibility, slew, sensitivity and contact constraints, using injected transients from published light-curve models and withheld classes as ground-truth anomalies, and replicate the communication layer on an ESP32 hardware-in-the-loop testbed. We test whether the planner reaches correct identification earlier, recovers more early-time information, and flags withheld classes more reliably than reactive, uncertainty-sampling and closed-world information-gain baselines under identical budgets.</p>
+    </div>
+
+    <p class="thesis">We show that a distributed space observatory that keeps an explicit &ldquo;none of the above&rdquo; explanation and accounts for fading signals recovers more of the physically unrecoverable information about fading transients than closed-world or reactive planners under the same constraints.</p>
+  </div>
+
+  <div class="body-columns">
+
+    <section>
+      <h2 class="sec"><span class="num">1</span>Introduction</h2>
+      <p class="lead">When an unexplained transient appears, a constellation of heterogeneous instruments must decide, repeatedly and without waiting for the ground, which spacecraft should take which measurement next. The right choice depends on which explanations remain plausible, how fast each explanation predicts the discriminating signal will vanish, what other spacecraft are already doing, and whether any existing explanation fits at all.</p>
+      <p>The measurement that separates two hypotheses is often the one available only briefly &mdash; an early ultraviolet colour, the first spectrum before a photosphere cools, a near-infrared epoch before a kilonova fades. A wrong or late choice is not a delay; it is a permanent loss, because wide-field surveys now produce far more candidates than follow-up capacity can serve, which makes the choice of <em>measurement</em>, not just of target, the binding constraint. This is not hypothetical: automated pipelines have mis-flagged a Type IIb supernova as a kilonova candidate for days before spectroscopic confirmation ruled it out.</p>
+      <h3 class="sub">Research gap</h3>
+      <p>Hypothesis-discriminating observation exists for Earth science and rover geology, but with a closed hypothesis set and a single planner. Distributed spacecraft allocation exists for fixed coverage objectives, with no hypothesis state at all. Misspecification-robust experimental design exists for single experimenters without deadlines. Astronomical follow-up optimisation targets training-set construction or one-shot spectroscopic selection. No located work combines open-world hypothesis discrimination, a fading-value objective, multi-instrument sequencing and decentralised execution in one campaign planner &mdash; and none measures what the combination recovers.</p>
+      <h3 class="sub">Research question</h3>
+      <p>Can a distributed, resource-constrained space observatory plan sequential multi-instrument measurements that discriminate competing physical explanations of a fading transient, and recognise when none of them applies, better than reactive and closed-world planners under identical physical and communication constraints?</p>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">2</span>Related work</h2>
+      <p>The table below names, for each closest prior system, what it does, what it assumes, and the specific capability it stops short of &mdash; the delta this project occupies. All entries are draft claims pending a full read of the cited sources (&sect;References).</p>
+    </section>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Table 1 &middot; Closest prior work</caption>
+        <thead><tr><th>System</th><th>What it does</th><th>What it does not do</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">JPL&nbsp;POISE</td><td>Chooses observations that best discriminate competing hypotheses and re-tasks Earth-observing assets under cost and feasibility constraints, given domain models.</td><td>No explicit unmodeled hypothesis; no decentralized planning under intermittent links.</td></tr>
+          <tr><td class="lbl">SHM&#8209;POMDP</td><td>Plans belief-space observations over science hypotheses for a single rover in a static, closed hypothesis structure.</td><td>Single agent; no time-decaying targets; no model-inadequacy signal.</td></tr>
+          <tr><td class="lbl">NASA&nbsp;DSA&nbsp;/&nbsp;Starling</td><td>Four spacecraft share perspectives and allocate ionospheric measurements without ground direction, surviving member loss, toward a fixed shared objective.</td><td>No hypothesis-discrimination objective; proves distributed allocation flies, not epistemic planning.</td></tr>
+          <tr><td class="lbl">Astudillo&nbsp;et&nbsp;al.&nbsp;2020</td><td>Information-theoretic choice of which objects receive a spectroscopic follow-up slot.</td><td>One follow-up type; population-level selection; no timing or sequencing.</td></tr>
+          <tr><td class="lbl">RESSPECT&nbsp;/&nbsp;Fink&nbsp;active&nbsp;learning</td><td>Chooses spectroscopic targets to improve a population classifier's training set.</td><td>Goal is a better classifier, not per-event discrimination; does not model misspecification.</td></tr>
+          <tr><td class="lbl">NMMA&#8209;Astro&#8209;COLIBRI</td><td>Fits early photometry to competing kilonova/supernova/afterglow models and reports Bayes factors as data arrive.</td><td>Does not choose the next measurement; comparison is after the fact.</td></tr>
+          <tr><td class="lbl">Robust&nbsp;BED&nbsp;(EGIG&nbsp;/&nbsp;GBOED)</td><td>Designs experiments that remain informative, or detect misspecification, when the model may be wrong.</td><td>Single experimenter, no hard deadlines, no distributed assets &mdash; the mechanism this project borrows, applied to a new operational setting.</td></tr>
+          <tr><td class="lbl">GRANDMA&nbsp;/&nbsp;TOM&nbsp;Toolkit&nbsp;/&nbsp;AEON</td><td>Coordinates global human follow-up networks for transient alerts.</td><td>Humans decide the campaign logic; no autonomous hypothesis-driven planner.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section>
+      <p>The pattern across the broader landscape (twelve candidate questions were traced to a prior-art bottleneck before this gap was selected) matters more than any single row: every lower-stack capability &mdash; detect, rank, allocate, retarget &mdash; has prior art. What recurs unresolved is the layer where a <em>distributed</em> system must reason about which explanation is true, under a closing window, while allowing that its explanations may all be wrong.</p>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">3</span>Hypotheses</h2>
+      <p>Four falsifiable hypotheses follow from the research question. Each names the result that would refute it; a refuted hypothesis &mdash; H4 in particular &mdash; is still a publishable finding and will be reported as a refutation, not tuned away.</p>
+    </section>
+
+    <ol class="hyp-list col-span" style="column-span:all;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <li class="hyp">
+        <span class="htag">H1 &middot; Discrimination</span>
+        <p>The proposed planner (P) reaches 95% posterior on the true modeled class in less median time than every baseline, using no more measurements.</p>
+        <p class="falsify">Refuted if a baseline matches or beats P's median time-to-95% at equal budget.</p>
+      </li>
+      <li class="hyp">
+        <span class="htag">H2 &middot; Irreversibility</span>
+        <p>Removing the opportunity-decay term reduces recovered early-time information more for fast-evolving classes (kilonova, shock-cooling) than for slow ones.</p>
+        <p class="falsify">Refuted if the decay-ablation's information loss is the same (or worse) for slow classes.</p>
+      </li>
+      <li class="hyp">
+        <span class="htag">H3 &middot; Open world</span>
+        <p>On withheld classes, the planner's model-inadequacy probability P(h&#8320;) separates unmodeled from modeled events better than classifier-entropy thresholding, at a matched false-alarm rate.</p>
+        <p class="falsify">Refuted if AUROC(P(h&#8320;)) &le; AUROC(entropy threshold) on held-out events.</p>
+      </li>
+      <li class="hyp">
+        <span class="htag">H4 &middot; Distribution</span>
+        <p>Performance degrades gracefully as inter-satellite contact fraction falls; the stale-belief auction retains a measurable fraction of centralized-oracle performance where independent greedy planners duplicate measurements.</p>
+        <p class="falsify">Refuted if the auction collapses to independent-greedy performance at all tested contact fractions.</p>
+      </li>
+    </ol>
+
+    <section>
+      <h2 class="sec"><span class="num">4</span>Contributions</h2>
+      <ol>
+        <li>A formulation of transient follow-up as open-world sequential model discrimination with hypothesis-dependent measurement decay.</li>
+        <li>A decentralized allocation rule for epistemic (discrimination) objectives under intermittent inter-satellite links.</li>
+        <li>A discrimination-to-preservation mode switch driven by model-inadequacy evidence.</li>
+        <li>An open simulator and benchmark with withheld-class tests, plus a hardware-in-the-loop communication testbed.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">5</span>System formulation</h2>
+      <p>OrbitalNet, the distributed substrate, supplies exactly three things to the planner: who can see the target when, who can talk to whom when, and a message layer that survives link gaps. The contribution sits entirely in the belief and utility layers built on top.</p>
+    </section>
+
+    <div class="pipeline-wrap">
+      <div class="pipeline">
+        <div class="pstep"><span class="pnum">1</span><b>Orbital layer</b><small>SGP4 visibility, slew, eclipse</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">2</span><b>Feasible actions</b><small>per spacecraft, per epoch</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">3</span><b>Utility engine</b><small>discrimination + inadequacy + decay</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">4</span><b>Marginal-gain auction</b><small>stale-belief tolerant</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">5</span><b>Execute measurement</b><small>&mdash;</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">6</span><b>Local Bayesian update</b><small>per-class posterior</small></div>
+        <div class="parrow">&#10230;</div>
+        <div class="pstep"><span class="pnum">7</span><b>Belief exchange</b><small>whenever contact allows</small></div>
+      </div>
+      <p class="ploop">loop: step 7 &#10227; step 2</p>
+      <p class="pbranch">If P(h&#8320;) &gt; &tau; for two consecutive updates &nbsp;&#10230;&nbsp; <b>switch to preservation mode</b>: discrimination terms drop out, the planner maximizes time/wavelength coverage of the auxiliary model, and onboard retention priority for this event's raw data is raised.</p>
+    </div>
+
+    <section>
+      <h3 class="sub">5.1 Hypothesis space</h3>
+      <p>The event's true class <i>h</i> is drawn from <i>K</i> physical models plus one unmodeled alternative h&#8320;. Each modeled class <i>k</i> carries parameters &theta;<sub>k</sub> (explosion time, distance, ejecta mass, temperature, and similarly class-specific quantities) and a forward model predicting the flux an instrument would measure:</p>
+      <div class="eq">
+        <div class="math">
+          <span class="script">&#8459;</span> = {h<sub>1</sub>,&nbsp;&hellip;,&nbsp;h<sub>K</sub>} &cup; {h<sub>0</sub>},&nbsp;&nbsp;&nbsp;
+          y &vert; h<sub>k</sub>, &theta;<sub>k</sub>, a &nbsp;&sim;&nbsp; <span class="rm">&Nscr;</span>&#8201;(&nbsp;f<sub>k</sub>(&theta;<sub>k</sub>, &lambda;<sub>a</sub>, t<sub>a</sub>),&nbsp; &sigma;<sub>a</sub><sup>2</sup>(f<sub>k</sub>)&nbsp;)
+        </div>
+        <div class="tag">eq. 1</div>
+      </div>
+      <p>The unmodeled alternative is represented deliberately by a flexible auxiliary model &mdash; a Gaussian process over time and wavelength with broad priors &mdash; so that it never wins by fitting a known class well. It wins only when every known class fits badly:</p>
+      <div class="eq">
+        <div class="math">y &vert; h<sub>0</sub>, a &nbsp;&sim;&nbsp; <span class="rm">&Gscr;&Pscr;</span>&#8201;(&nbsp;m(t,&lambda;),&nbsp; k<sub>broad</sub>&#8201;((t,&lambda;),(t&prime;,&lambda;&prime;))&nbsp;)</div>
+        <div class="tag">eq. 2</div>
+      </div>
+
+      <h3 class="sub">5.2 Actions and feasibility</h3>
+      <p>An action a&nbsp;=&nbsp;(spacecraft&nbsp;i, instrument&nbsp;m, band/mode&nbsp;&lambda;, start&nbsp;time&nbsp;t, exposure&nbsp;&Delta;) is feasible only if the orbital layer reports the target visible and outside Sun, Earth-limb and South Atlantic Anomaly exclusion, the slew fits the schedule, and power and storage budgets hold. Measurement noise &sigma;<sub>a</sub> is read from the instrument's limiting-magnitude curve, so a faded source automatically yields an uninformative measurement &mdash; the physical mechanism behind the decay term below.</p>
+
+      <h3 class="sub">5.3 Utility</h3>
+      <p>A candidate measurement's score combines three terms, each a mutual-information or decision-theoretic quantity, divided by its resource cost c(a):</p>
+      <div class="eq">
+        <div class="math">
+          U(a&nbsp;&vert;&nbsp;b<sub>t</sub>) &nbsp;=&nbsp;
+          <span style="display:inline-block;text-align:center;vertical-align:middle;">
+            <span style="display:block;border-bottom:1px solid currentColor;padding:0 4px 2px;">I(H<sub>1:K</sub>;&nbsp;Y<sub>a</sub>&nbsp;&vert;&nbsp;b<sub>t</sub>)&nbsp;+&nbsp;&beta;&nbsp;I(Z;&nbsp;Y<sub>a</sub>&nbsp;&vert;&nbsp;b<sub>t</sub>)&nbsp;+&nbsp;&gamma;&nbsp;D(a,&nbsp;b<sub>t</sub>)</span>
+            <span style="display:block;padding-top:2px;">c(a)</span>
+          </span>
+        </div>
+        <div class="tag">eq. 3</div>
+      </div>
+      <p>The first term is the mutual information between the measurement and the class label: how much it separates the remaining explanations. <i>Z</i> is a binary indicator of whether the truth is h&#8320;; the second term is how much the measurement would reveal about model adequacy, following the misspecification-indicator idea from robust Bayesian experimental design (&sect;2). The third term is opportunity decay: the expected information lost if this measurement is postponed to the next feasible slot, averaged over the current posterior &mdash; classes that fade fast make early measurements urgent only while they remain plausible:</p>
+      <div class="eq">
+        <div class="math">
+          D(a,&nbsp;b<sub>t</sub>) &nbsp;=&nbsp; <span class="rm">&sum;</span><sub>k</sub> b<sub>t</sub>(h<sub>k</sub>) &#8201;[&nbsp; I<sub>k</sub>(Y<sub>a</sub>)&nbsp;&minus;&nbsp;I<sub>k</sub>(Y<sub>a&prime;</sub>)&nbsp;]<sub>+</sub> ,&nbsp;&nbsp; a&prime; = same measurement at the next feasible time
+        </div>
+        <div class="tag">eq. 4</div>
+      </div>
+
+      <h3 class="sub">5.4 Multi-spacecraft allocation</h3>
+      <p>For a fixed class variable and measurements conditionally independent given the class, mutual information is monotone submodular, so greedy batch selection is within a factor (1&nbsp;&minus;&nbsp;1/e) of optimal &mdash; but only for a centralized planner with perfectly shared beliefs. The proposed auction instead lets each spacecraft bid its marginal gain given whatever commitments it has heard about. Stale beliefs break the optimality guarantee; measuring by how much is H4, not a result to hide.</p>
+
+      <h3 class="sub">5.5 Mode switch</h3>
+      <p>If the posterior on h&#8320; exceeds a threshold &tau; for two consecutive updates, the utility changes: discrimination terms drop out, the planner maximizes coverage in time and wavelength of the auxiliary model, and onboard retention priority for all raw data on the event is raised. &tau; is fixed on a validation split to hit a chosen false-alarm rate on modeled classes, never on the test split.</p>
+
+      <h3 class="sub">5.6 Belief update and communication</h3>
+      <p>Each spacecraft keeps a grid or particle posterior per class. Messages carry per-class log-evidence and a compact list of committed future measurements, never raw data. Merging two beliefs that share earlier measurements must avoid double counting; tagging every measurement with a unique ID and summing only unseen evidence handles this exactly for discrete classes &mdash; the property exercised directly by the decentralization experiments (&sect;6).</p>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">6</span>Experimental design</h2>
+      <p>Every strategy sees the same injected events, the same orbits, the same instrument budgets and the same contact schedule; only the decision rule changes. That pairing is what turns the simulator into evidence.</p>
+      <h3 class="sub">6.1 Simulated universe</h3>
+    </section>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Table 2 &middot; Injected event classes</caption>
+        <thead><tr><th>Role</th><th>Classes</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">Modeled (K=4)</td><td>Kilonova; shock-cooling / Type&nbsp;IIb early phase; GRB afterglow (broken power-law); M-dwarf flare.</td><td>All plausible early confusions; published analytic or template models exist for each.</td></tr>
+          <tr><td class="lbl">Withheld (truth = h&#8320;)</td><td>Fast blue optical transient (AT2018cow-like); tidal disruption event; one synthetic "nonsense" class with physically odd colour evolution.</td><td>Ground truth for the open-world test; the planner never sees these models.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section>
+      <p>Forward models are taken from published light-curve codes or templates (e.g. sncosmo templates, kilonova grids, flare templates), each separately cited, so reviewers can check the physics first. Distance and host extinction are sampled from realistic ranges and classes weighted by rough relative rates, to avoid a toy balanced problem.</p>
+
+      <h3 class="sub">6.2 Simulated constellation</h3>
+      <p>Six to eight low-Earth-orbit spacecraft from the OrbitalNet propagator, mixed payloads: two ultraviolet imagers, two optical multi-band imagers, one near-infrared imager, one low-resolution spectrograph, optionally one X-ray monitor. Each instrument carries a limiting-magnitude-versus-exposure curve, a slew rate and duty-cycle limits. Visibility uses SGP4 with Earth occultation, Sun avoidance and South Atlantic Anomaly exclusion; inter-satellite links follow line-of-sight and range, sampled into a contact schedule.</p>
+
+      <h3 class="sub">6.3 Strategies compared</h3>
+    </section>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Table 3 &middot; Strategies under identical budgets</caption>
+        <thead><tr><th>Label</th><th>Strategy</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">B0</td><td>Fixed recipe: two optical bands every <i>N</i> hours, a spectrum once brighter than a threshold.</td><td>Human-style practice.</td></tr>
+          <tr><td class="lbl">B1</td><td>Reactive nearest-capable dispatcher (the existing project baseline).</td><td>Shows what the pre-existing system does.</td></tr>
+          <tr><td class="lbl">B2</td><td>Classifier-entropy sampling: measure whatever most reduces predicted-class entropy; no physics likelihoods.</td><td>Active-learning-style baseline.</td></tr>
+          <tr><td class="lbl">B3</td><td>Closed-world expected information gain, centralized, no decay term, no h&#8320;.</td><td>POIE-style baseline &mdash; the key comparison.</td></tr>
+          <tr><td class="lbl">P</td><td>Full method: h&#8320; + decay + stale-belief auction.</td><td>Proposed.</td></tr>
+          <tr><td class="lbl">O</td><td>Centralized, perfect communication, full method.</td><td>Upper bound.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section>
+      <h3 class="sub">6.4 Metrics</h3>
+      <ul>
+        <li><b>Time to identification</b> &mdash; hours until the posterior on the true class exceeds 0.95, censored at the event's detectability limit.</li>
+        <li><b>Accuracy at deadline</b> &mdash; correct top class and log score at a fixed horizon (e.g. 72&nbsp;h).</li>
+        <li><b>Early-time information recovered</b> &mdash; posterior contraction of each class's physical parameters (e.g. ejecta mass, explosion time) relative to prior; the knowledge metric.</li>
+        <li><b>Open-world detection</b> &mdash; area under the ROC curve of P(h&#8320;) separating withheld from modeled events; false-alarm rate on modeled events at the chosen &tau;.</li>
+        <li><b>Preservation</b> &mdash; for withheld events, fraction of the event's detectable lifetime covered in at least three wavelength regions.</li>
+        <li><b>Cost</b> &mdash; measurements used, slew time, messages sent, bytes exchanged.</li>
+      </ul>
+
+      <h3 class="sub">6.5 Scenarios</h3>
+      <ol>
+        <li><b>Nominal</b> &mdash; full constellation, contact fraction as propagated.</li>
+        <li><b>Communication sweep</b> &mdash; contacts artificially thinned from 100% down to 10% of the propagated schedule.</li>
+        <li><b>Node loss</b> &mdash; one or two spacecraft removed mid-campaign.</li>
+        <li><b>Crowding</b> &mdash; several events competing at once for the same instruments.</li>
+        <li><b>Model error</b> &mdash; forward models perturbed from the injected truth by realistic systematics, testing h&#8320; false alarms.</li>
+      </ol>
+
+      <h3 class="sub">6.6 Ablations</h3>
+      <p>Each ablation removes exactly one term so a reader can see which part earns its keep: drop h&#8320; entirely; drop the decay term (&gamma;&nbsp;=&nbsp;0); drop the inadequacy term while keeping h&#8320; in the belief (&beta;&nbsp;=&nbsp;0); replace the auction with independent greedy planners; vary K.</p>
+
+      <h3 class="sub">6.7 Statistics</h3>
+      <p>At least 1,000 injected events per scenario, fixed seeds shared across strategies. Strategies are compared with paired tests (Wilcoxon signed-rank on per-event metrics), medians reported with bootstrap 95% intervals, and multiple comparisons corrected (Holm). Effect sizes are reported alongside p-values, not in place of them. The mode-switch threshold &tau; and the utility weights &beta;,&nbsp;&gamma; are tuned on a validation split of events, never on the test split.</p>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">7</span>Real-data validation</h2>
+      <p>Archival data cannot answer what a different measurement choice would have shown, since only the measurements actually taken exist. Real public light curves (e.g. from ZTF via a broker such as Fink or ALeRCE) are used for two narrower purposes only: checking that the forward models and noise model match reality, and a retrospective replay on densely observed events, where the planner may choose only among epochs that genuinely exist. This limitation is stated plainly rather than implied away.</p>
+    </section>
+
+    <section>
+      <h2 class="sec"><span class="num">8</span>Hardware-in-the-loop testbed</h2>
+      <p>The decision layer is replicated on physical hardware to show it survives real asynchronous radios and microcontroller-class compute, with results close to simulation &mdash; not to reproduce flight-qualified radiation tolerance, real RF link budgets, attitude control or flight software, which the testbed explicitly does not claim.</p>
+    </section>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Table 4 &middot; Testbed elements</caption>
+        <thead><tr><th>Element</th><th>Hardware</th><th>Constraint reproduced</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">Spacecraft nodes (6&ndash;8)</td><td>ESP32 boards running belief update, utility and bidding on-device.</td><td>Limited compute and memory; tests whether the planner fits a microcontroller-class budget.</td></tr>
+          <tr><td class="lbl">Crosslinks</td><td>ESP-NOW radio, gated on and off by the OrbitalNet contact schedule replayed in real time (or accelerated).</td><td>Intermittent links, message loss, asynchrony.</td></tr>
+          <tr><td class="lbl">Clocks</td><td>Independent node clocks, synchronized only via messages.</td><td>Clock drift and ordering errors.</td></tr>
+          <tr><td class="lbl">Sky oracle &amp; ground</td><td>Raspberry Pi serving measurement outcomes from the simulated universe; acts as ground station.</td><td>Separates ground truth from the nodes' own beliefs.</td></tr>
+          <tr><td class="lbl">Faults</td><td>Scheduled power-cycling of nodes.</td><td>Node loss and rejoin.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section>
+      <h2 class="sec"><span class="num">9</span>Expected results, limitations &amp; validity</h2>
+      <p>Nothing in this section is demonstrated; these are the predictions the experiments above are built to confirm or refute.</p>
+      <h3 class="sub">9.1 Expected results</h3>
+      <ul>
+        <li>P is expected to beat B0&ndash;B2 clearly on time to identification, since none of them use physics likelihoods to choose discriminating bands.</li>
+        <li>P versus B3 is the real test: expected similar performance on modeled classes, better early-time parameter recovery for fast classes (the decay term), and much better behaviour on withheld classes, where B3 is expected to confidently misclassify them.</li>
+        <li>A plausible failure mode: h&#8320; raises false alarms when forward models are imperfect (Scenario&nbsp;5). If so, the false-alarm/detection trade-off curve is itself a useful, reportable result.</li>
+        <li>The auction is expected to approach the centralized oracle (O) at high contact fractions and degrade toward independent-greedy at low ones; where the crossover sits is unknown and worth reporting either way.</li>
+      </ul>
+      <h3 class="sub">9.2 Limitations</h3>
+      <ul>
+        <li>Hypothesis sets are small and hand-chosen; real follow-up faces dozens of classes and subclasses.</li>
+        <li>Forward models are simplified; systematics between templates and reality can masquerade as "unmodeled."</li>
+        <li>No real spacecraft constellation today carries this payload mix; the constellation is a design study.</li>
+        <li>The "none of the above" hypothesis detects inadequacy; it does not invent a new explanation. The system participates in discovery by preserving evidence and flagging it, not by theorising.</li>
+        <li>Computing mutual information in real time on microcontrollers may require coarse approximations that change rankings.</li>
+      </ul>
+    </section>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Table 5 &middot; Threats to validity</caption>
+        <thead><tr><th>Type</th><th>Threat</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">Internal</td><td>Tuning weights on the test events.</td><td>Separate validation set; fixed seeds; metrics pre-registered before final runs.</td></tr>
+          <tr><td class="lbl">Internal</td><td>Baselines implemented weakly.</td><td>B3 receives the same likelihoods and budget as P; baselines tuned as carefully as P.</td></tr>
+          <tr><td class="lbl">Construct</td><td>Posterior contraction may not equal "scientific knowledge."</td><td>Also report accuracy of recovered physical parameters against injected truth.</td></tr>
+          <tr><td class="lbl">External</td><td>Simulator realism.</td><td>Validate noise and light curves against real broker data; state which physics is omitted.</td></tr>
+          <tr><td class="lbl">External</td><td>Hardware testbed does not generalise to flight.</td><td>Claim limited to decision-layer behaviour under asynchrony and compute limits.</td></tr>
+          <tr><td class="lbl">Conclusion</td><td>Many pairwise comparisons.</td><td>Holm correction; effect sizes; confidence intervals.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section>
+      <h2 class="sec"><span class="num">10</span>Reproducibility &amp; future work</h2>
+      <p>The release will include the simulator, class forward models (or scripts that fetch them), orbital elements, contact schedules, every strategy's code, the analysis notebooks producing each figure, ESP32 firmware and the wiring diagram, under an open licence with a tagged, DOI-archived version.</p>
+      <p>Planned extensions: scaling to larger hypothesis libraries; shadow-mode integration with a real alert stream alongside a partner follow-up network (planner advises, humans act); learned, amortized design policies to reduce onboard compute; inadequacy-driven onboard retention as a second paper; and, for an eventual flight path, radiation-tolerant compute, real link budgets and a hosted-payload or rideshare demonstration.</p>
+    </section>
+
+    <section class="refs">
+      <h2 class="sec"><span class="num">R</span>References</h2>
+      <p class="note">These entries were located by web search on 24 September 2026; only abstracts or summaries were read while drafting, not full texts. They are leads, not confirmed citations &mdash; each must be read in full and its author list verified before use in any submitted version.</p>
+      <ol>
+        <li>JPL POISE project page and the POISE i-SAIRAS 2020 paper.</li>
+        <li>Guirguis et&nbsp;al., POMDPs for Autonomous Science Exploration (SHM-POMDP), arXiv:2608.03155; cites Candela et&nbsp;al., IROS 2017, on Science Hypothesis Maps.</li>
+        <li>NASA: What Is Distributed Spacecraft Autonomy?, and the DSA Starling&nbsp;1.0 results (SmallSat).</li>
+        <li>An information-theoretic approach to deciding spectroscopic follow-ups (Astudillo et&nbsp;al., AJ 2020).</li>
+        <li>Kennamer et&nbsp;al., active learning with RESSPECT.</li>
+        <li>Real-time active learning with the Fink broker, PASA 2025.</li>
+        <li>NMMA-Astro-COLIBRI, arXiv:2608.17568.</li>
+        <li>Improving robustness to model misspecification in Bayesian experimental design (OpenReview).</li>
+        <li>Metrics for Bayesian optimal experiment design under model misspecification, arXiv:2304.07949.</li>
+        <li>Robust experimental design via generalised Bayesian inference (GBOED), arXiv:2511.07671.</li>
+        <li>GRANDMA observations of ZTF/Fink transients; TOM Toolkit and AEON.</li>
+        <li>On-orbit space AI survey, arXiv:2604.16518.</li>
+        <li>Real-time detection of anomalies in large-scale transient surveys, MNRAS 2022.</li>
+        <li>Krause &amp; Guestrin on submodularity of information gain (still to locate and cite directly).</li>
+        <li>The consensus-based bundle algorithm (still to locate and cite directly).</li>
+        <li>ASE/EO-1 autonomous science papers, Chien et&nbsp;al. (still to locate and cite directly).</li>
+        <li>The specific light-curve model paper for each injected class (still to select and cite per class).</li>
+      </ol>
+    </section>
+
+    <footer>
+      <span>Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories</span>
+      <span>Draft of 24 Sep 2026 &middot; results are hypotheses until run</span>
+    </footer>
+
+  </div>
+</div>
+</body>
+</html>

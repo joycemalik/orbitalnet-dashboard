@@ -11,8 +11,19 @@ from __future__ import annotations
 
 import streamlit as st
 
-from research.app.data import load_phase_summary, load_progress, load_worked_example
-from research.app.plotting import existence_proof_figure, worked_example_figure
+from research.app.data import (
+    list_scenarios_with_results,
+    load_phase_summary,
+    load_progress,
+    load_scenario_summary,
+    load_worked_example,
+)
+from research.app.plotting import (
+    existence_proof_figure,
+    strategy_comparison_figure,
+    time_to_identification_figure,
+    worked_example_figure,
+)
 
 st.set_page_config(page_title="Open-World Planner Research Viewer", layout="wide")
 
@@ -96,7 +107,61 @@ with tabs[1]:
 
 with tabs[2]:
     st.header("Strategy comparison")
-    st.info("Not run yet — this fills in after Phase 2 (single-planner experiment with orbits).")
+    scenarios = list_scenarios_with_results("phase2")
+    if not scenarios:
+        st.info("Not run yet — this fills in after Phase 2 (single-planner experiment with orbits).")
+    else:
+        scenario = st.selectbox("Scenario", scenarios)
+        scenario_result = load_scenario_summary("phase2", scenario)
+        cfg = scenario_result["config"]
+        st.caption(
+            f"seed={scenario_result['seed']} | git_commit={scenario_result['git_commit'][:12]} | "
+            f"config_hash={scenario_result['config_hash']} | tag={scenario_result.get('tag', '?')} | "
+            f"generated_at={scenario_result['generated_at']}"
+        )
+        scenario_cfg = cfg["scenarios"][scenario]
+        st.caption(scenario_cfg["description"])
+
+        summary = scenario_result["summary"]
+        st.pyplot(strategy_comparison_figure(summary))
+        st.pyplot(time_to_identification_figure(summary))
+
+        st.subheader("Metrics by strategy")
+        rows = []
+        for name, stats in summary["strategies"].items():
+            row = {
+                "strategy": name,
+                "accuracy (modeled)": stats["accuracy_modeled"],
+                "accuracy (withheld)": stats["accuracy_withheld"],
+                "mean log score": stats["mean_log_score"],
+                "mean time to ID": stats["mean_time_to_identification"],
+                "never identified": stats["fraction_never_identified"],
+                "mean instrument time": stats["mean_instrument_time"],
+                "early amp error (fast)": stats["early_amp_error_fast"],
+                "early amp error (slow)": stats["early_amp_error_slow"],
+            }
+            if "auroc_p_h0_withheld_vs_modeled" in stats:
+                row["AUROC P(h0)"] = stats["auroc_p_h0_withheld_vs_modeled"]
+            rows.append(row)
+        st.dataframe(rows, use_container_width=True)
+
+        st.subheader("Validity checks")
+        nc = scenario_result["null_control"]
+        hc = scenario_result["h0_calibration"]
+        ngc = scenario_result["negative_control"]
+        st.write(
+            f"Null control (P vs B3 on modeled-only events): "
+            f"{'PASSED' if nc['passed'] else 'FAILED'} (mean log-score diff={nc['mean_diff']:.4f}, "
+            f"tolerance={nc['tolerance']})"
+        )
+        st.write(
+            f"h0 calibration: threshold={hc['calibrated_threshold']:.4f} calibrated for target FPR="
+            f"{hc['target_fpr']} on validation seed {hc['seed']}"
+        )
+        st.write(
+            f"Negative control (test seed): observed FPR={ngc['observed_fpr']} vs target={ngc['target_fpr']} "
+            f"(n={ngc['n_modeled_events']} modeled events)"
+        )
 
 with tabs[3]:
     st.header("Ablations")

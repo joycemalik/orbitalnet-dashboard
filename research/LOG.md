@@ -3,6 +3,126 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 2 — single-planner experiment with real orbits (2026-10-01)
+
+### Two passes: own design, then realigned to the manuscript
+Phase 2 was built twice. The first pass (documented in the earlier parts of
+this entry's git history) used toy exponential/plateau/oscillating classes,
+a plain-EIG utility with no decay/adequacy weighting, and 5 scenarios
+varying fleet size — all explicitly labeled "this project's own design"
+because no manuscript existed yet. Mid-session the user supplied
+`Hypothesis-Discriminating Observation Campaigns for Distributed
+Space Observatories.pdf`. Its Part IV defines H1-H4, the utility function
+(eq. 3-4), the exact class list, and the scenario list precisely — all
+different from the first pass. The first pass's validation results
+(null control passed on all 5 of the old scenarios) were discarded rather
+than used for a preregistration, since preregistering against a superseded
+design would have been pointless. Phase 2 was then rebuilt to match the
+manuscript. This section documents the SECOND (current) build.
+
+### Built
+- `transients/models.py`: replaced the toy P2 classes with the manuscript's
+  4 modeled (kilonova, shock-cooling/Type IIb early phase, GRB afterglow
+  broken power-law, M-dwarf flare) + 3 withheld (FBOT/AT2018cow-like, TDE,
+  synthetic "nonsense") classes, as physically-motivated analytic
+  approximations — NOT the published templates (sncosmo etc.) the
+  manuscript asks for, since this branch has no network access beyond
+  `requirements-research.txt`. Documented inline and here; replacing these
+  with real forward models is the single highest-value follow-up.
+  Also added `modeled_flux_fn_p2_perturbed(cls, factor)` (time-dilates a
+  class's shape by `factor`) for the model-error scenario.
+- `inference/mutual_information.py`: added `expected_information_gain_batch`
+  (Phase 1 already had the scalar version); this was already done before
+  the manuscript arrived but is load-bearing for Phase 2's utility.
+- `planners/phase2.py`: rewrote the baselines to match the manuscript's
+  definitions — B0 is now a deterministic fixed-cadence dispatcher (was
+  random), B2 is now a "classifier-entropy" disagreement heuristic over
+  point-estimate amplitudes with no Bayesian marginal-likelihood machinery
+  (was best-SNR greedy). B1 (CNP reimplementation) and B3 (closed-world EIG,
+  renamed internally to share a `_class_only_eig_batch` helper with P)
+  needed no change. P now computes `U = I_class + beta*I_Z + gamma*D`:
+  - `I_class`: exact, via `_class_only_eig_batch` (closed-world only, same
+    computation B3 uses).
+  - `I_Z` (adequacy term): exact, by reusing the already-built open-world
+    cell/weight machinery with a 2-group split (all modeled cells vs. the
+    single h0 cell) instead of the old per-class+h0 grouping — this is
+    actually simpler than what was there before.
+  - `D` (decay term): **approximated**, not exact. The manuscript's
+    `I_k(Y_a)` is a per-class mutual-information quantity that would need
+    one more EIG quadrature per class per candidate per step — at ~1000
+    events x 3 scenarios this was not affordable on top of I_class and I_Z.
+    Used a Fisher-information-style SNR² proxy instead:
+    `D ≈ Σ_k b_t(h_k) · [SNR_k(t)² − SNR_k(t')²]₊` where t' is the next
+    time the same satellite is visible (or SNR treated as 0 if there is no
+    later opportunity, i.e. maximal urgency). SNR² is the right order
+    for Fisher information of an amplitude-like parameter under Gaussian
+    noise, so this is a defensible proxy, not an arbitrary one, but it is
+    not what eq. 4 literally specifies. Tested in
+    `tests/test_phase2_utility.py` (zero when nothing is lost by waiting,
+    positive when the class is fading).
+  - `cost(a)`: fixed at 1 (uniform). The manuscript's exposure/slew cost
+    model is not implemented.
+  - beta=1.0, gamma=0.01 are fixed defaults chosen so I_class/I_Z (nats,
+    O(0-1.4) for K=4) and D (SNR² units, empirically larger) land on a
+    comparable scale — picked for scale-matching before seeing results, not
+    tuned against outcomes. The manuscript's own statistics section says to
+    tune beta/gamma on a validation split; that calibration step is not yet
+    automated here (see "What we distrust" below).
+  - Mode switch (manuscript 5.5): implemented as a fallback at the
+    experiment-script level (`phase2_single_planner.run_one_event`), not
+    inside the planner — once P(h0) exceeds `MODE_SWITCH_TAU=0.9` for two
+    consecutive steps, remaining steps for that event use
+    `fixed_cadence_planner` instead of P's own EIG utility, approximating
+    "maximize coverage" with "take whatever's next." A `time_coverage_fraction`
+    metric (fraction of the full candidate-time range spanned by chosen
+    measurements) stands in for the manuscript's wavelength-coverage
+    preservation metric, since no wavelength bands are modeled.
+- `experiments/scenarios.py`: replaced the fleet-size-based S1-S5 with
+  Nominal / Crowding / Model-error (3 scenarios); Communication sweep and
+  Node loss are reserved for Phase 4 (see PLAN.md section 6 for why).
+  Crowding randomly masks a fraction of (time, satellite) cells once per
+  event, shared across strategies. Model error swaps the BELIEF's
+  (not the true event's) flux resolver for the time-dilated perturbed one.
+- `experiments/phase2_single_planner.py`: widened `CANDIDATE_TIMES_DAYS`
+  from [0.2, 10] days (12 points) to [0.01, 20] days (16 points) — the
+  manuscript's classes span minutes (flare) to weeks (TDE), which the old
+  grid could not represent. `CONFIDENT_THRESHOLD` raised to 0.95 (manuscript
+  H1). Added the mode-switch/preservation logic described above.
+
+### Tests passed
+`pytest research/` — 33/33 passed, including:
+- `test_phase2_planners.py`: updated for the renamed B0/B2 (fixed-cadence
+  picks the deterministic earliest-time/lowest-satellite cell;
+  classifier-entropy matches its own documented disagreement formula
+  independently recomputed in the test).
+- `test_phase2_utility.py` (new): the perturbed-model resolver equals the
+  true model evaluated at `t/factor`; `_next_visible_index` finds the
+  correct next-visible slot per satellite; the decay-term proxy is exactly
+  zero when waiting loses nothing and strictly positive when the class is
+  fading.
+
+### What we distrust about this result
+- The decay term is a proxy, not eq. 4's literal quantity (see above) — H2
+  (irreversibility) should be read as testing "does SOME decay-aware term
+  help fast classes more," not as a direct test of the manuscript's exact
+  formulation.
+- beta/gamma are fixed, not calibrated on a validation split as the
+  manuscript's statistics section asks — a real calibration pass (sweep a
+  small grid on validation seeds, pick by some criterion, freeze before
+  test seeds) should happen before any of this is reported as more than a
+  qualitative existence check.
+- The forward models are this project's own analytic approximations of the
+  named classes' qualitative shapes (timescale family, single/double-peaked,
+  power-law vs. exponential), not the published templates the manuscript
+  calls for. Good enough to test the PLANNER logic; not good enough to
+  claim astrophysical realism.
+- `cost(a)=1` for every action means the utility's division by cost is a
+  no-op right now; the manuscript's resource-cost model (exposure, slew) is
+  unimplemented.
+- Crowding and model-error are this project's own operationalizations of
+  the manuscript's scenario names (cell-masking; time-dilated belief), not
+  validated against any other source — documented as such in scenarios.py.
+
 ## Phase 1 — Existence proof (2026-10-01)
 
 ### Built

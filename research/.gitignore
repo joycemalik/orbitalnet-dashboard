@@ -1,0 +1,7 @@
+# Raw per-event results are large and fully reproducible from (seed, config).
+# Only configs, seeds and summary JSONs are committed.
+results/progress.json
+results/*/events_raw.jsonl
+results/*/raw/
+__pycache__/
+*.pyc

@@ -12,7 +12,6 @@ import numpy as np
 from research.inference.bayes import ClosedWorldBelief
 from research.inference.mutual_information import expected_information_gain
 from research.inference.openworld import SimpleGP, open_world_posterior
-from research.transients.models import modeled_flux_fn
 from research.transients.noise import SIGMA0
 
 
@@ -57,7 +56,7 @@ def open_world_eig_planner(
     for idx in idxs:
         t_cand = float(candidate_times[idx])
         modeled_means = np.concatenate([
-            modeled_flux_fn(cls)(np.full(n_amp, t_cand), belief.amplitude_grid)
+            belief.flux_fn_resolver(cls)(np.full(n_amp, t_cand), belief.amplitude_grid)
             for cls in belief.classes
         ])
         gp_mean, gp_std = gp.predict(np.asarray(t_obs), np.asarray(y_obs), t_cand)

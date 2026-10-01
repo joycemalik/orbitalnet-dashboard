@@ -30,6 +30,41 @@ def existence_proof_figure(summary: dict):
     return fig
 
 
+def strategy_comparison_figure(summary: dict):
+    strategies = list(summary["strategies"].keys())
+    modeled = [summary["strategies"][s]["confident_wrong_rate_modeled"] for s in strategies]
+    withheld = [summary["strategies"][s]["confident_wrong_rate_withheld"] for s in strategies]
+
+    x = np.arange(len(strategies))
+    width = 0.35
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.bar(x - width / 2, modeled, width, label="true class modeled")
+    ax.bar(x + width / 2, withheld, width, label="true class withheld (h0 should fire)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(strategies, rotation=20, ha="right")
+    ax.set_ylabel("confident-wrong rate")
+    ax.set_title("Phase 2 strategy comparison: confident-wrong rate")
+    ax.set_ylim(0, 1.0)
+    ax.legend()
+    fig.tight_layout()
+    return fig
+
+
+def time_to_identification_figure(summary: dict):
+    strategies = list(summary["strategies"].keys())
+    means = [summary["strategies"][s]["mean_time_to_identification"] or 0 for s in strategies]
+
+    x = np.arange(len(strategies))
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.bar(x, means)
+    ax.set_xticks(x)
+    ax.set_xticklabels(strategies, rotation=20, ha="right")
+    ax.set_ylabel("mean steps to identification")
+    ax.set_title("Phase 2: mean time to identification (lower = faster)")
+    fig.tight_layout()
+    return fig
+
+
 def worked_example_figure(example: dict):
     history = example["history"]
     steps = list(range(1, len(history) + 1))

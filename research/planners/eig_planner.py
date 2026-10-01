@@ -10,7 +10,6 @@ import numpy as np
 
 from research.inference.bayes import ClosedWorldBelief
 from research.inference.mutual_information import expected_information_gain
-from research.transients.models import modeled_flux_fn
 from research.transients.noise import SIGMA0
 
 
@@ -32,7 +31,7 @@ def closed_world_eig_planner(
     for idx in idxs:
         t_cand = candidate_times[idx]
         means = np.concatenate([
-            modeled_flux_fn(cls)(np.full(n_amp, t_cand), belief.amplitude_grid)
+            belief.flux_fn_resolver(cls)(np.full(n_amp, t_cand), belief.amplitude_grid)
             for cls in belief.classes
         ])
         eig = expected_information_gain(log_weights, means, SIGMA0, group_idx, n_classes)

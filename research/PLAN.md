@@ -169,3 +169,23 @@ experiment script takes `--seed` and `--n-events` and writes only to `research/r
   rerunning) or gitignored (regenerate-only) — affects repo hygiene but not the code.
 
 Nothing above requires a decision to start Phase 1; flagging for awareness.
+
+## 6. Phase 2 realignment to the manuscript (2026-10-01)
+
+Phase 2 was originally built (classes, utility, scenarios, baselines) as
+this project's own design, documented above as such, because no manuscript
+existed in the repo yet. The user then supplied
+`Hypothesis-Discriminating Observation Campaigns for Distributed
+Space Observatories.pdf` ("the manuscript"), which specifies these choices
+precisely. Phase 2 was rebuilt to match it. See research/LOG.md's Phase 2
+entry for the full list of what changed and the simplifications made where
+exact fidelity was not tractable at this compute budget (decay term,
+exposure/slew cost, wavelength bands).
+
+**Scenario split across phases**: the manuscript lists five scenarios
+(Nominal, Communication sweep, Node loss, Crowding, Model error) without
+assigning them to a phase. Communication sweep and Node loss are about
+multi-spacecraft belief staleness, which does not exist until Phase 4
+(decentralization). Phase 2 (a single centralized planner) runs Nominal,
+Crowding, and Model error; Phase 4 runs Communication sweep and Node loss
+alongside its own contact-fraction sweep, which subsumes them.

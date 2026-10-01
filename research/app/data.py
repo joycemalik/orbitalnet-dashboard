@@ -33,3 +33,17 @@ def load_phase_config(phase_dir: str) -> dict | None:
 
 def load_worked_example(phase_dir: str) -> dict | None:
     return _read_json(os.path.join(RESULTS_DIR, phase_dir, "worked_example.json"))
+
+
+def load_scenario_summary(phase_dir: str, scenario: str) -> dict | None:
+    return _read_json(os.path.join(RESULTS_DIR, phase_dir, scenario, "summary.json"))
+
+
+def list_scenarios_with_results(phase_dir: str) -> list[str]:
+    base = os.path.join(RESULTS_DIR, phase_dir)
+    if not os.path.isdir(base):
+        return []
+    return sorted(
+        name for name in os.listdir(base)
+        if os.path.isfile(os.path.join(base, name, "summary.json"))
+    )

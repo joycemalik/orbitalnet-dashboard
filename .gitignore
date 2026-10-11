@@ -4,3 +4,8 @@ __pycache__/
 .DS_Store
 test_files/
 .streamlit/
+
+# Phase 3 raw downloads (re-creatable via research/data/fetch_*.py; manifest keeps checksums)
+research/data/raw/*
+!research/data/raw/manifest.json
+!research/data/raw/selection.json

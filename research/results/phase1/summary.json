@@ -1,0 +1,79 @@
+{
+  "config": {
+    "phase": "phase1_existence_proof",
+    "seed": 0,
+    "n_events": 100,
+    "n_obs_budget": 5,
+    "confident_threshold": 0.9,
+    "sigma0": 1.0,
+    "candidate_times": [
+      0.2,
+      0.24572507119869555,
+      0.30190405307802,
+      0.3709269746888561,
+      0.45573028632467955,
+      0.5599217852726689,
+      0.6879341027591364,
+      0.8452132819024977,
+      1.0384504693678718,
+      1.2758665776086955,
+      1.5675620281146636,
+      1.9259464548342364,
+      2.3662666486950896,
+      2.9072552036284978,
+      3.5719274595219552,
+      4.38856064653804,
+      5.391896886651766,
+      6.624621231842649,
+      8.139177619294626,
+      10.000000000000002
+    ],
+    "amplitude_grid_size": 25,
+    "modeled_classes": [
+      "fast",
+      "slow"
+    ],
+    "withheld_class": "bump",
+    "strategies": [
+      "random",
+      "B3_closed_world_eig",
+      "P_open_world_eig"
+    ],
+    "tag": "demo"
+  },
+  "config_hash": "2c4e78f3d988e197",
+  "git_commit": "972be98bfcf0c759cb80c708512054f43e0a8ab2",
+  "generated_at": "2026-10-01T03:48:39.704595+00:00",
+  "strategies": {
+    "random": {
+      "n_events": 100,
+      "confident_wrong_rate_overall": 0.29,
+      "confident_wrong_rate_modeled": 0.0,
+      "confident_wrong_rate_withheld": 0.8787878787878788,
+      "accuracy_modeled": 0.9701492537313433,
+      "accuracy_withheld": 0.0,
+      "mean_max_posterior": 0.9687757946082769,
+      "mean_confident_rate": 0.9
+    },
+    "B3_closed_world_eig": {
+      "n_events": 100,
+      "confident_wrong_rate_overall": 0.33,
+      "confident_wrong_rate_modeled": 0.0,
+      "confident_wrong_rate_withheld": 1.0,
+      "accuracy_modeled": 1.0,
+      "accuracy_withheld": 0.0,
+      "mean_max_posterior": 0.9993029359325319,
+      "mean_confident_rate": 1.0
+    },
+    "P_open_world_eig": {
+      "n_events": 100,
+      "confident_wrong_rate_overall": 0.04,
+      "confident_wrong_rate_modeled": 0.0,
+      "confident_wrong_rate_withheld": 0.12121212121212122,
+      "accuracy_modeled": 1.0,
+      "accuracy_withheld": 0.7878787878787878,
+      "mean_max_posterior": 0.9855679320623275,
+      "mean_confident_rate": 0.95
+    }
+  }
+}

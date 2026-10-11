@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OrbitalNet: Differential Diagnosis for the Sky</title>
+  <meta name="description" content="Space research by joycemalik.com: open-world planning for distributed space observatories. The paper, the roadmap, the lab notebook, the code, the simulation and a film, in one place.">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:title" content="OrbitalNet: Differential Diagnosis for the Sky">
+  <meta property="og:description" content="Teaching a constellation of satellites to choose the observations that tell competing explanations apart, including the one we have no name for yet.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ffb766'/%3E%3Cellipse cx='16' cy='16' rx='14' ry='5' fill='none' stroke='%237fd0ff' stroke-width='1.5' transform='rotate(-25 16 16)'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Barlow:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap">
+</head>
+<body>
+  <canvas id="hero-gl" aria-hidden="true"></canvas>
+  <div class="hero-shade" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="/">ORBITALNET</a>
+    <nav aria-label="Sections">
+      <a href="/film/">Film</a>
+      <a href="/paper/">Paper</a>
+      <a href="/paper/venues/">Roadmap</a>
+      <a href="/notebook/">Notebook</a>
+      <a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">Code</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="kicker">Space research · open-world planning for distributed observatories</div>
+      <h1>Differential Diagnosis <span>for the Sky</span></h1>
+      <p class="lede">When something new flares in the sky, a fleet of satellites has hours to decide who looks, and when. This project teaches them to choose the observations that best tell the possible explanations apart, including the one we have no name for yet.</p>
+      <div class="cta">
+        <a class="btn primary" href="/film/"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>Watch the film</a>
+        <a class="btn" href="/paper/">Read the paper</a>
+      </div>
+      <div class="cta-meta">Film: about 4 minutes, plays itself · best with sound, in landscape</div>
+    </div>
+    <div class="live" aria-hidden="true"><i></i>Live: <b id="liveCount">10,109</b> Starlink orbits from TLEs · <b id="liveClock">2026-04-07</b> UTC</div>
+  </section>
+
+  <main class="body">
+    <section class="idea" aria-labelledby="idea-h">
+      <h2 id="idea-h">A doctor’s question, asked of the sky</h2>
+      <div class="idea-text">
+        <p>Fast transients fade on timescales from minutes to months: stellar flares, gamma-ray burst afterglows, kilonovae, stars torn apart by black holes. Each fades in its own way, so the right measurement at the right moment tells them apart. Miss the moment and the question closes for good.</p>
+        <p>OrbitalNet began as a live simulation in which satellites bid for observing work through a Contract Net auction scored on distance and battery. The research replaces that score with the expected information gain over competing explanations, and adds an explicit unknown, h₀, so the planner can recognise something it was never taught.</p>
+        <dl class="terms">
+          <div><dt>Expected information gain</dt><dd>How much a measurement is expected to reduce our uncertainty about what the event is.</dd></div>
+          <div><dt class="sym">h₀</dt><dd>An explicit “none of the above” hypothesis, modelled nonparametrically, so new physics is not forced into a known box.</dd></div>
+          <div><dt>The constellation</dt><dd>Many spacecraft with intermittent links, limited power, and the Earth in the way half the time.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="explore" aria-labelledby="ex-h">
+      <h2 id="ex-h">Everything, in one place</h2>
+      <div class="cards">
+        <a class="card film" href="/film/">
+          <span class="k">Film · start here</span>
+          <span class="t">The story, in first person</span>
+          <span class="d">Seven acts, from a neutron-star merger 130 million years ago to a ride aboard a real satellite as the light rises over Earth’s edge. Programmed score, 3D throughout, plays itself.</span>
+          <span class="m">16 shots · about 4 min · landscape, sound on</span>
+          <span class="play" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg></span>
+        </a>
+        <div class="card">
+          <span class="k">Manuscript</span>
+          <span class="t">The paper</span>
+          <span class="d">Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories. Read it on the page or download the manuscript.</span>
+          <span class="links"><a href="/paper/">Read online</a><a href="/paper/manuscript.pdf">PDF</a></span>
+        </div>
+        <a class="card" href="/paper/venues/">
+          <span class="k">Roadmap</span>
+          <span class="t">Where it is headed</span>
+          <span class="d">Target venues, deadlines and what each one needs before submission, with every figure pulled from the results files.</span>
+        </a>
+        <a class="card" href="/notebook/">
+          <span class="k">Evidence</span>
+          <span class="t">Lab notebook</span>
+          <span class="d">Phase by phase: what was built, which tests pass, the decisions on ambiguous points, and what we distrust about every result.</span>
+        </a>
+        <a class="card" href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">
+          <span class="k">Code</span>
+          <span class="t">The repository</span>
+          <span class="d">Planners, baselines, orbit simulation, transient models and a pytest suite. Every experiment takes a seed and writes its results to files.</span>
+        </a>
+        <a class="card" href="https://github.com/joycemalik/orbitalnet-dashboard#-execution" target="_blank" rel="noopener">
+          <span class="k">Simulation</span>
+          <span class="t">OrbitalNet OS, live</span>
+          <span class="d">SGP4 physics, a Redis message bus, the Contract Net auction and a 3D globe. It runs on your own machine: <code>python boot_os.py</code>.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="progress" aria-labelledby="pr-h">
+      <h2 id="pr-h">Progress</h2>
+      <ol class="timeline">
+        <li class="done"><span class="when">Oct 2026</span><span class="what"><b>Phase 1 · Existence proof</b>Open-world EIG on a toy problem with a withheld class. One seed; a preliminary signal only.</span><span class="st">Done</span></li>
+        <li class="done"><span class="when">Oct 2026</span><span class="what"><b>Phase 2 · One planner, real orbits</b>All strategies run on identical events, orbits, budgets and contact schedules for each seed.</span><span class="st">Done</span></li>
+        <li class="wip"><span class="when">Oct 2026</span><span class="what"><b>Phase 3 · Real-data replay</b>Archival events replayed counterfactually. The tuning protocol was written down before any tuning run was seen.</span><span class="st">In progress</span></li>
+        <li class="next"><span class="when">Nov 2026</span><span class="what"><b>Pre-registration</b>Commit the pre-registration, tune on validation seeds only, then run the untouched test seeds.</span><span class="st">Next</span></li>
+      </ol>
+      <p class="promise">Every number in the paper and the roadmap is generated from files in <code>research/results/</code>. None is typed by hand, and test seeds stay untouched until the pre-registration is committed.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>space_research.joycemalik.com</span>
+    <span><a href="/film/">Film</a> · <a href="/paper/">Paper</a> · <a href="/paper/venues/">Roadmap</a> · <a href="/notebook/">Notebook</a> · <a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">Code</a></span>
+    <span>Earth imagery derived from NASA · orbits from public TLEs</span>
+  </footer>
+
+  <script type="module" src="/src/landing.js"></script>
+</body>
+</html>

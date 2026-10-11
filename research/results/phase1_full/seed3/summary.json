@@ -1,0 +1,79 @@
+{
+  "config": {
+    "phase": "phase1_existence_proof",
+    "seed": 3,
+    "n_events": 1000,
+    "n_obs_budget": 5,
+    "confident_threshold": 0.9,
+    "sigma0": 1.0,
+    "candidate_times": [
+      0.2,
+      0.24572507119869555,
+      0.30190405307802,
+      0.3709269746888561,
+      0.45573028632467955,
+      0.5599217852726689,
+      0.6879341027591364,
+      0.8452132819024977,
+      1.0384504693678718,
+      1.2758665776086955,
+      1.5675620281146636,
+      1.9259464548342364,
+      2.3662666486950896,
+      2.9072552036284978,
+      3.5719274595219552,
+      4.38856064653804,
+      5.391896886651766,
+      6.624621231842649,
+      8.139177619294626,
+      10.000000000000002
+    ],
+    "amplitude_grid_size": 25,
+    "modeled_classes": [
+      "fast",
+      "slow"
+    ],
+    "withheld_class": "bump",
+    "strategies": [
+      "random",
+      "B3_closed_world_eig",
+      "P_open_world_eig"
+    ],
+    "tag": "full"
+  },
+  "config_hash": "1b4754f29913b434",
+  "git_commit": "33a32f76f878ea3aa388180c2c0d7727154e6c7e",
+  "generated_at": "2026-10-11T18:58:16.438116+00:00",
+  "strategies": {
+    "random": {
+      "n_events": 1000,
+      "confident_wrong_rate_overall": 0.31,
+      "confident_wrong_rate_modeled": 0.006069802731411229,
+      "confident_wrong_rate_withheld": 0.8973607038123167,
+      "accuracy_modeled": 0.9666160849772383,
+      "accuracy_withheld": 0.0,
+      "mean_max_posterior": 0.9713599398816526,
+      "mean_confident_rate": 0.906
+    },
+    "B3_closed_world_eig": {
+      "n_events": 1000,
+      "confident_wrong_rate_overall": 0.34,
+      "confident_wrong_rate_modeled": 0.0,
+      "confident_wrong_rate_withheld": 0.9970674486803519,
+      "accuracy_modeled": 0.9969650986342944,
+      "accuracy_withheld": 0.0,
+      "mean_max_posterior": 0.997562691200687,
+      "mean_confident_rate": 0.991
+    },
+    "P_open_world_eig": {
+      "n_events": 1000,
+      "confident_wrong_rate_overall": 0.081,
+      "confident_wrong_rate_modeled": 0.0015174506828528073,
+      "confident_wrong_rate_withheld": 0.23460410557184752,
+      "accuracy_modeled": 0.9954476479514416,
+      "accuracy_withheld": 0.7331378299120235,
+      "mean_max_posterior": 0.9863333408067605,
+      "mean_confident_rate": 0.966
+    }
+  }
+}

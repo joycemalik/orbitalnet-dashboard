@@ -41,7 +41,8 @@ export function createEarth(tex, sunDir) {
           // thin blue limb, warm at the terminator
           float fr = pow(1.0 - max(dot(N, V), 0.0), 3.0);
           vec3 rim = mix(vec3(1.0, 0.45, 0.2), vec3(0.3, 0.6, 1.0), smoothstep(-0.1, 0.4, d));
-          col += rim * fr * smoothstep(-0.35, 0.2, d) * 0.5;
+          // the limb glow belongs to the view from afar; from low orbit nearly everything is grazing
+          col += rim * fr * smoothstep(-0.35, 0.2, d) * 0.5 * smoothstep(1.15, 2.2, length(cameraPosition));
           gl_FragColor = vec4(col * uOpacity, 1.0);
         }`,
     }));
@@ -71,9 +72,34 @@ export function createEarth(tex, sunDir) {
     }));
   group.add(atmosphere);
 
+  // the thin bright layer seen edge-on at the horizon from orbit: blue by day,
+  // orange at the terminator, the faint green oxygen airglow by night
+  const limb = new THREE.Mesh(
+    new THREE.SphereGeometry(1.012, 160, 80),
+    new THREE.ShaderMaterial({
+      uniforms: atmoU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: /* glsl */`
+        varying vec3 vN; varying vec3 vW;
+        void main(){ vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz;
+          gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: /* glsl */`
+        uniform vec3 uSun; uniform float uOpacity; varying vec3 vN; varying vec3 vW;
+        void main(){
+          vec3 V = normalize(cameraPosition - vW);
+          float graze = pow(1.0 - abs(dot(normalize(vN), V)), 7.0);
+          float d = dot(normalize(vN), uSun);
+          vec3 day = vec3(0.35, 0.62, 1.0) * 1.3, dusk = vec3(1.0, 0.5, 0.22) * 1.4, night = vec3(0.18, 0.55, 0.28) * 0.35;
+          vec3 c = mix(night, dusk, smoothstep(-0.25, 0.0, d));
+          c = mix(c, day, smoothstep(0.0, 0.3, d));
+          gl_FragColor = vec4(c * graze * uOpacity, 1.0);
+        }`,
+    }));
+  group.add(limb);
+
   return {
     group, surface, uniforms,
     setRotation(angle) { surface.rotation.y = angle; },
+    setInside(inside) { atmosphere.visible = !inside; },
     setOpacity(o) { uniforms.uOpacity.value = o; group.visible = o > 0.003; },
   };
 }

@@ -27,13 +27,13 @@ export function createSatellites(data, tgtEci, sunEci) {
 
   const uniforms = {
     uT: { value: 0 }, uTgt: { value: new THREE.Vector3(...tgtEci) }, uSunE: { value: new THREE.Vector3(...sunEci) },
-    uVis: { value: 0 }, uOpacity: { value: 1 }, uPix: { value: 600 }, uSize: { value: 1 }, uH0: { value: 0 }, uTime: { value: 0 },
+    uVis: { value: 0 }, uOpacity: { value: 1 }, uHide: { value: -1 }, uPix: { value: 600 }, uSize: { value: 1 }, uH0: { value: 0 }, uTime: { value: 0 },
   };
   const points = new THREE.Points(geo, new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: /* glsl */`
       attribute vec4 aEl; attribute float aR; attribute float aShell; attribute float aSeed;
-      uniform float uT, uVis, uPix, uSize, uH0, uTime; uniform vec3 uTgt, uSunE;
+      uniform float uT, uVis, uPix, uSize, uH0, uTime, uHide; uniform vec3 uTgt, uSunE;
       varying vec3 vC; varying float vA;
       void main(){
         float u = aEl.z + aEl.w * uT;
@@ -57,6 +57,7 @@ export function createSatellites(data, tgtEci, sunEci) {
         vA = 1.0;
         float s = uSize * uPix * 0.007 / max(-mv.z, 0.001);
         gl_PointSize = clamp(s, 1.3, 7.0) * (see > 0.5 ? 1.0 + 0.35 * uVis : 1.0);
+        if (float(gl_VertexID) == uHide) gl_PointSize = 0.0;   // your own satellite, in first person
       }`,
     fragmentShader: /* glsl */`
       uniform float uOpacity; varying vec3 vC; varying float vA;
@@ -133,7 +134,7 @@ export function createSatellites(data, tgtEci, sunEci) {
   auction.visible = false;
   let bidders = [];
 
-  function runAuction(t, camera, sampleStride = 5) {
+  function runAuction(t, camera, youK = -1, sampleStride = 5) {
     const v = new THREE.Vector3(), cand = [];
     for (let k = (Math.random() * sampleStride) | 0; k < N; k += sampleStride) {
       sceneAt(k, t, v);
@@ -146,12 +147,15 @@ export function createSatellites(data, tgtEci, sunEci) {
       cand.push(k);
     }
     const picks = new Set(); for (let i = 0; i < 12 && cand.length; i++) picks.add(cand[(Math.random() * cand.length) | 0]);
+    if (youK >= 0) { sceneAt(youK, t, v); if (seesTarget(v)) picks.add(youK); }
     const tg = uniforms.uTgt.value;
     bidders = [...picks].map(k => {
       sceneAt(k, t, v); const e = [v.x, -v.z, v.y], r = Math.hypot(...e);
       const geo = Math.min(1, Math.max(0, 0.5 + 0.5 * (e[0] * tg.x + e[1] * tg.y + e[2] * tg.z) / r));
-      return { k, name: 'STARLINK-' + num[k], geo, bat: batt[k], score: 0.55 * geo + 0.45 * batt[k] };
-    }).sort((a, b) => b.score - a.score).slice(0, 6);
+      return { k, you: k === youK, name: 'STARLINK-' + num[k], geo, bat: batt[k], score: 0.55 * geo + 0.45 * batt[k] };
+    }).sort((a, b) => b.score - a.score);
+    const you = bidders.find(b => b.you); bidders = bidders.slice(0, 6);
+    if (you && !bidders.includes(you)) bidders[5] = you;
     return bidders;
   }
   function updateAuction(t, now, opacity) {
@@ -214,7 +218,7 @@ export function createSatellites(data, tgtEci, sunEci) {
   }
 
   return {
-    points, links, auction, beams, uniforms, linkU, count: N,
+    points, links, auction, beams, uniforms, linkU, count: N, sceneAt, seesTarget, num, batt,
     updateLinks, runAuction, updateAuction, fireBeam, updateBeams,
   };
 }

@@ -14,10 +14,10 @@ export function createPost(renderer, scene, camera) {
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const lens = new ShaderPass({
-    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarp: { value: 0 }, uFlash: { value: 0 } },
+    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarp: { value: 0 }, uFlash: { value: 0 }, uFade: { value: 0 } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);} `,
     fragmentShader: /* glsl */`
-      uniform sampler2D tDiffuse; uniform float uTime, uWarp, uFlash; varying vec2 vUv;
+      uniform sampler2D tDiffuse; uniform float uTime, uWarp, uFlash, uFade; varying vec2 vUv;
       float rand(vec2 c){ return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
       void main(){
         vec2 d = vUv - 0.5;
@@ -29,7 +29,11 @@ export function createPost(renderer, scene, camera) {
         float vig = smoothstep(0.95, 0.25, length(d * vec2(1.15, 1.0)));
         c *= mix(0.55, 1.0, vig);
         c += (rand(vUv * 900.0 + fract(uTime) * 37.0) - 0.5) * 0.045;
-        c += vec3(1.0, 0.95, 0.9) * uFlash * 0.35;
+        // film grade: cool shadows, warm highlights
+        float l = dot(c, vec3(0.299, 0.587, 0.114));
+        c = mix(c * vec3(0.92, 1.0, 1.08), c * vec3(1.06, 1.0, 0.93), smoothstep(0.15, 0.7, l));
+        c += vec3(1.0, 0.95, 0.9) * uFlash * 0.6;
+        c *= 1.0 - uFade;
         gl_FragColor = vec4(c, 1.0);
       }`,
   });

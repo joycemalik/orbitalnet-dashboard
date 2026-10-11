@@ -4,7 +4,7 @@ import * as THREE from 'three';
 // stars along the light's path from the merger, so the camera flies *through* them.
 export function createStars(dirToMerger, mergerDist) {
   const rnd = mulberry(23);
-  const pos = [], col = [], size = [], seed = [];
+  const pos = [], col = [], size = [], seed = [], corr = [];
   const tint = () => {
     const t = rnd();
     if (t < 0.15) return [0.7, 0.8, 1.0];      // hot blue
@@ -12,7 +12,7 @@ export function createStars(dirToMerger, mergerDist) {
     if (t < 0.92) return [1.0, 0.85, 0.65];    // yellow-orange
     return [1.0, 0.65, 0.5];                   // red dwarf
   };
-  const push = (p, s) => { pos.push(p.x, p.y, p.z); col.push(...tint()); size.push(s); seed.push(rnd()); };
+  const push = (p, s, c = 0) => { pos.push(p.x, p.y, p.z); col.push(...tint()); size.push(s); seed.push(rnd()); corr.push(c); };
 
   // shell
   for (let i = 0; i < 5000; i++) {
@@ -27,7 +27,7 @@ export function createStars(dirToMerger, mergerDist) {
     const along = 40 + rnd() * (mergerDist + 300);
     const r = 6 + Math.pow(rnd(), 0.5) * 160, a = rnd() * Math.PI * 2;
     const v = f.clone().multiplyScalar(along).addScaledVector(side, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r);
-    push(v, 0.5 + Math.pow(rnd(), 5) * 3.5);
+    push(v, 0.5 + Math.pow(rnd(), 5) * 3.5, 1);
   }
 
   const geo = new THREE.BufferGeometry();
@@ -35,21 +35,22 @@ export function createStars(dirToMerger, mergerDist) {
   geo.setAttribute('aColor', new THREE.Float32BufferAttribute(col, 3));
   geo.setAttribute('aSize', new THREE.Float32BufferAttribute(size, 1));
   geo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1));
+  geo.setAttribute('aCorr', new THREE.Float32BufferAttribute(corr, 1));
 
-  const uniforms = { uTime: { value: 0 }, uPix: { value: 600 }, uOpacity: { value: 1 } };
+  const uniforms = { uTime: { value: 0 }, uPix: { value: 600 }, uOpacity: { value: 1 }, uCorr: { value: 1 }, uSizeK: { value: 1 } };
   const points = new THREE.Points(geo, new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: /* glsl */`
-      attribute vec3 aColor; attribute float aSize; attribute float aSeed;
-      uniform float uTime; uniform float uPix;
+      attribute vec3 aColor; attribute float aSize; attribute float aSeed; attribute float aCorr;
+      uniform float uTime; uniform float uPix; uniform float uCorr; uniform float uSizeK;
       varying vec3 vColor; varying float vA;
       void main(){
         vec4 mv = modelViewMatrix * vec4(position,1.0);
         gl_Position = projectionMatrix * mv;
         float d = -mv.z;
-        float s = aSize * uPix / max(d, 0.001) * 0.9;
+        float s = aSize * uPix / max(d, 0.001) * 0.9 * uSizeK;
         float tw = 0.75 + 0.25 * sin(uTime * (1.2 + aSeed * 3.0) + aSeed * 60.0);
-        vA = clamp(s, 0.25, 1.0) * tw;
+        vA = clamp(s, 0.25, 1.0) * tw * mix(1.0, uCorr, aCorr);
         gl_PointSize = clamp(s, 1.4, 14.0);
         vColor = aColor;
       }`,

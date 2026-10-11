@@ -10,7 +10,7 @@ export function sizeCanvas(c, dpr) {
 }
 
 /* ---- II: every flash is a clock. Log time (minutes), brightness relative to peak ---- */
-const FADE = [
+export const FADE = [
   { c: COL.flare, L: t => t < 2 ? t / 2 : Math.exp(-(t - 2) / 12) },
   { c: COL.grb, L: t => Math.min(1, t / 3) * Math.min(1, Math.pow(Math.max(t, 3) / 3, -1.2)) },
   { c: COL.kn, L: t => { const x = Math.log(t / 1440); return Math.exp(-x * x / (2 * (x < 0 ? 1.0 : 0.75) ** 2)); } },
@@ -44,7 +44,7 @@ export const HYP = [
   { n: 'M-dwarf flare', c: COL.flare, m: t => Math.min(7, 1.0857 * (t - 0.5) / 0.4) },
   { n: 'Tidal disruption', c: COL.tde, m: t => -0.4 * (1 - Math.exp(-(t - 0.5) / 20)) + 0.004 * (t - 0.5) },
 ];
-const SIG = 0.15, H0_DENS = 0.1, PRIOR = [0.225, 0.225, 0.225, 0.225, 0.1];
+export const SIG = 0.15; const H0_DENS = 0.1, PRIOR = [0.225, 0.225, 0.225, 0.225, 0.1];
 const weirdTruth = t => 0.03 * (t - 0.5) - 0.35 * (1 - Math.exp(-(t - 0.5) / 5)) - 1.3 * Math.exp(-(((t - 26) / 6) ** 2));
 
 function buildRun(truth, seed, nMax, stopWhenSure) {

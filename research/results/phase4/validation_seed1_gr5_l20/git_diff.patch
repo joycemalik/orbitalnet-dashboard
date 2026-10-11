@@ -1,0 +1,549 @@
+diff --git a/research/LOG.md b/research/LOG.md
+index 48a842d..3eb3a70 100644
+--- a/research/LOG.md
++++ b/research/LOG.md
+@@ -3,6 +3,43 @@
+ Running log of what was built, what passed, what surprised us, and decisions
+ made on ambiguous points. Append-only, one section per phase.
+ 
++## Phase 4 â€” colour: two-band (g+r) replay (2026-10-12)
++
++Motivation: Phase 3 validation showed P can barely rank real unmodeled
++events above ordinary SNe (AUROC ~0.59) from 5 single-band points, and SN
++Ia vs Ibc are confused â€” exactly the cases astronomers separate with
++colour. Hypothesis: giving every pointing a simultaneous g and r flux
++(a dual-band imager) lets the open-world planner separate the classes.
++
++### Design (written BEFORE any Phase 4 run was seen)
++- Event set: Phase 3 events that ALSO have >= 8 g-band detections
++  (1,121 usable; split 394 template / 363 validation / 364 test). Both arms
++  below use this same event set, so the comparison is paired.
++- g templates: each template-split event's g truth curve divided by its
++  r-band PEAK, median per class â€” keeps the class colour evolution.
++- Each pointing returns r and g at once (same instrument noise per band);
++  the g value enters belief/GP at t + 1e4 d (zero cross-band GP covariance,
++  shared amplitude). Planners still score candidates on r-band predictions
++  only â€” colour enters through the measurements, not the choice.
++- g-band noise is drawn after r noise, so the r values are bit-identical
++  between arms (tested).
++- Arms: r@5 (Phase 3 config on this event set), gr@5 (same pointings,
++  colour added), r@10 (same NUMBER of fluxes as gr@5 â€” controls for "it's
++  just more data").
++
++### Validation tuning protocol (fixed now)
++Validation split, seed 1. gr@5 with h0 GP lengthscale in {5, 10, 20} d;
++r@5 and r@10 at the frozen Phase 3 lengthscale (5 d). Selection rule for
++the gr config: same as Phase 3 (max P AUROC; ties within 0.01 -> lower P
++confident-wrong on modeled). Then PREREGISTRATION_PHASE4.md, then test.
++
++### Declared test-set reuse
++The Phase 4 test events are a subset of the Phase 3 test events. Phase 4
++was designed while the Phase 3 test run was still in progress (before its
++numbers were seen), but Phase 3 test results WILL be seen before Phase 4's
++test run, so Phase 4 is a second look at those events. Its config was chosen on validation only, and
++this reuse must be stated wherever Phase 4 test numbers are reported.
++
+ ## Phase 3 â€” real-data counterfactual replay: infrastructure (2026-10-11)
+ 
+ Status: pipeline built and tested; NO results yet. Raw data download is
+diff --git a/research/experiments/phase3_real_replay.py b/research/experiments/phase3_real_replay.py
+index 6f23321..5bf8e94 100644
+--- a/research/experiments/phase3_real_replay.py
++++ b/research/experiments/phase3_real_replay.py
+@@ -25,6 +25,7 @@ from __future__ import annotations
+ import argparse
+ import datetime
+ import json
++import subprocess
+ import time
+ from pathlib import Path
+ 
+@@ -41,7 +42,10 @@ from research.planners.phase2 import MODE_SWITCH_TAU, STRATEGIES_P2, fixed_caden
+ from research.transients.noise import assign_instruments, noise_sigma_from_limiting_magnitude
+ from research.transients.real_events import (
+     MODELED_CLASSES,
++    G_TIME_OFFSET_DAYS,
+     RealEvent,
++    build_class_templates_g,
++    two_band_flux_fn_resolver,
+     StretchAmplitudeGrid,
+     build_class_templates,
+     load_real_events,
+@@ -79,7 +83,7 @@ def split_events(events: list[RealEvent]) -> dict[str, list[RealEvent]]:
+     return {"template": template, "validation": scored[:half], "test": scored[half:]}
+ 
+ 
+-def load_fleet_archive() -> tuple[list[tuple[datetime.datetime, dict]], tuple[str, ...], list[str]]:
++def load_fleet_archive(n_satellites: int = N_SATELLITES) -> tuple[list[tuple[datetime.datetime, dict]], tuple[str, ...], list[str]]:
+     names_all = tuple(json.loads((TLE_DIR / "fleet.json").read_text()).keys())
+     archive, empty = [], []
+     for path in sorted(TLE_DIR.glob("*.tle")):
+@@ -89,7 +93,7 @@ def load_fleet_archive() -> tuple[list[tuple[datetime.datetime, dict]], tuple[st
+             continue
+         epoch = datetime.datetime.fromisoformat(path.stem).replace(tzinfo=datetime.timezone.utc)
+         archive.append((epoch, fleet))
+-    return archive, names_all[:N_SATELLITES], empty
++    return archive, names_all[:n_satellites], empty
+ 
+ 
+ def mjd_to_datetime(mjd: float) -> datetime.datetime:
+@@ -97,14 +101,20 @@ def mjd_to_datetime(mjd: float) -> datetime.datetime:
+ 
+ 
+ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver,
+-                  param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS) -> dict | None:
++                  param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS,
++                  budget: int = N_OBS_BUDGET, bands: str = "r", sun_exclusion_deg: float = 0.0) -> dict | None:
++    """bands="r": Phase 3 (one r-band flux per pointing). bands="gr": Phase 4,
++    each pointing returns simultaneous r AND g fluxes (dual-band imager); the
++    g value enters the belief/GP at t + G_TIME_OFFSET_DAYS. Planners still
++    score candidates on r-band predictions only (documented simplification),
++    so any gain is from the colour information in the measurements."""
+     rng = np.random.default_rng(seed_seq)
+     schedule, tle_age = build_contact_schedule_historical(
+         archive, sat_names, mjd_to_datetime(ev.t0_mjd), CANDIDATE_TIMES_DAYS,
+-        radec_to_unit_eci(ev.ra_deg, ev.dec_deg), MAX_TLE_AGE_DAYS)
++        radec_to_unit_eci(ev.ra_deg, ev.dec_deg), MAX_TLE_AGE_DAYS, sun_exclusion_deg)
+     # No extrapolation of the real light curve: times after the last real
+     # detection have no ground truth, so they are not offered to any strategy.
+-    schedule.visibility &= (CANDIDATE_TIMES_DAYS <= ev.t_days[-1])[:, None]
++    schedule.visibility &= (CANDIDATE_TIMES_DAYS <= ev.last_time_with_truth)[:, None]
+     if not schedule.visibility.any():
+         return None
+ 
+@@ -112,6 +122,10 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
+     instrument_sigma = np.array([noise_sigma_from_limiting_magnitude(instruments[n]) for n in schedule.satellite_names])
+     true_flux = ev.truth_flux(CANDIDATE_TIMES_DAYS)
+     observed = true_flux[:, None] + rng.normal(size=schedule.visibility.shape) * instrument_sigma[None, :]
++    if bands == "gr":
++        # drawn AFTER the r noise, so the r values are identical to the r-only arm
++        true_flux_g = ev.truth_flux_g(CANDIDATE_TIMES_DAYS)
++        observed_g = true_flux_g[:, None] + rng.normal(size=schedule.visibility.shape) * instrument_sigma[None, :]
+ 
+     per_strategy = {}
+     for (name, planner_fn), child in zip(STRATEGIES_P2.items(), seed_seq.spawn(len(STRATEGIES_P2))):
+@@ -123,7 +137,7 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
+         is_ow = name == "P_open_world_eig"
+         streak, switch_step = 0, None
+ 
+-        for step in range(N_OBS_BUDGET):
++        for step in range(budget):
+             if not remaining.any():
+                 break
+             fn = fixed_cadence_planner if (is_ow and switch_step is not None) else planner_fn
+@@ -132,6 +146,10 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
+             t, y, s = float(CANDIDATE_TIMES_DAYS[i]), float(observed[i, j]), float(instrument_sigma[j])
+             t_obs.append(t); y_obs.append(y); s_obs.append(s)
+             belief.update(t, y, s)
++            if bands == "gr":
++                yg = float(observed_g[i, j])
++                t_obs.append(t + G_TIME_OFFSET_DAYS); y_obs.append(yg); s_obs.append(s)
++                belief.update(t + G_TIME_OFFSET_DAYS, yg, s)
+             post = (open_world_posterior(belief, np.array(t_obs), np.array(y_obs), gp, np.array(s_obs))
+                     if is_ow else belief.class_posterior())
+             history.append({"t": t, "sat": schedule.satellite_names[j], "sigma": s, "y": y,
+@@ -146,7 +164,7 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
+         correct = (decision == ev.true_class) if not ev.is_withheld else (is_ow and decision == "h0")
+         confident = final[decision] >= CONFIDENT_THRESHOLD
+         per_strategy[name] = {
+-            "n_obs_used": len(t_obs), "decision": decision, "max_posterior": final[decision],
++            "n_obs_used": len(history), "decision": decision, "max_posterior": final[decision],
+             "confident": bool(confident), "correct": bool(correct),
+             "confident_wrong": bool(confident and not correct),
+             "log_score": log_score(final, ev.true_class, MODELED_CLASSES),
+@@ -196,19 +214,37 @@ def main() -> None:
+     ap.add_argument("--stretch-range", type=float, nargs=2, default=DEFAULT_STRETCH_RANGE)
+     ap.add_argument("--gp-lengthscale", type=float, default=H0_GP_LENGTHSCALE_DAYS)
+     ap.add_argument("--tag", default="", help="suffix for the results directory (tuning variants)")
++    ap.add_argument("--bands", choices=("r", "gr"), default="r")
++    ap.add_argument("--require-g", action="store_true",
++                    help="restrict to events with enough g points (Phase 4 event set, also for its r-only arm)")
++    ap.add_argument("--budget", type=int, default=N_OBS_BUDGET)
++    ap.add_argument("--n-satellites", type=int, default=N_SATELLITES)
++    ap.add_argument("--results-dir", default=str(RESULTS_DIR))
++    ap.add_argument("--sun-exclusion-deg", type=float, default=0.0, help="0 = off (Phase 3 default)")
+     args = ap.parse_args()
+     if args.split == "test" and not (REPO_ROOT / "research" / "PREREGISTRATION.md").exists():
+         raise SystemExit("Test split is locked until research/PREREGISTRATION.md is committed.")
+ 
+     t_start = time.time()
+-    events, load_exclusions = load_real_events()
++    # Provenance for runs launched from an uncommitted tree: snapshot the exact
++    # diff and commit at START (code may be edited while a long run is going).
++    diff = subprocess.run(["git", "diff", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True).stdout
++    commit_at_start = git_commit_hash()
++    if args.bands == "gr":
++        args.require_g = True
++    events, load_exclusions = load_real_events(require_g=args.require_g)
+     splits = split_events(events)
+     templates = build_class_templates(splits["template"])
+-    archive, sat_names, empty_tle_weeks = load_fleet_archive()
++    archive, sat_names, empty_tle_weeks = load_fleet_archive(args.n_satellites)
+     lo, hi = args.stretch_range
+     if lo == hi == 1.0:
+         param_grid, resolver = AMPLITUDE_GRID, template_flux_fn_resolver(templates)
++        if args.bands == "gr":
++            templates_g = build_class_templates_g(splits["template"])
++            resolver = two_band_flux_fn_resolver(templates, templates_g)
+     else:
++        if args.bands == "gr":
++            raise SystemExit("stretch + two-band is not implemented")
+         grid = StretchAmplitudeGrid(TEMPLATE_AMPLITUDE_GRID, np.exp(np.linspace(np.log(lo), np.log(hi), N_STRETCH)))
+         param_grid, resolver = grid.params, grid.resolver(templates)
+ 
+@@ -216,7 +252,8 @@ def main() -> None:
+     seeds = np.random.SeedSequence(args.seed).spawn(len(chosen))
+     records, no_contact = [], []
+     for k, (ev, ss) in enumerate(zip(chosen, seeds)):
+-        rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale)
++        rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale,
++                            args.budget, args.bands, args.sun_exclusion_deg)
+         if rec is None:
+             no_contact.append(ev.oid)
+         else:
+@@ -226,7 +263,7 @@ def main() -> None:
+ 
+     config = {
+         "split": args.split, "seed": args.seed, "n_events_requested": args.n_events,
+-        "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": N_OBS_BUDGET,
++        "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": args.budget, "bands": args.bands, "require_g": args.require_g, "sun_exclusion_deg": args.sun_exclusion_deg,
+         "satellites": list(sat_names), "limiting_magnitudes": LIMITING_MAGNITUDE_CHOICES,
+         "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": args.gp_lengthscale,
+         "stretch_range": list(args.stretch_range), "n_stretch": N_STRETCH if args.stretch_range[0] != args.stretch_range[1] else 1,
+@@ -235,13 +272,18 @@ def main() -> None:
+         "split_sizes": {k: len(v) for k, v in splits.items()},
+         "split_date_ranges_mjd": {k: [v[0].t0_mjd, v[-1].t0_mjd] for k, v in splits.items() if v},
+     }
+-    out_dir = RESULTS_DIR / f"{args.split}_seed{args.seed}{'_' + args.tag if args.tag else ''}"
++    out_dir = Path(args.results_dir) / f"{args.split}_seed{args.seed}{'_' + args.tag if args.tag else ''}"
+     out_dir.mkdir(parents=True, exist_ok=True)
+-    provenance = {"git_commit": git_commit_hash(), "config_hash": config_hash(config),
++    provenance = {"git_commit": commit_at_start, "config_hash": config_hash(config),
+                   "runtime_s": round(time.time() - t_start, 1)}
++    if diff:
++        provenance["git_dirty"] = True
++        (out_dir / "git_diff.patch").write_text(diff, encoding="utf-8")
+     atomic_write_json(out_dir / "config.json", {**config, **provenance})
+     atomic_write_json(out_dir / "templates.json", {"grid_days": np.linspace(0.0, 90.0, 181).tolist(),
+-                                                   **{c: v.tolist() for c, v in templates.items()}})
++                                                   **{c: v.tolist() for c, v in templates.items()},
++                                                   **({f"{c}_g": v.tolist() for c, v in templates_g.items()}
++                                                      if args.bands == "gr" else {})})
+     atomic_write_json(out_dir / "exclusions.json", {
+         "loader": load_exclusions, "no_feasible_contact": no_contact, "empty_tle_weeks": empty_tle_weeks})
+     with open(out_dir / "events.jsonl", "w", encoding="utf-8") as f:
+diff --git a/research/figures/export_site_results.py b/research/figures/export_site_results.py
+index 444ac6f..ab03c72 100644
+--- a/research/figures/export_site_results.py
++++ b/research/figures/export_site_results.py
+@@ -58,10 +58,30 @@ def phase3() -> dict | None:
+     runs = sorted((RESULTS_DIR / "phase3").glob("*/summary.json")) if (RESULTS_DIR / "phase3").exists() else []
+     if not runs:
+         return None
+-    return {
++    out = {
+         "n_runs": len(runs),
+         "n_scored_total": sum((_read_json(p) or {}).get("n_scored", 0) or 0 for p in runs),
+     }
++    # Preregistered test outcome (research/PREREGISTRATION.md), if it exists.
++    for key, fname in (("test", "analysis_test.json"), ("phase4_test", "analysis_phase4_test.json")):
++        a = _read_json(RESULTS_DIR / "phase3" / fname)
++        if a is None:
++            continue
++        r0 = a["runs"][0]
++        out[key] = {
++            "overall_pass": a["overall_pass_all_seeds"],
++            "n_seeds": len(a["runs"]), "n_events": r0["n_events"],
++            "n_withheld": r0["n_withheld"], "n_modeled": r0["n_modeled"],
++            "seeds": [{
++                "H1": r["H1_P_vs_B3_confident_wrong_withheld"], "H2": r["H2_auroc_p_h0"],
++                "H3": r["H3_P_vs_B3_confident_wrong_modeled"],
++                "cw_withheld": r["reported"]["confident_wrong_withheld"],
++                "cw_modeled": r["reported"]["confident_wrong_modeled"],
++                "acc_modeled": r["reported"]["accuracy_modeled"],
++                "h0_false_alarm": r["reported"]["P_h0_false_alarm_modeled"],
++            } for r in a["runs"]],
++        }
++    return out
+ 
+ 
+ def rnaas() -> dict | None:
+diff --git a/research/orbitsim/contacts.py b/research/orbitsim/contacts.py
+index 1043e42..2a04800 100644
+--- a/research/orbitsim/contacts.py
++++ b/research/orbitsim/contacts.py
+@@ -13,7 +13,7 @@ from dataclasses import dataclass
+ import numpy as np
+ from sgp4.api import Satrec
+ 
+-from research.orbitsim.geometry import random_sky_direction, visibility_margin_deg
++from research.orbitsim.geometry import random_sky_direction, sun_separation_deg, visibility_margin_deg
+ from research.orbitsim.tle import datetime_to_jd_fr, propagate_eci_km
+ 
+ REFERENCE_EPOCH = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+@@ -69,6 +69,7 @@ def build_contact_schedule_historical(
+     candidate_times_days: np.ndarray,
+     target_dir: np.ndarray,
+     max_tle_age_days: float,
++    sun_exclusion_deg: float = 0.0,
+ ) -> tuple[ContactSchedule, np.ndarray]:
+     """Phase 3: real date, real sky direction, archived TLEs. For each
+     candidate time t0 + t, each satellite is propagated from the element set
+@@ -84,6 +85,8 @@ def build_contact_schedule_historical(
+     for i, t_days in enumerate(candidate_times_days):
+         dt = t0 + datetime.timedelta(days=float(t_days))
+         jd, fr = datetime_to_jd_fr(dt)
++        if sun_exclusion_deg > 0 and sun_separation_deg(target_dir, jd + fr) < sun_exclusion_deg:
++            continue  # target too close to the Sun for every satellite at this time
+         for j, name in enumerate(satellite_names):
+             # nearest-epoch file that actually contains this satellite
+             for k in np.argsort(np.abs(epochs - dt.timestamp())):
+diff --git a/research/orbitsim/geometry.py b/research/orbitsim/geometry.py
+index 1f3e481..f40fd16 100644
+--- a/research/orbitsim/geometry.py
++++ b/research/orbitsim/geometry.py
+@@ -68,3 +68,18 @@ def radec_to_unit_eci(ra_deg: float, dec_deg: float) -> np.ndarray:
+     2018-2026 is far below the visibility margins that matter here."""
+     ra, dec = np.radians(ra_deg), np.radians(dec_deg)
+     return np.array([np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)])
++
++
++def sun_unit_vector_eci(jd_plus_fr: float) -> np.ndarray:
++    """Low-precision Sun direction (Astronomical Almanac, ~0.01 deg; plenty for
++    a tens-of-degrees exclusion cone), equatorial frame."""
++    n = jd_plus_fr - 2451545.0
++    L = np.radians((280.460 + 0.9856474 * n) % 360.0)
++    g = np.radians((357.528 + 0.9856003 * n) % 360.0)
++    lam = L + np.radians(1.915) * np.sin(g) + np.radians(0.020) * np.sin(2 * g)
++    eps = np.radians(23.439 - 4.0e-7 * n)
++    return np.array([np.cos(lam), np.cos(eps) * np.sin(lam), np.sin(eps) * np.sin(lam)])
++
++
++def sun_separation_deg(target_dir_eci: np.ndarray, jd_plus_fr: float) -> float:
++    return float(np.degrees(np.arccos(np.clip(np.dot(target_dir_eci, sun_unit_vector_eci(jd_plus_fr)), -1.0, 1.0))))
+diff --git a/research/tests/test_geometry.py b/research/tests/test_geometry.py
+index c38ff9c..a32abcf 100644
+--- a/research/tests/test_geometry.py
++++ b/research/tests/test_geometry.py
+@@ -38,3 +38,14 @@ def test_perpendicular_direction_is_visible_for_leo():
+     target_dir = np.array([1.0, 0.0, 0.0])
+     margin = visibility_margin_deg(r_sat, target_dir)
+     assert margin > 0
++
++
++def test_sun_direction_at_equinox_and_solstice():
++    from research.orbitsim.geometry import sun_unit_vector_eci
++    from research.orbitsim.tle import datetime_to_jd_fr
++    import datetime
++    jd, fr = datetime_to_jd_fr(datetime.datetime(2024, 3, 20, 3, 6))   # March equinox
++    assert sun_unit_vector_eci(jd + fr) == pytest.approx([1.0, 0.0, 0.0], abs=0.01)
++    jd, fr = datetime_to_jd_fr(datetime.datetime(2024, 6, 20, 20, 51))  # June solstice: dec = +23.44
++    v = sun_unit_vector_eci(jd + fr)
++    assert np.degrees(np.arcsin(v[2])) == pytest.approx(23.44, abs=0.05)
+diff --git a/research/tests/test_phase3_real.py b/research/tests/test_phase3_real.py
+index 4ab3ba7..b5c01e3 100644
+--- a/research/tests/test_phase3_real.py
++++ b/research/tests/test_phase3_real.py
+@@ -147,3 +147,48 @@ def test_stretch_grid_decodes_amplitude_and_stretch():
+     assert f(t, np.full(3, 3.0)) == pytest.approx(base(t / 2.0, 3.0))    # A=3, s=2
+     # broadcasting used by the planners: (n_t, 1) x (1, n_params)
+     assert f(t[:, None], g.params[None, :]).shape == (3, 4)
++
++
++def _event_gr(oid, cls, t0_mjd, colour=0.6, **kw):
++    ev = _event(oid, cls, t0_mjd, **kw)
++    import dataclasses
++    return dataclasses.replace(ev, g_t_days=ev.t_days.copy(), g_flux=colour * ev.flux, g_flux_err=colour * ev.flux_err)
++
++
++def test_g_template_keeps_colour_relative_to_r_peak():
++    from research.transients.real_events import build_class_templates_g
++    events = [_event_gr(f"{c}{i}", c, 58000.0, colour=col, tau=t)
++              for c, t, col in (("sn_ia", 8, 0.9), ("sn_ii", 60, 0.5), ("sn_ibc", 20, 0.3)) for i in range(2)]
++    tg, tr = build_class_templates_g(events), build_class_templates(events)
++    i = int(np.argmax(tr["sn_ii"]))
++    assert tg["sn_ii"][i] == pytest.approx(0.5, abs=0.05)
++    assert tg["sn_ibc"][i] == pytest.approx(0.3, abs=0.05)
++
++
++def test_two_band_resolver_routes_by_time_offset():
++    from research.transients.real_events import G_TIME_OFFSET_DAYS, build_class_templates_g, two_band_flux_fn_resolver
++    events = [_event_gr(f"{c}{i}", c, 58000.0, colour=0.5, tau=t)
++              for c, t in (("sn_ia", 8), ("sn_ii", 60), ("sn_ibc", 20)) for i in range(2)]
++    tr, tg = build_class_templates(events), build_class_templates_g(events)
++    f = two_band_flux_fn_resolver(tr, tg)("sn_ia")
++    r = template_flux_fn_resolver(tr)("sn_ia")
++    assert f(np.array([12.0]), 2.0) == pytest.approx(r(np.array([12.0]), 2.0))
++    assert f(np.array([12.0 + G_TIME_OFFSET_DAYS]), 2.0) == pytest.approx(0.5 * r(np.array([12.0]), 2.0), rel=0.05)
++    # the offset gives zero GP covariance between bands
++    assert SimpleGP(lengthscale=20.0).kernel(np.array([0.0]), np.array([G_TIME_OFFSET_DAYS]))[0, 0] == 0.0
++
++
++def test_two_band_arm_sees_same_r_values_as_r_arm(monkeypatch):
++    from research.transients.real_events import build_class_templates_g, two_band_flux_fn_resolver
++    archive, names, epoch = _archive_from_repo_tles(n=8)
++    mjd = (epoch - datetime.datetime(1858, 11, 17, tzinfo=datetime.timezone.utc)).total_seconds() / 86400.0
++    monkeypatch.setattr(p3, "MAX_TLE_AGE_DAYS", 1e9)
++    tev = [_event_gr(f"{c}{i}", c, 58000.0, tau=t) for c, t in (("sn_ia", 8), ("sn_ii", 60), ("sn_ibc", 20)) for i in range(2)]
++    tr, tg = build_class_templates(tev), build_class_templates_g(tev)
++    ev = _event_gr("z", "sn_ii", mjd)
++    r_rec = p3.run_one_event(ev, np.random.SeedSequence(3), archive, names, template_flux_fn_resolver(tr), bands="r")
++    gr_rec = p3.run_one_event(ev, np.random.SeedSequence(3), archive, names, two_band_flux_fn_resolver(tr, tg), bands="gr")
++    # B0 is data-independent, so it picks the same cells in both arms: r values must match exactly
++    h_r = r_rec["strategies"]["B0_fixed_cadence"]["history"]
++    h_gr = gr_rec["strategies"]["B0_fixed_cadence"]["history"]
++    assert [(h["t"], h["sat"], h["y"]) for h in h_r] == [(h["t"], h["sat"], h["y"]) for h in h_gr]
+diff --git a/research/transients/real_events.py b/research/transients/real_events.py
+index 8e6ac16..80798b7 100644
+--- a/research/transients/real_events.py
++++ b/research/transients/real_events.py
+@@ -27,6 +27,7 @@ from research.inference.openworld import SimpleGP
+ from research.transients.noise import ZEROPOINT_MAG
+ 
+ R_BAND_FID = 2
++G_BAND_FID = 1
+ MIN_DETECTIONS = 8  # fewer points cannot pin down a light-curve shape
+ TRUTH_GP_LENGTHSCALE = 8.0  # days; SN-scale evolution (vs 1.2 d for the fast synthetic classes)
+ 
+@@ -57,6 +58,11 @@ class RealEvent:
+     t_days: np.ndarray
+     flux: np.ndarray
+     flux_err: np.ndarray
++    # Phase 4 (colour): g-band detections on the SAME time axis (days since the
++    # first r detection, so g times can be negative). None when not loaded.
++    g_t_days: np.ndarray | None = None
++    g_flux: np.ndarray | None = None
++    g_flux_err: np.ndarray | None = None
+ 
+     @property
+     def is_withheld(self) -> bool:
+@@ -71,6 +77,39 @@ class RealEvent:
+         alpha = np.linalg.solve(K, self.flux)
+         return gp.kernel(t, self.t_days) @ alpha
+ 
++    def truth_flux_g(self, t: np.ndarray) -> np.ndarray:
++        """Same GP construction as `truth_flux`, through the real g detections.
++        The signal scale is the r-band peak so both bands share one prior scale."""
++        gp = SimpleGP(lengthscale=TRUTH_GP_LENGTHSCALE, var_f=float(max(np.max(self.flux), np.max(self.g_flux)) ** 2))
++        t = np.asarray(t, dtype=float)
++        K = gp.kernel(self.g_t_days, self.g_t_days) + np.diag(self.g_flux_err ** 2)
++        alpha = np.linalg.solve(K, self.g_flux)
++        return gp.kernel(t, self.g_t_days) @ alpha
++
++    @property
++    def last_time_with_truth(self) -> float:
++        """Latest time both loaded bands still have real data (no extrapolation)."""
++        if self.g_t_days is None:
++            return float(self.t_days[-1])
++        return float(min(self.t_days[-1], self.g_t_days[-1]))
++
++
++def _band_detections(raw: dict, fid: int) -> list[dict]:
++    dets = [d for d in raw.get("detections", [])
++            if d.get("fid") == fid and d.get("isdiffpos", 1) in (1, "t")
++            and d.get("magpsf") is not None and d.get("sigmapsf") is not None]
++    dets.sort(key=lambda d: d["mjd"])
++    return dets
++
++
++def parse_g_band(raw: dict, t0_mjd: float) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
++    dets = _band_detections(raw, G_BAND_FID)
++    if len(dets) < MIN_DETECTIONS:
++        return None
++    mjd = np.array([d["mjd"] for d in dets])
++    flux = mag_to_flux([d["magpsf"] for d in dets])
++    return mjd - t0_mjd, flux, flux_err_from_mag_err(flux, [d["sigmapsf"] for d in dets])
++
+ 
+ def parse_lightcurve(raw: dict) -> tuple[float, np.ndarray, np.ndarray, np.ndarray] | None:
+     dets = [d for d in raw.get("detections", [])
+@@ -85,8 +124,9 @@ def parse_lightcurve(raw: dict) -> tuple[float, np.ndarray, np.ndarray, np.ndarr
+     return float(mjd[0]), mjd - mjd[0], flux, err
+ 
+ 
+-def load_real_events(raw_dir: Path = RAW_DIR) -> tuple[list[RealEvent], dict[str, int]]:
+-    """Returns (events, exclusion_counts). Exclusions are reported, never silent."""
++def load_real_events(raw_dir: Path = RAW_DIR, require_g: bool = False) -> tuple[list[RealEvent], dict[str, int]]:
++    """Returns (events, exclusion_counts). Exclusions are reported, never silent.
++    `require_g` (Phase 4) also loads g band and drops events with too few g points."""
+     selection = json.loads((raw_dir / "selection.json").read_text())
+     events: list[RealEvent] = []
+     excluded = {"missing_download": 0, "too_few_r_detections": 0}
+@@ -101,7 +141,13 @@ def load_real_events(raw_dir: Path = RAW_DIR) -> tuple[list[RealEvent], dict[str
+             continue
+         t0, t, f, e = parsed
+         ra, dec = sexagesimal_to_deg(obj["ra"], obj["dec"])
+-        events.append(RealEvent(obj["oid"], obj["cls"], obj["bts_type"], ra, dec, t0, t, f, e))
++        g = (None, None, None)
++        if require_g:
++            g = parse_g_band(json.loads(path.read_text()), t0)
++            if g is None:
++                excluded["too_few_g_detections"] = excluded.get("too_few_g_detections", 0) + 1
++                continue
++        events.append(RealEvent(obj["oid"], obj["cls"], obj["bts_type"], ra, dec, t0, t, f, e, *g))
+     events.sort(key=lambda ev: (ev.t0_mjd, ev.oid))
+     return events, excluded
+ 
+@@ -137,6 +183,55 @@ def build_class_templates(events: list[RealEvent]) -> dict[str, np.ndarray]:
+     return templates
+ 
+ 
++def build_class_templates_g(events: list[RealEvent]) -> dict[str, np.ndarray]:
++    """g-band companion to `build_class_templates`: each event's g truth curve
++    is divided by the peak of its R-band truth curve (not its own g peak), so
++    the template carries the class's g/r colour evolution, not just its shape.
++    Normalized so the class's r template peak is 1 (median g/r ratio kept)."""
++    templates: dict[str, np.ndarray] = {}
++    for cls in MODELED_CLASSES:
++        curves = []
++        for ev in events:
++            if ev.true_class != cls or ev.g_flux is None:
++                continue
++            r_peak = np.max(ev.truth_flux(TEMPLATE_GRID_DAYS))
++            f = ev.truth_flux_g(TEMPLATE_GRID_DAYS) / r_peak
++            f[(TEMPLATE_GRID_DAYS > ev.g_t_days[-1]) | (TEMPLATE_GRID_DAYS > ev.t_days[-1])] = np.nan
++            curves.append(f)
++        if not curves:
++            raise ValueError(f"no template-split g-band events for class {cls!r}")
++        with warnings.catch_warnings():
++            warnings.simplefilter("ignore", RuntimeWarning)
++            med = np.nanmedian(np.array(curves), axis=0)
++        covered = ~np.isnan(med)
++        last = np.flatnonzero(covered)[-1]
++        med[last + 1:] = med[last]
++        templates[cls] = np.clip(np.nan_to_num(med), 0.0, None)  # uncovered early grid -> 0
++    return templates
++
++
++# Phase 4 band encoding: a g-band measurement at time t is stored at
++# t + G_TIME_OFFSET_DAYS. Every flux function/GP then distinguishes bands by
++# time alone, so ClosedWorldBelief, the planners and the GP need no changes;
++# with GP lengthscales of days, the 1e4-day offset gives exactly zero r-g
++# covariance (bands independent given the shared amplitude).
++G_TIME_OFFSET_DAYS = 1.0e4
++
++
++def two_band_flux_fn_resolver(templates_r: dict[str, np.ndarray], templates_g: dict[str, np.ndarray]):
++    def resolve(cls: str):
++        r, g = templates_r[cls], templates_g[cls]
++
++        def f(t, amplitude):
++            t = np.asarray(t, dtype=float)
++            is_g = t >= G_TIME_OFFSET_DAYS / 2
++            vals = np.where(is_g, np.interp(t - G_TIME_OFFSET_DAYS, TEMPLATE_GRID_DAYS, g),
++                            np.interp(t, TEMPLATE_GRID_DAYS, r))
++            return amplitude * vals
++        return f
++    return resolve
++
++
+ def template_flux_fn_resolver(templates: dict[str, np.ndarray]):
+     """Same contract as transients.models.modeled_flux_fn_p2: cls -> f(t, A)."""
+     def resolver(cls: str):
+@@ -174,5 +269,5 @@ class StretchAmplitudeGrid:
+         return resolve
+ 
+ 
+-__all__ = ["StretchAmplitudeGrid", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
++__all__ = ["StretchAmplitudeGrid", "build_class_templates_g", "two_band_flux_fn_resolver", "G_TIME_OFFSET_DAYS", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
+            "MODELED_CLASSES", "WITHHELD_CLASSES"]

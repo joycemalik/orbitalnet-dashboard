@@ -54,7 +54,8 @@ body.locked { overflow: hidden; height: 100vh; }
 /* chrome */
 .top-ui { position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: var(--bar); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: env(safe-area-inset-top, 0px) clamp(16px, 3vw, 40px) 0; pointer-events: none; }
 .top-ui > * { pointer-events: auto; }
-.brand { font-family: var(--f-title); font-size: 11px; letter-spacing: .4em; color: var(--ink-soft); }
+.brand { font-family: var(--f-title); font-size: 11px; letter-spacing: .4em; color: var(--ink-soft); text-decoration: none; }
+.brand:hover { color: var(--ink); }
 .act-now { font-family: var(--f-body); font-weight: 300; font-size: 12px; letter-spacing: .4em; text-transform: uppercase; color: var(--ink-faint); text-align: center; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sound { display: flex; align-items: center; gap: 10px; background: none; border: 1px solid rgba(255,255,255,.18); color: var(--ink-soft); font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; }
 .sound:hover { border-color: var(--ink-soft); color: var(--ink); }

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RASTI Submission</title>
+<meta name="description" content="RAS Techniques and Instruments: fit, format, costs and a tailored astronomy-methods paper on information-driven transient follow-up with real ZTF replay.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>RASTI</span></nav>
+  <p class="eyebrow">Venue 4 of 6 · Astronomical methods · Open-access journal</p>
+  <h1>RAS Techniques &amp; Instruments</h1>
+  <p class="lede">The Royal Astronomical Society's open-access methods journal, published with Oxford University Press. It covers machine learning, statistical methods, mission concepts and research software for astronomy. This is where astronomers, the people who would actually use the planner, read methods papers.</p>
+  <div class="meta-row"><span>Rolling submission</span><span>Abstract ≤ 250 words</span><span>APC £1,339 (non-members)</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-warn">Needs real templates + real-data replay</span><span class="badge b-ok">Scope fit: confirmed</span></div>
+    <p><strong>The scope fits explicitly:</strong> “mission concepts,” “statistical methods,” “machine learning” and “software.” No deadline pressure either.</p>
+    <p><strong>But astronomers judge the physics first.</strong> Analytic approximations of kilonova and TDE shapes won't survive an astronomy referee. This paper needs the published templates the manuscript calls for (sncosmo and kilonova grids), the ZTF/BTS replay from Phase 3 producing scored events, and a clear science-return metric. It also needs an astronomer co-author.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>Methods for collecting and evaluating data in astronomy and geophysics: machine learning, statistics, data-processing software, instrumentation, mission concepts, research software.</td></tr>
+    <tr><th>Format</th><td>Research article with no fixed page limit (“be concise”). Abstract normally ≤ 250 words. 3–6 keywords, at least one from the journal list. LaTeX class on Overleaf recommended; upload a compiled PDF.</td></tr>
+    <tr><th>Review</th><td>Single-anonymous. A Scientific Editor plus usually two or more referees. Four months for the first revision. Editorial-office desk rejection if out of scope or below standard.</td></tr>
+    <tr><th>Cost</th><td>CC BY open access. APC £1,339 for non-members, 20% off for RAS members. Waivers or discounts exist for corresponding authors in low- and middle-income countries (India qualifies under many schemes; check the current list).</td></tr>
+    <tr><th>Mandatory</th><td>A Data Availability statement. Software papers must make code public with a bug-reporting route. FAIR principles are strongly encouraged.</td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://academic.oup.com/rasti/pages/general-instructions">RASTI general instructions</a> · <a href="https://academic.oup.com/rasti/pages/why-publish">Why publish in RASTI</a></td></tr>
+  </table>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract" data-limit="250">
+    <p class="ttl">Differential Diagnosis for the Sky: Information-Driven Follow-Up of Fading Transients with an Explicit Unmodeled Hypothesis</p>
+    <p>Wide-field surveys discover far more transients than follow-up facilities can observe, and in their first hours kilonovae, shock-cooling supernovae, GRB afterglows and M-dwarf flares are often photometrically indistinguishable. The observations that would separate them, such as early colour and near-infrared epochs, lose diagnostic value as the source fades. We present a follow-up planner that chooses each next observation to maximise the expected separation of competing physical models. It also measures the expected evidence that no modeled class applies, using a Gaussian-process auxiliary hypothesis, and accounts for diagnostic power lost to fading. The planner switches to evidence preservation when an event looks unmodeled. We test it in two ways. First, on injected light curves from published templates observed by a simulated low-Earth-orbit constellation. Second, by replaying archival ZTF Bright Transient Survey events, restricting choices to epochs that were actually observed. Withheld classes (fast blue optical transients, tidal disruption events) serve as ground truth for unmodeled-event detection. <span class="pending">Result sentences pending: time to secure classification, AUROC of P(h₀), and replay outcome.</span> We release the simulator, planner and analysis code.</p>
+  </div>
+  <p class="wc"></p>
+  <p><strong>Suggested keywords:</strong> methods: statistical · methods: data analysis · transients: supernovae · transients: neutron star mergers · space vehicles. Check each against the journal's list.</p>
+
+  <h2>Paper plan</h2>
+  <ol class="outline">
+    <li><span class="t">Introduction</span><span class="budget">~1.5 pp</span><span class="d">Lead with the science. Discovery rates outrun follow-up, and early confusion is real: cite the documented case of a Type IIb flagged as a kilonova candidate. The decision of <em>what to measure</em> is the bottleneck.</span></li>
+    <li><span class="t">Transient models and noise</span><span class="budget">~2 pp</span><span class="d">Published templates for each class, each cited, with distance and extinction priors and rate weighting. Limiting-magnitude noise. Validate the models against ZTF light curves, as manuscript §7 promises.</span></li>
+    <li><span class="t">Inference</span><span class="budget">~1.5 pp</span><span class="d">Grid posterior, GP h₀ and why it can't win by fitting a known class. Calibration of P(h₀) on validation events.</span></li>
+    <li><span class="t">Planner</span><span class="budget">~1.5 pp</span><span class="d">Utility, decay term, mode switch. Keep the planning-theory detail light and point to the ICAPS/IWPSS paper if it exists.</span></li>
+    <li><span class="t">Simulated-constellation results</span><span class="budget">~2.5 pp</span><span class="d">H1–H3 with astronomy-relevant metrics: hours to secure classification, recovered ejecta mass and explosion-time precision, unmodeled-event detection.</span></li>
+    <li><span class="t">Archival ZTF replay</span><span class="budget">~2 pp</span><span class="d">The Phase 3 counterfactual replay, with its limitation stated up front: it can only choose among epochs that exist. Exclusion counts reported, not hidden.</span></li>
+    <li><span class="t">Discussion</span><span class="budget">~1 pp</span><span class="d">Relevance to Rubin-era brokers (Fink, ALeRCE) and space missions. Limitations. Data availability statement.</span></li>
+  </ol>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Replace analytic class shapes with published templates (the single highest-value follow-up per <code>research/LOG.md</code>).</li>
+    <li>Get Phase 3 replay to score a meaningful number of events (currently: <span data-r="phase3.n_scored_total"></span>).</li>
+    <li>Add an astronomer co-author or at minimum an expert read-through.</li>
+    <li>Archive code with a DOI (Zenodo) and write the Data Availability statement.</li>
+    <li>Check APC waiver eligibility before submitting.</li>
+  </ul>
+
+  <p class="foot"><a href="iwpss.html">← IWPSS</a> · <a href="index.html">All venues</a> · Next: <a href="ieee-aerospace.html">IEEE Aerospace →</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

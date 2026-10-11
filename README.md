@@ -1,6 +1,6 @@
 # OrbitalNet OS (USOS) & Open-World Autonomous Space Observatory Research
 
-[![GitHub Pages](https://img.shields.io/badge/Research_Paper-Live_Page-8a1430?style=for-the-badge&logo=github)](https://joycemalik.github.io/orbitalnet-dashboard/)
+[![GitHub Pages](https://img.shields.io/badge/Research_Paper-Live_Page-8a1430?style=for-the-badge&logo=github)](https://orbitalnet.joycemalik.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL_3D_Globe-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
@@ -13,7 +13,9 @@ This repository contains both the **OrbitalNet OS** real-time simulation platfor
 
 ## 🌟 Research Paper & Web Publication
 
-- **Interactive Research Page:** [https://joycemalik.github.io/orbitalnet-dashboard/](https://joycemalik.github.io/orbitalnet-dashboard/)
+- **Website (film, paper, roadmap, notebook):** [https://orbitalnet.joycemalik.com/](https://orbitalnet.joycemalik.com/)
+- **The film:** [https://orbitalnet.joycemalik.com/film/](https://orbitalnet.joycemalik.com/film/)
+- **Paper page:** [https://orbitalnet.joycemalik.com/](https://orbitalnet.joycemalik.com/)
 - **Manuscript PDF:** [`Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories.pdf`](./Hypothesis-Discriminating%20Observation%20Campaigns%20for%20Distributed%20Space%20Observatories.pdf)
 
 ### Paper Summary: *"Differential Diagnosis for the Sky"*
@@ -160,7 +162,7 @@ If you build upon or reference this work in academic research, please cite:
   author={Malik, Joyce and Contributors},
   journal={OrbitalNet OS Research Publications},
   year={2026},
-  url={https://joycemalik.github.io/orbitalnet-dashboard/}
+  url={https://orbitalnet.joycemalik.com/}
 }
 ```
 

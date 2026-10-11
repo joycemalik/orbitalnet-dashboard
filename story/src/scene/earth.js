@@ -31,7 +31,7 @@ export function createEarth(tex, sunDir) {
           float cloud = texture2D(uClouds, vUv + vec2(uCloudShift, 0.0)).a;
           float spec = texture2D(uSpec, vUv).r;
 
-          vec3 col = albedo * (0.02 + 0.85 * max(d, 0.0));
+          vec3 col = albedo * (0.045 + 0.85 * max(d, 0.0));
           col = mix(col, vec3(0.78), cloud * 0.8 * clamp(d * 1.4 + 0.1, 0.0, 1.0));
           // city lights on the night side, dimmed under clouds
           col += lights * vec3(1.0, 0.78, 0.48) * 1.8 * (1.0 - day) * (1.0 - cloud * 0.8);

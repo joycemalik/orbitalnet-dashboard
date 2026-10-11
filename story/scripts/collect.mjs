@@ -1,5 +1,5 @@
 // Gathers the rest of the research into the site at build time, so one deploy
-// serves everything from space_research.joycemalik.com:
+// serves everything from orbitalnet.joycemalik.com:
 //   /paper/            the manuscript page (from ../docs), plus /paper/manuscript.pdf
 //   /paper/venues/     the submission roadmap (from ../docs/venues)
 //   /notebook/         the lab notebook: research/LOG.md and research/PLAN.md, rendered

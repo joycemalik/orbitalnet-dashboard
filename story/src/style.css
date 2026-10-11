@@ -139,6 +139,18 @@ body.locked { overflow: hidden; height: 100vh; }
 .bids .r.you span:first-child::after { content: " ◂ YOU"; color: var(--ice); }
 .bids .r.win.you span:first-child::after { color: #000; }
 
+/* the ending */
+.ending { position: fixed; inset: 0; z-index: 4; pointer-events: none; display: grid; place-items: center; }
+.end-title { position: absolute; text-align: center; display: grid; gap: 14px; justify-items: center; opacity: 0; padding: 0 16px; }
+.end-title .kick { font-weight: 300; font-style: italic; letter-spacing: .3em; font-size: 13px; color: var(--ember); text-transform: uppercase; padding-left: .3em; }
+.end-title .sub { font-weight: 300; letter-spacing: .42em; text-transform: uppercase; font-size: 12px; color: var(--ink-soft); padding-left: .42em; }
+.roll { position: absolute; left: 50%; top: 100%; width: min(640px, calc(100% - 32px)); transform: translateX(-50%); display: grid; gap: 46px; text-align: center; opacity: 0; will-change: transform; }
+.r-group { display: grid; gap: 6px; }
+.r-group span { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-faint); }
+.r-group b { font-weight: 400; font-size: clamp(16px, 1.4vw, 21px); letter-spacing: .04em; color: var(--ink); }
+.r-group i { font-weight: 300; font-size: 14px; color: var(--ink-soft); }
+.r-group.last b { font-family: var(--f-title); font-size: 13px; letter-spacing: .3em; color: var(--ember); }
+
 /* end */
 .endcard { position: fixed; inset: 0; z-index: 22; display: grid; place-content: center; justify-items: center; text-align: center; gap: 18px; padding: calc(var(--bar) + 16px) 16px; opacity: 0; pointer-events: none; transition: opacity 1.5s; }
 .endcard.on { opacity: 1; pointer-events: auto; }

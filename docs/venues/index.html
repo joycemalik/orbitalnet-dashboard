@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Submission Roadmap</title>
+<meta name="description" content="Six target venues for the open-world hypothesis-discrimination work: theme, format, deadlines, readiness, and a tailored abstract for each.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">← Paper</a><span>/</span><span>Submission roadmap</span></nav>
+
+  <p class="eyebrow">Differential Diagnosis for the Sky · Publication plan</p>
+  <h1>Where this paper goes, and when</h1>
+  <p class="lede">Six venues across the three communities this work sits between: multi-agent systems, automated planning, aerospace autonomy, and astronomical methods. Each has its own audience, format and clock.</p>
+  <div class="meta-row"><span>Venue facts checked 11 Oct 2026</span><span>Re-verify every deadline on the official page before acting</span></div>
+
+  <h2>Can this get in? The honest read</h2>
+  <div class="verdict">
+    <div class="row"><span class="badge b-warn">Strong question</span><span class="badge b-bad">Results not yet run</span></div>
+    <p>The <strong>research question is good</strong>. It is specific and falsifiable, and the gap is real: open-world hypothesis discrimination plus fading measurement value plus decentralised execution has not been combined in one planner. Reviewers at ICAPS, AAMAS and AIAA will find that interesting.</p>
+    <p>The <strong>evidence is not there yet</strong>. A results-track reviewer will ask one thing first: does P beat closed-world EIG (B3) on preregistered test seeds, at scale, with credible forward models? Today the repository can't answer that:</p>
+    <ul>
+      <li>Phase 1 is a toy existence proof (seed <span data-r="phase1.seed"></span>, <span data-r="phase1.n_events"></span> events, tagged <span data-r="phase1.tag"></span>).</li>
+      <li>Phase 2 summaries in <code>research/results/</code>: <span data-r="phase2.n_summaries"></span>. Real-data replay events scored: <span data-r="phase3.n_scored_total"></span>.</li>
+      <li><code>research/PREREGISTRATION.md</code> is not committed yet, so no test-seed result exists.</li>
+      <li>The references on the paper page are flagged as unverified leads.</li>
+    </ul>
+    <p>So right now only a <strong>vision / position track</strong> is an honest submission. Once preregistered Phase 2 results exist, every venue below becomes realistic.</p>
+  </div>
+
+  <h3>On the “MIT, Harvard, NASA-level” ambition</h3>
+  <p>That bar is reachable, but it isn't set by formatting or venue choice. Papers at that level share four traits, and this project can have all four:</p>
+  <ol>
+    <li><strong>A clean headline result against the strongest baseline.</strong> Here that means P vs. B3 on test seeds, with the preregistration committed first. Beating B0 to B2 alone won't impress anyone.</li>
+    <li><strong>Physics that domain experts trust.</strong> The current light curves are this project's own analytic approximations (see <code>research/LOG.md</code>). Swapping in published templates such as sncosmo and kilonova grids is what makes astronomers take it seriously.</li>
+    <li><strong>A co-author from the field.</strong> An astronomy or aerospace-autonomy faculty member or JPL/NASA researcher who reads the draft. This is the single biggest lever on acceptance, and the AAMAS Blue Sky track explicitly weighs author track record.</li>
+    <li><strong>A path to use.</strong> NASA adopts things that run in shadow mode next to a real alert stream (Fink, ALeRCE) and fit flight-like compute. The ESP32 testbed and the shadow-mode plan in §10 of the paper are the right seeds for this.</li>
+  </ol>
+  <aside class="note"><span class="tag">numbers on this site</span>Every result figure on these pages is filled at load time from <code>results.js</code>, which <code>research/figures/export_site_results.py</code> generates from <code>research/results/</code>. Nothing is typed in by hand. A yellow <span class="pending">not run</span> marker means that the experiment hasn't produced the number yet.</aside>
+
+  <h2>What you can cite today</h2>
+  <p>The Phase 1 existence proof. It is a toy problem (two exponential classes plus one withheld “bump” class, fixed Gaussian noise) and a single seed, so present it only as a preliminary signal in a vision or workshop paper:</p>
+  <div class="table-scroll"><table class="compare">
+    <thead><tr><th>Strategy</th><th>Confidently wrong on withheld events</th><th>Withheld events correctly flagged h₀</th><th>Confidently wrong on modeled events</th></tr></thead>
+    <tbody>
+      <tr><td>Random</td><td><span data-r="phase1.random.cw_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.random.acc_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.random.cw_modeled" data-fmt="pct"></span></td></tr>
+      <tr><td>B3 closed-world EIG</td><td><span data-r="phase1.B3_closed_world_eig.cw_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.B3_closed_world_eig.acc_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.B3_closed_world_eig.cw_modeled" data-fmt="pct"></span></td></tr>
+      <tr><td>P open-world EIG</td><td><span data-r="phase1.P_open_world_eig.cw_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.P_open_world_eig.acc_withheld" data-fmt="pct"></span></td><td><span data-r="phase1.P_open_world_eig.cw_modeled" data-fmt="pct"></span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">Source: research/results/phase1/summary.json · commit <span data-r="phase1.git_commit"></span> · config <span data-r="phase1.config_hash"></span></p>
+
+  <h2>Recommended sequence</h2>
+  <ol class="timeline">
+    <li><span class="when">20 Oct → 5 Nov → 12 Nov 2026</span><strong>AAMAS 2027 Blue Sky Ideas</strong>: OpenReview registration, then abstract, then the 4-page paper. This is the only venue where the work is ready as-is.</li>
+    <li><span class="when">Nov 2026</span><strong>Commit <code>PREREGISTRATION.md</code></strong>, calibrate β, γ and τ on validation seeds, then run Phase 2 on test seeds. Every venue below depends on this step.</li>
+    <li><span class="when">7 Dec → 14 Dec 2026</span><strong>ICAPS 2027 main track</strong>, only if Phase 2 test results exist by about 1 December. Otherwise skip it; a rushed ICAPS rejection costs more than waiting.</li>
+    <li><span class="when">~early 2027 · unconfirmed</span><strong>IWPSS 2027</strong>, if the biennial series runs. This is the space-planning home community.</li>
+    <li><span class="when">Spring 2027 · rolling</span><strong>RAS Techniques &amp; Instruments</strong>: the astronomy-facing methods paper, once real templates and the ZTF replay produce results.</li>
+    <li><span class="when">~1 Jul 2027 · inferred</span><strong>IEEE Aerospace Conference 2028</strong> abstract, centred on the ESP32 hardware-in-the-loop work.</li>
+    <li><span class="when">Late 2027 · rolling</span><strong>AIAA Journal of Aerospace Information Systems</strong>: the archival journal version of the full system, including decentralisation (H4) and the testbed.</li>
+  </ol>
+  <aside class="note"><span class="tag">arXiv</span>Post a preprint once the first real results exist, to establish priority. ICAPS 2027 discourages posting from two weeks before its deadline until notification, so avoid roughly 30 Nov 2026 to 26 Feb 2027 if you submit there. First-time arXiv submitters in astro-ph.IM or cs.AI may need an endorsement.</aside>
+
+  <h2>The six venues</h2>
+  <div class="cards">
+    <a class="card" href="aamas-blue-sky.html"><span class="k">Conference track · Multi-agent systems</span><span class="n">AAMAS 2027 · Blue Sky Ideas</span><span class="dl">Paper due 12 Nov 2026 · 4 pages</span><span class="badge b-ok" style="align-self:flex-start">Submittable now</span><span class="why">A vision track that isn't judged on results. Pitch: epistemic coordination for agent swarms.</span></a>
+    <a class="card" href="icaps.html"><span class="k">Conference · Automated planning</span><span class="n">ICAPS 2027 · Main track</span><span class="dl">Paper due 14 Dec 2026 · 8 pages · double-blind</span><span class="badge b-warn" style="align-self:flex-start">Needs Phase 2 results</span><span class="why">Planning under uncertainty with incomplete models, which is where the open-world EIG utility lives.</span></a>
+    <a class="card" href="iwpss.html"><span class="k">Workshop · Space planning &amp; scheduling</span><span class="n">IWPSS 2027</span><span class="dl">2027 call not found · 2025 used 8 pp / 4 pp</span><span class="badge b-warn" style="align-self:flex-start">Unconfirmed edition</span><span class="why">The exact community behind POISE and JPL onboard planning. Highest topical fit.</span></a>
+    <a class="card" href="rasti.html"><span class="k">Journal · Astronomical methods</span><span class="n">RAS Techniques &amp; Instruments</span><span class="dl">Rolling · open access · 250-word abstract</span><span class="badge b-warn" style="align-self:flex-start">Needs real templates + replay</span><span class="why">Convinces astronomers that the planner matters for real transient follow-up.</span></a>
+    <a class="card" href="ieee-aerospace.html"><span class="k">Conference · Aerospace engineering</span><span class="n">IEEE Aerospace Conference 2028</span><span class="dl">2027 deadlines passed · 2028 abstract ~Jul 2027</span><span class="badge b-warn" style="align-self:flex-start">Needs hardware testbed</span><span class="why">NASA/JPL-heavy audience. The place for the ESP32 hardware-in-the-loop story.</span></a>
+    <a class="card" href="jais.html"><span class="k">Journal · Aerospace autonomy</span><span class="n">AIAA Journal of Aerospace Information Systems</span><span class="dl">Rolling · 100–200-word abstract</span><span class="badge b-bad" style="align-self:flex-start">Capstone, needs all phases</span><span class="why">The archival home for the complete system: H1 to H4 plus the testbed.</span></a>
+  </div>
+
+  <h2>At a glance</h2>
+  <div class="table-scroll"><table class="compare">
+    <thead><tr><th>Venue</th><th>Audience cares about</th><th>Length</th><th>Review</th><th>Leads with</th></tr></thead>
+    <tbody>
+      <tr><td>AAMAS Blue Sky</td><td>Vision, new agent problems</td><td>4 pp + refs</td><td>Track chairs; author record weighed</td><td>The coordination problem</td></tr>
+      <tr><td>ICAPS</td><td>Formal planning contribution, benchmarks</td><td>8 pp + refs (AAAI)</td><td>Double-blind</td><td>Open-world EIG utility (H1, H3)</td></tr>
+      <tr><td>IWPSS</td><td>Deployable space planning</td><td>8 pp / 4 pp (2025 rules)</td><td>Workshop PC</td><td>Constellation + decay term (H2)</td></tr>
+      <tr><td>RASTI</td><td>Science return, real data</td><td>No fixed limit</td><td>Single-anonymous</td><td>Follow-up efficiency on ZTF replay</td></tr>
+      <tr><td>IEEE Aerospace</td><td>Systems, hardware, mission relevance</td><td>Check call</td><td>Full-paper review</td><td>Testbed + decentralisation (H4)</td></tr>
+      <tr><td>AIAA JAIS</td><td>Archival autonomy systems</td><td>Check AIAA guideline</td><td>Peer review</td><td>Everything, end to end</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="foot">Master manuscript: <a href="../index.html">docs/index.html</a>. Each venue page reuses its sections; only framing, length and emphasis change. Generated numbers: <code>python -m research.figures.export_site_results</code>.</p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIAA JAIS</title>
+<meta name="description" content="AIAA Journal of Aerospace Information Systems: fit, format and a tailored archival journal paper covering the complete open-world distributed observation-planning system.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>AIAA JAIS</span></nav>
+  <p class="eyebrow">Venue 6 of 6 · Aerospace autonomy · Archival journal</p>
+  <h1>AIAA Journal of Aerospace Information Systems</h1>
+  <p class="lede">AIAA's journal for aerospace computing, information, networks and autonomy. It has a particular interest in autonomous systems and mission assurance. This is the capstone: the complete system, all four hypotheses, simulation plus hardware, in one archival paper.</p>
+  <div class="meta-row"><span>Rolling submission</span><span>Abstract 100–200 words</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-bad">Capstone: needs Phases 2–4 + testbed</span><span class="badge b-ok">Scope fit: confirmed</span></div>
+    <p><strong>JAIS's scope names autonomous systems, uncertainty quantification and machine learning for aerospace</strong>, and accepts both full papers and shorter Technical Notes. The paper page already lists it as a target.</p>
+    <p><strong>Journal reviewers expect completeness.</strong> All of H1–H4, the ablations, the real-data check and the testbed. Submitting before that wastes a review cycle. A <em>Technical Note</em> on the Phase 2 single-planner result is a reasonable earlier step if you want a journal line sooner.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>Original archival research on aerospace computing, information, networks and communication: new theory, novel applications, case studies. Particular interest in autonomous systems, systems engineering, and safety and mission assurance.</td></tr>
+    <tr><th>Article types</th><td>Full-length papers and Technical Notes.</td></tr>
+    <tr><th>Format</th><td>AIAA style: English (American spelling), single-column, double-spaced 10-pt. Single-paragraph summary abstract of 100–200 words. <span class="unverified">Page and word limits are in AIAA's “Journal Page Limits and Word Count Guidelines,” which couldn't be retrieved here. Check before writing.</span></td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://aiaa.org/publications/journals/journal-scopes-and-content/">AIAA journal scopes</a> · <a href="https://aiaa.org/publications/journals/journal-author/">AIAA journal author resources</a></td></tr>
+  </table>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract" data-limit="200">
+    <p class="ttl">Open-World, Deadline-Aware Hypothesis Discrimination for Distributed Space Observatories</p>
+    <p>Autonomous constellations following up fading astronomical transients must decide, without ground intervention, which spacecraft takes which measurement while the discriminating signal decays and the true explanation may be unmodeled. We formulate follow-up as open-world sequential model discrimination with time-decaying measurement value, executed by spacecraft with intermittently synchronised beliefs. The planner combines expected discrimination, expected evidence of model inadequacy, and opportunity decay. It switches to evidence preservation when inadequacy becomes probable and allocates measurements through a stale-belief-tolerant marginal-gain auction. We evaluate it on a simulated constellation propagated from real orbital elements, against reactive, uncertainty-sampling and closed-world baselines under identical budgets, and on an ESP32 hardware-in-the-loop testbed. <span class="pending">Result sentences pending: H1–H4 outcomes from preregistered test seeds.</span></p>
+  </div>
+  <p class="wc"></p>
+
+  <h2>Paper plan (full-length)</h2>
+  <ol class="outline">
+    <li><span class="t">Introduction</span><span class="budget">§1</span><span class="d">The manuscript's §1 and research question, with an aerospace framing: autonomy for time-critical science.</span></li>
+    <li><span class="t">Related work</span><span class="budget">§2</span><span class="d">Manuscript Table 1, every entry verified and read in full.</span></li>
+    <li><span class="t">Formulation and planner</span><span class="budget">§3–4</span><span class="d">Eqs. 1–4, the mode switch, and the auction with its exact-merge proof.</span></li>
+    <li><span class="t">Experimental design</span><span class="budget">§5</span><span class="d">The preregistration verbatim, with seeds, scenarios and statistics.</span></li>
+    <li><span class="t">Results: centralised planner</span><span class="budget">§6</span><span class="d">H1–H3 and the ablations.</span></li>
+    <li><span class="t">Results: decentralisation</span><span class="budget">§7</span><span class="d">H4: communication sweep and node loss.</span></li>
+    <li><span class="t">Real-data validation</span><span class="budget">§8</span><span class="d">Model and noise validation against ZTF, plus the counterfactual replay.</span></li>
+    <li><span class="t">Hardware-in-the-loop</span><span class="budget">§9</span><span class="d">Testbed results and sim-vs-hardware agreement.</span></li>
+    <li><span class="t">Limitations, threats to validity, conclusion</span><span class="budget">§10</span><span class="d">Manuscript §9.2 and Table 5, updated with what actually happened, including any refuted hypothesis.</span></li>
+  </ol>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Phases 2, 3 and 4 run on preregistered test seeds, all tables generated from <code>research/results/</code>.</li>
+    <li>ESP32 testbed built and measured.</li>
+    <li>Retrieve AIAA's page-limit guideline and fit the paper to it.</li>
+    <li>DOI-archived code release, as the manuscript's §10 promises.</li>
+  </ul>
+
+  <p class="foot"><a href="ieee-aerospace.html">← IEEE Aerospace</a> · <a href="index.html">All venues</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

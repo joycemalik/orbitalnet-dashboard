@@ -42,6 +42,11 @@ class ClosedWorldBelief:
     amplitude_grid: np.ndarray
     log_joint: np.ndarray  # shape (n_classes, n_amplitudes), not yet guaranteed normalized
     flux_fn_resolver: Callable[[str], Callable] = field(default=modeled_flux_fn, repr=False, compare=False)
+    # Optional model-discrepancy (Phase 5): cls -> g(t, amplitude) giving an
+    # extra Gaussian std added in quadrature to the measurement noise, i.e.
+    # the class's real population scatter around its template. None = off
+    # (exactly the previous likelihood).
+    discrepancy_resolver: Callable[[str], Callable] | None = field(default=None, repr=False, compare=False)
 
     @classmethod
     def with_uniform_prior(cls, classes: tuple[str, ...] = MODELED_CLASSES,
@@ -55,7 +60,8 @@ class ClosedWorldBelief:
                     flux_fn_resolver=flux_fn_resolver)
 
     def copy(self) -> "ClosedWorldBelief":
-        return ClosedWorldBelief(self.classes, self.amplitude_grid, self.log_joint.copy(), self.flux_fn_resolver)
+        return ClosedWorldBelief(self.classes, self.amplitude_grid, self.log_joint.copy(), self.flux_fn_resolver,
+                                 self.discrepancy_resolver)
 
     def log_likelihood_grid(self, t: float, y: float, sigma: float) -> np.ndarray:
         """log p(y | h, A) for every (h, A) cell, at measurement time t."""
@@ -63,7 +69,12 @@ class ClosedWorldBelief:
         for i, cls in enumerate(self.classes):
             f = self.flux_fn_resolver(cls)
             means = f(np.full_like(self.amplitude_grid, t), self.amplitude_grid)
-            out[i, :] = -0.5 * np.log(2 * np.pi * sigma ** 2) - 0.5 * ((y - means) / sigma) ** 2
+            if self.discrepancy_resolver is None:  # original expression, kept bit-identical
+                out[i, :] = -0.5 * np.log(2 * np.pi * sigma ** 2) - 0.5 * ((y - means) / sigma) ** 2
+            else:
+                s2 = sigma ** 2 + self.discrepancy_resolver(cls)(np.full_like(self.amplitude_grid, t),
+                                                                 self.amplitude_grid) ** 2
+                out[i, :] = -0.5 * np.log(2 * np.pi * s2) - 0.5 * (y - means) ** 2 / s2
         return out
 
     def update(self, t: float, y: float, sigma: float) -> None:

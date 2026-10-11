@@ -1,4 +1,4 @@
-# space_research.joycemalik.com
+# orbitalnet.joycemalik.com
 
 The public home of the OrbitalNet research, built from this repository:
 
@@ -48,7 +48,7 @@ Deep links open a shot directly: `/#s0` … `/#s15`.
 Import the repo in Vercel and set **Root Directory** to `story`. Keep the project
 setting *Include files outside the root directory in the Build Step* switched on
 (it is by default): the build reads `../docs`, `../research` and the manuscript PDF.
-Then add the domain `space_research.joycemalik.com` under Settings → Domains.
+Then add the domain `orbitalnet.joycemalik.com` under Settings → Domains.
 
 ## What is real and what is illustrative
 

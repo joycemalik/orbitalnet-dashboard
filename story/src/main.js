@@ -129,7 +129,9 @@ function povPose(t) {
   const rh = p.clone().normalize();
   const th = F.clone().addScaledVector(rh, -F.dot(rh)).normalize();
   const el = Math.asin(clamp(F.dot(rh), -1, 1));
-  const pitch = el - 0.1;                                   // aim a little below the source, so the limb sits in frame
+  // aim at the source, but never so high that the horizon leaves the bottom of the frame
+  const dip = Math.acos(1 / p.length());
+  const pitch = clamp(el - 0.1, -dip + 0.12, -dip + 0.36);
   const dir = th.clone().multiplyScalar(Math.cos(pitch)).addScaledVector(rh, Math.sin(pitch)).normalize();
   const pos = p.clone().addScaledVector(rh, 0.0012).addScaledVector(th, -0.002);
   return { pos, dir, up: rh, fov: 58 };
@@ -204,8 +206,8 @@ const SHOTS = [
   { act: 6, w: { sats: 1, bg: .4, tr: .4 }, cue: { prog: 'finale', organ: 1, strings: .8, choir: .8, ost: .4, ticks: .3, dbl: false },
     cam: t => blend(O7, O8, ease(t)),
     subs: [['The universe will not wait for us.', .3, .5], ['The next great discovery might last a few hours.', .53, .76], ['We want to be looking.', .79, .98, 'big']] },
-  { act: 6, w: { sats: 1, bg: .5, tr: .2 }, cue: { organ: .5, strings: .3, choir: .3, ost: 0, ticks: .5 }, end: true,
-    cam: t => blend(O8, O9, ease(t)), subs: [] },
+  { act: 6, w: { sats: 1, bg: .5, tr: .2 }, cue: { organ: .5, strings: .3, choir: .3, ost: 0, ticks: .5 }, end: true, dur: 3,
+    cam: t => blend(O8, O9, ease(Math.min(1, t / 0.4))), subs: [] },
 ];
 SHOTS.forEach(s => (s.w = { ...W0, ...s.w }));
 const actStart = ACTS.map((_, a) => SHOTS.findIndex(s => s.act === a));
@@ -298,6 +300,7 @@ $('#again').onclick = () => { mergerSeen = false; scrollToShot(0, true); setAuto
 const subsEl = $('#subs'), subLine = document.createElement('div'); subLine.className = 'line'; subsEl.appendChild(subLine);
 const tc = $('#titlecard'), tcAct = $('#tcAct'), tcName = $('#tcName'), tcLine = $('#tcLine');
 const povEl = $('#pov'), reticle = $('#reticle'), retBox = $('#retBox'), bidsEl = $('#bids'), bidRows = $('#bidRows'), alertPanel = $('#pvAlert'), endcard = $('#endcard');
+const endTitle = $('#endTitle'), roll = $('#roll');
 const PV = Object.fromEntries(['Id', 'Alt', 'Vel', 'LL', 'Bat', 'Sun', 'Src', 'El', 'Win', 'Ecl'].map(k => [k, $('#pv' + k)]));
 let lastSub = '';
 function youFacts() {
@@ -386,14 +389,14 @@ function fmtDistance(d) {
   if (km > 1.496e8 * 50) return `${Math.round(km / 1.496e8).toLocaleString('en-US')} AU`;
   return `${Math.round(km).toLocaleString('en-US')} km`;
 }
-let holoFrame = 0, last = performance.now(), gs = 0, prevPos = null, auctionClock = 0, lastObs = -1, lastHolo = null, wasExplore = false, snap = 0;
+let finaleHit = false, holoFrame = 0, last = performance.now(), gs = 0, prevPos = null, auctionClock = 0, lastObs = -1, lastHolo = null, wasExplore = false, snap = 0;
 const vel = V3(), w = { ...W0 };
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (blocked) { last = now; requestAnimationFrame(frame); return; }   // upright phone: nothing plays
   if (auto && started && !RM) {
-    const end = (SHOTS.length - 0.3) * shotH();
-    autoY = Math.min(end, Math.max(autoY, window.scrollY - 2) + dt * shotH() / AUTO_SEC_PER_SHOT);
+    const end = (SHOTS.length - 0.02) * shotH();
+    autoY = Math.min(end, Math.max(autoY, window.scrollY - 2) + dt * shotH() / (AUTO_SEC_PER_SHOT * (SHOTS[Math.max(shot, 0)].dur || 1)));
     lenis.scrollTo(autoY, { immediate: true, force: true });
     if (autoY >= end) setAuto(false);
   }
@@ -504,11 +507,20 @@ function frame(now) {
     reticle.style.transform = `translate(${(pr.x * .5 + .5) * innerWidth}px, ${(-pr.y * .5 + .5) * innerHeight}px)`;
     retBox.style.transform = `rotate(${i === 8 && t < 0.3 ? (now * 0.3) % 360 : 45}deg) scale(${i === 8 && t < 0.3 ? 1.6 - t * 2 : 1})`;
   } else reticle.style.opacity = 0;
-  endcard.classList.toggle('on', !!s.end && t > 0.25);
+  // the ending: fade to black, the title, the credit roll, then the way out
+  const E = s.end ? t : 0;
+  if (s.end) post.lens.uniforms.uFade.value = Math.max(post.lens.uniforms.uFade.value, ease(clamp((E - 0.2) / 0.15, 0, 1)) * 0.92);
+  endTitle.style.opacity = s.end ? clamp((E - 0.3) / 0.06, 0, 1) * clamp((0.56 - E) / 0.06, 0, 1) : 0;
+  roll.style.opacity = s.end && E > 0.55 && E < 0.94 ? 1 : 0;
+  roll.style.transform = `translate(-50%, ${-(clamp((E - 0.55) / 0.37, 0, 1)) * (roll.offsetHeight + innerHeight)}px)`;
+  endcard.classList.toggle('on', !!s.end && E > 0.92);
+  if (s.end && E > 0.3 && !finaleHit) { finaleHit = true; score.braam(33, 0.9); }
+  if (!s.end) finaleHit = false;
 
   const d = new Date(Date.UTC(2000, 0, 1, 12) + (JD0 - 2451545 + simT / 86400) * 86400000);
   hudClock.textContent = d.toISOString().slice(0, 19).replace('T', ' ');
   hudAlt.textContent = fmtDistance(dist);
+  document.querySelector('.telemetry').style.opacity = s.end && t > 0.2 ? 0 : 1;
 
   post.composer.render();
   requestAnimationFrame(frame);

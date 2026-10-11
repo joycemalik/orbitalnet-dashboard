@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ICAPS 2027</title>
+<meta name="description" content="ICAPS 2027 main track: fit, format, deadlines and a tailored 8-page planning paper on open-world expected-information-gain planning with decaying measurement value.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>ICAPS 2027</span></nav>
+  <p class="eyebrow">Venue 2 of 6 · Automated planning · Archival conference</p>
+  <h1>ICAPS 2027: Main Track</h1>
+  <p class="lede">The International Conference on Automated Planning and Scheduling, Columbia, South Carolina, 27 June to 2 July 2027. This is the flagship planning venue, and the natural home for the utility function as a planning contribution.</p>
+  <div class="meta-row"><span>Paper due 14 Dec 2026 AoE</span><span>8 pages + refs · AAAI style</span><span>Double-blind</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-warn">Needs Phase 2 test results</span><span class="badge b-warn">Tight: 9 weeks</span></div>
+    <p><strong>Strong topical fit.</strong> The call lists planning under uncertainty with “incomplete models or information” and “belief states” as topics, and that is the open-world h₀ term exactly.</p>
+    <p><strong>But ICAPS is a results venue.</strong> Without a preregistered P-vs-B3 comparison at ≥1,000 events per scenario, reviewers will reject it. Go only if Phase 2 test-seed results exist by about 1 December 2026. Otherwise, target ICAPS 2028 with the full study.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>Automated planning and scheduling. Relevant listed topics: planning under uncertainty (MDPs, POMDPs, planning with sensing, incomplete models, belief states), real-time and online planning, novel application domains. A special track, “Planning Under a Different Name,” targets neighbouring communities.</td></tr>
+    <tr><th>Format</th><td>Long paper: 8 pages + references. Short paper: 4 pages + references. AAAI format mandatory. Content past page 9 (long) or 5 (short), other than references or the ethics statement, means desk rejection.</td></tr>
+    <tr><th>Review</th><td>Double-blind. No names or affiliations, own work cited in the third person. arXiv posting discouraged from two weeks before the deadline until notification.</td></tr>
+    <tr><th>Deadlines (AoE)</th><td>Abstract <strong>7 Dec 2026</strong> · paper <strong>14 Dec 2026</strong> · notification 26 Feb 2027.</td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://icaps27.icaps-conference.org/calls/cfp/">ICAPS 2027 CfP</a> · <a href="https://icaps27.icaps-conference.org/">ICAPS 2027 home</a></td></tr>
+  </table>
+  <aside class="note"><span class="tag">anonymity</span>The public GitHub Pages site and repo name identify you. During review, either don't link them or provide an anonymised mirror (e.g. anonymous.4open.science), and don't promote the page as “under review at ICAPS.”</aside>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract">
+    <p class="ttl">Open-World Information-Gain Planning with Decaying Measurement Value</p>
+    <p>We study sequential measurement planning where the goal is to identify which of K generative models explains an evolving process, where the informativeness of each candidate measurement decays at a model-dependent rate, and where the true model may lie outside the set. Standard expected-information-gain planners assume a closed hypothesis set and are indifferent to when information becomes unrecoverable, so they can commit confidently to a wrong model and spend budget on measurements that could have waited. We propose a planner whose utility adds two terms to closed-world class information gain: the mutual information between a measurement and a model-adequacy indicator, computed against a Gaussian-process auxiliary hypothesis, and an opportunity-decay term that values a measurement by the information lost if it is deferred to the next feasible slot. When inadequacy becomes probable, the planner switches from discrimination to evidence preservation. We evaluate on fading astronomical transients observed by a simulated low-Earth-orbit constellation with SGP4 visibility, against fixed-cadence, nearest-capable, classifier-entropy and closed-world EIG baselines under identical budgets and preregistered test seeds. <span class="pending">Result sentence pending: time-to-identification and AUROC of P(h₀) from Phase 2 test seeds.</span></p>
+  </div>
+  <p class="wc"></p>
+
+  <h2>Paper plan (8 pages, AAAI two-column)</h2>
+  <ol class="outline">
+    <li><span class="t">Introduction</span><span class="budget">0.9 p</span><span class="d">Frame it as a <em>planning</em> problem first (open-world sequential model discrimination) and the astronomy second, as the motivating domain. Three contributions: the utility, the mode switch, the benchmark with withheld classes.</span></li>
+    <li><span class="t">Related work</span><span class="budget">0.7 p</span><span class="d">Planning-centric: active hypothesis testing, POMDP information gathering, robust/misspecified Bayesian experimental design, POISE, SHM-POMDP. Astronomy follow-up in one paragraph.</span></li>
+    <li><span class="t">Problem formulation</span><span class="budget">1.0 p</span><span class="d">Eqs. 1–2 (hypotheses, GP h₀) and the feasible-action model. Define the decision problem formally as a belief-MDP with a deadline-dependent observation model.</span></li>
+    <li><span class="t">The open-world decaying-value planner</span><span class="budget">1.4 p</span><span class="d">Eqs. 3–4. State honestly that D is currently a Fisher-style SNR² proxy, not eq. 4's literal per-class MI (see <code>research/LOG.md</code>). Either implement the exact term or present the proxy as the method with a justification. Mode switch, and the exact quadrature EIG estimator with its known-answer tests.</span></li>
+    <li><span class="t">Experimental setup</span><span class="budget">1.0 p</span><span class="d">Classes, constellation, B0–B3, metrics, scenarios (Nominal, Crowding, Model error). Seeds and the preregistration. The β, γ, τ calibration protocol on validation seeds.</span></li>
+    <li><span class="t">Results</span><span class="budget">1.8 p</span><span class="d">Generated only from <code>research/results/phase2/</code>. Headline: H1 (time to 95%) and H3 (AUROC of P(h₀) vs. entropy threshold), with Wilcoxon, Holm and bootstrap CIs. Ablation: γ=0 split by fast vs. slow classes (H2). A refuted hypothesis is reported as refuted.</span></li>
+    <li><span class="t">Discussion and limitations</span><span class="budget">0.7 p</span><span class="d">Analytic light-curve approximations, uniform cost, false alarms under model error. Decentralisation (H4) is future work. Don't overreach into it in this paper.</span></li>
+    <li><span class="t">Conclusion</span><span class="budget">0.3 p</span><span class="d">One paragraph.</span></li>
+  </ol>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Commit <code>research/PREREGISTRATION.md</code> before touching test seeds.</li>
+    <li>Calibrate β, γ, τ on validation seeds only, as the paper's §6.7 promises.</li>
+    <li>Run Phase 2 with ≥1,000 events per scenario and generate tables via <code>research/figures/make_tables.py</code>.</li>
+    <li>Fix or justify the decay-term proxy and the cost(a)=1 simplification.</li>
+    <li>Anonymise: strip names, the repo URL and the OrbitalNet branding if it identifies you.</li>
+    <li>Abstract by 7 Dec, paper by 14 Dec 2026 AoE.</li>
+  </ul>
+
+  <p class="foot"><a href="aamas-blue-sky.html">← AAMAS Blue Sky</a> · <a href="index.html">All venues</a> · Next: <a href="iwpss.html">IWPSS →</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

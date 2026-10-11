@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IWPSS 2027</title>
+<meta name="description" content="International Workshop on Planning and Scheduling for Space: fit, format based on the 2025 edition, and a tailored paper on deadline-aware constellation follow-up planning.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>IWPSS</span></nav>
+  <p class="eyebrow">Venue 3 of 6 · Space planning &amp; scheduling · Workshop</p>
+  <h1>IWPSS: International Workshop on Planning &amp; Scheduling for Space</h1>
+  <p class="lede">A series running since 1997, where NASA, JPL, ESA and academic planners present onboard and ground planning for real missions. It is the community this work most directly speaks to, and the venue the paper page already names.</p>
+  <div class="meta-row"><span>2027 edition: call not found</span><span>2025 format: 8 pp full / 4 pp extended abstract</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-warn">Edition unconfirmed</span><span class="badge b-ok">Highest topical fit</span></div>
+    <p><strong>No IWPSS 2027 call was found</strong> on 11 Oct 2026. The series has run roughly every two years (Prague 2023, Toulouse 2025), so a 2027 edition is plausible but <em>not confirmed</em>. Everything about format and timing below comes from the 2025 edition.</p>
+    <p><strong>Why it's worth waiting for:</strong> reviewers here built POISE, ASPEN/CASPER and the Starling autonomy. A 4-page extended abstract with Phase 2 results, presented to that room, is the fastest way to get the attention of the people who actually fly this kind of software.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>Planning, scheduling and execution for space missions: onboard autonomy, constellation and ground-station scheduling, observation planning, mission operations.</td></tr>
+    <tr><th>Format (2025)</th><td>Full papers up to 8 pages, or extended abstracts up to 4 pages, in AAAI style. <span class="unverified">2027 rules unverified.</span></td></tr>
+    <tr><th>Timing (2025)</th><td>Submissions were due in late January 2025 for a late-April workshop, often co-located with ICAPS or IJCAI. <span class="unverified">A 2027 edition, if it runs, would likely follow a similar pattern. That is an inference, not a published date.</span></td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://sites.google.com/view/iwpss">IWPSS series site</a> · <a href="https://sites.google.com/view/iwpss2025">IWPSS 2025</a></td></tr>
+  </table>
+  <aside class="note"><span class="tag">action</span>Watch the series site and the planning mailing lists from November 2026. If no 2027 call appears by January, the same paper fits the ICAPS 2027 workshops or the i-SAIRAS 2028 symposium.</aside>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract">
+    <p class="ttl">Deadline-Aware, Open-World Follow-Up Planning for Fading Transients with a Low-Earth-Orbit Constellation</p>
+    <p>Spacecraft follow-up of fast astronomical transients is usually planned by recipe: a fixed cadence of bands chosen for the class the transient is assumed to be. When early photometry cannot yet separate a kilonova from a shock-cooling supernova, an afterglow or a stellar flare, the recipe may spend the few hours in which the discriminating measurement exists on observations that tell the classes apart poorly. We present a follow-up planner that chooses, at each epoch, which spacecraft takes which measurement, by maximising expected discrimination between physical models, expected evidence that none of the models applies, and the information lost by deferring a measurement to its next feasible slot. Feasibility comes from SGP4-propagated real two-line elements with Earth-occlusion visibility. The planner is compared against a fixed-cadence recipe, a contract-net nearest-capable dispatcher reimplemented from an existing constellation simulator, classifier-entropy sampling and closed-world information gain, all under identical events, orbits and budgets. <span class="pending">Result sentence pending: Phase 2 test-seed outcome for H1–H3.</span></p>
+  </div>
+  <p class="wc"></p>
+
+  <h2>Paper plan (4-page extended abstract, AAAI style)</h2>
+  <ol class="outline">
+    <li><span class="t">Operational problem</span><span class="budget">0.6 p</span><span class="d">Mission-ops framing: alert in, campaign out, no ground in the loop. Why recipe-based follow-up wastes the window.</span></li>
+    <li><span class="t">Constellation and feasibility model</span><span class="budget">0.7 p</span><span class="d">This audience will scrutinise it. Covers real TLEs, SGP4, the Earth-occlusion visibility test from <code>research/orbitsim/geometry.py</code>, and the limiting-magnitude noise model. Be explicit about what is missing: slew, SAA, Sun avoidance and power are not modelled yet.</span></li>
+    <li><span class="t">Planner</span><span class="budget">0.9 p</span><span class="d">Eq. 3 with all three terms in operational language, plus the mode switch. B1 deserves a sentence: it reimplements the existing CNP dispatcher, so it is an honest baseline for current practice, not a strawman.</span></li>
+    <li><span class="t">Results</span><span class="budget">1.3 p</span><span class="d">One figure (time-to-identification by strategy) and one table (H1–H3), generated from <code>research/results/</code>.</span></li>
+    <li><span class="t">Toward onboard execution</span><span class="budget">0.5 p</span><span class="d">Decentralised auction and ESP32 testbed as next steps. Compute budget per decision, if measured.</span></li>
+  </ol>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Confirm that a 2027 edition exists and record its actual dates and format here.</li>
+    <li>Phase 2 test-seed results, preregistered.</li>
+    <li>Implement or explicitly scope out slew, Sun avoidance and SAA. This audience will ask.</li>
+    <li>Measure wall-clock per planning decision. Operations reviewers care about it.</li>
+  </ul>
+
+  <p class="foot"><a href="icaps.html">← ICAPS</a> · <a href="index.html">All venues</a> · Next: <a href="rasti.html">RASTI →</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

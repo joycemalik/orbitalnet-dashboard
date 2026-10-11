@@ -92,10 +92,10 @@ export function createMerger() {
   const jetMat = new THREE.ShaderMaterial({
     uniforms: { uA: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     vertexShader: `varying float vY; void main(){ vY = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);}`,
-    fragmentShader: `uniform float uA; varying float vY; void main(){ float a = pow(vY, 1.5) * uA; gl_FragColor = vec4(vec3(0.75,0.85,1.0)*a, 1.0);}`,
+    fragmentShader: `uniform float uA; varying float vY; void main(){ float a = pow(vY, 2.5) * uA; gl_FragColor = vec4(vec3(0.6,0.8,1.0)*a, 1.0);}`,
   });
   const jets = [1, -1].map(sg => {
-    const g = new THREE.CylinderGeometry(0.15, 2.4, 70, 32, 1, true).translate(0, -35, 0);
+    const g = new THREE.CylinderGeometry(0.05, 0.9, 80, 32, 1, true).translate(0, -40, 0);
     const m = new THREE.Mesh(g, jetMat); m.rotation.x = sg > 0 ? Math.PI : 0; group.add(m); return m;
   });
 
@@ -175,7 +175,7 @@ export function createMerger() {
     remnant.scale.setScalar(merged ? 9 + (sinceGrb > 0 ? 10 * Math.exp(-sinceGrb / 3) : 2 * Math.sin(t * 20)) : 1);
     const fl = sinceGrb > 0 ? Math.exp(-sinceGrb * 1.4) : 0;
     flash.material.opacity = fl * opacity; flash.scale.setScalar(20 + 160 * fl);
-    jetMat.uniforms.uA.value = sinceGrb > 0 ? Math.exp(-sinceGrb * 0.45) * 1.4 * opacity : 0;
+    jetMat.uniforms.uA.value = sinceGrb > 0 ? Math.exp(-sinceGrb * 0.7) * 2.4 * opacity : 0;
     jets.forEach(j => (j.visible = jetMat.uniforms.uA.value > 0.01));
     kU.uAge.value = sinceGrb > 0 ? sinceGrb * 1.4 + ageBoost : (ageBoost > 0 && !active ? ageBoost : -1);
     gridU.uMass.value = merged ? 1.25 : 1;

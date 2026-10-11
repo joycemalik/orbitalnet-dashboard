@@ -1,12 +1,20 @@
 # OrbitalNet · Differential Diagnosis for the Sky
 
-A scroll-driven 3D story about OrbitalNet: the GW170817 neutron-star merger, the
-10,109 real Starlink satellites in `../satellites.txt`, the CNP auction OrbitalNet
-runs today, and the open-world planner (with its explicit unknown, h₀) that the
-research in `../research/` is building.
+A scroll-driven, first-person 3D film about OrbitalNet, told in seven acts and
+sixteen shots: the GW170817 neutron-star merger, the light's 130-million-year
+crossing, a ride aboard one of the 10,109 real Starlink satellites in
+`../satellites.txt` as the source rises over Earth's limb, the CNP auction
+OrbitalNet runs today, and the open-world planner (with its explicit unknown, h₀)
+that the research in `../research/` is building.
 
-Built with Vite, Three.js (custom shaders + bloom) and Lenis. The music is
-synthesised live with Web Audio; there are no audio files.
+Built with Vite, Three.js (custom shaders, bloom, 3D holograms) and Lenis.
+The score (`src/score.js`) is synthesised live with Web Audio on a lookahead
+tempo grid: an additive pipe organ, a ticking clock, an organ ostinato, string
+and choir pads, brass braams, taiko hits, risers and a Shepard tone. There are
+no audio files.
+
+The storyboard lives in `src/main.js` (`SHOTS`): each shot sets the camera move,
+world state, subtitles and the music cue.
 
 ## Run
 
@@ -17,7 +25,7 @@ npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
 ```
 
-Deep links open a chapter directly: `/#ch0` … `/#ch8`.
+Deep links open a shot directly: `/#s0` … `/#s15`.
 
 ## Deploy on Vercel
 
@@ -33,6 +41,10 @@ Computed from data:
 - The beacon sits at NGC 4993's real position (RA 13h09m48s, Dec −23°23′). The gold/grey
   colouring is a real line-of-sight test from each satellite to that direction.
 - The 1.7 s gap between the gravitational-wave chirp and the gamma-ray flash.
+- In Act III you are a real satellite, chosen because NGC 4993 is rising over its
+  limb. Its altitude, speed, ground position, sunlight/eclipse state, time until
+  Earth blocks the source and time until it enters Earth's shadow are all
+  computed from its orbit.
 
 Illustrative, and labelled as such on the page:
 - The merger animation (timescale compressed), light-curve shapes, auction battery levels,

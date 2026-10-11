@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RNAAS Research Note</title>
+<meta name="description" content="Research Notes of the AAS: the credibility-track submission. A short, fully reproducible note on why keeping a 'none of the above' hypothesis matters more than planning with it.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>RNAAS</span></nav>
+  <p class="eyebrow">Credibility track · Astronomy · Moderated journal</p>
+  <h1>Research Notes of the AAS</h1>
+  <p class="lede">The American Astronomical Society's journal for short, timely results. It is moderated by an editor for appropriateness and format rather than peer-reviewed, publishes within days, is free, and gives every note a DOI and an ADS listing. This is the first publication for this project.</p>
+  <div class="meta-row"><span>Rolling · no deadline</span><span>≤ 1,500 words · 1 figure or table</span><span>Free · CC BY 4.0</span><span>Facts checked 12 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-ok">Note drafted, compiled, reproducible</span><span class="badge b-warn">Fill author details, then submit</span></div>
+    <p><strong>Why this is the near-certain one:</strong> RNAAS checks that a note is appropriate astronomy and properly formatted. It doesn't ask for novelty or completeness, and accepted notes are typically online within 72 hours. It still carries the AAS name, a DOI and an ADS entry, which is real, citable proof that the work exists.</p>
+    <p><strong>Honest caveat:</strong> moderation is not a rubber stamp. The editor can decline a note that reads as out of scope or as an unfounded theory. This note is a controlled experiment with public code and conservative claims, which is the kind RNAAS publishes.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Length</th><td>≤ 1,500 words including title, headers, captions and references. The required abstract is ≤ 150 words. Table contents don't count. One figure <em>or</em> one table, not both.</td></tr>
+    <tr><th>Review</th><td>Not peer-reviewed. Moderated by an editor for appropriateness and format, published as submitted with no copy-editing, typically within 72 hours of acceptance.</td></tr>
+    <tr><th>Cost and licence</th><td>No author charges. Gold open access, CC BY 4.0.</td></tr>
+    <tr><th>Indexing</th><td>DOI, indexed in NASA ADS. arXiv accepts RNAAS notes.</td></tr>
+    <tr><th>Format</th><td>AASTeX v7 (preferred), Word or Overleaf. No line numbers. Single authors write in the first person singular.</td></tr>
+    <tr><th>Submit at</th><td>aas.msubmit.net (Editorial Office).</td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://journals.aas.org/research-note-preparation-guidelines">RNAAS preparation guidelines</a> · <a href="https://journals.aas.org/research-notes/">Research Notes of the AAS</a></td></tr>
+  </table>
+
+  <h2>The note</h2>
+  <div class="abstract" data-limit="150">
+    <p class="ttl">Keeping a “None of the Above” Hypothesis Matters More Than Planning With It: A Controlled Test for Transient Follow-Up</p>
+    <p>Information-driven follow-up planners for astronomical transients usually assume the event belongs to one of a fixed set of classes. We test, in a controlled toy problem, what happens when it does not. Across <span data-r="rnaas.n_events"></span> simulated fading transients (<span data-r="rnaas.n_seeds"></span> seeds), a closed-world expected-information-gain planner was confidently wrong on <span data-r="rnaas.B3.cw_withheld" data-fmt="pct"></span> of events from a withheld class. Adding an explicit unmodeled hypothesis h₀, represented by a Gaussian process, to the posterior largely removes this failure. Choosing measurements with h₀ in the planning objective did not add a clear further benefit: randomly timed measurements scored with the same open-world posterior flagged <span data-r="rnaas.random_h0.flag_withheld" data-fmt="pct"></span> of withheld events, against <span data-r="rnaas.P.flag_withheld" data-fmt="pct"></span> for the open-world planner. Model-inadequacy detection therefore has to be designed into the planning objective explicitly, not expected as a by-product of information gain.</p>
+  </div>
+  <p class="wc"></p>
+  <p><a href="rnaas-note.pdf"><strong>Read the compiled draft (PDF) →</strong></a></p>
+
+  <h3>Results at a glance</h3>
+  <div class="table-scroll"><table class="compare">
+    <thead><tr><th>Measurements chosen by</th><th>Scored with</th><th>Confidently wrong (withheld)</th><th>Flagged h₀ (withheld)</th><th>AUROC of P(h₀)</th></tr></thead>
+    <tbody>
+      <tr><td>Random</td><td>closed-world</td><td><span data-r="rnaas.random.cw_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.random.flag_withheld" data-fmt="pct"></span></td><td>—</td></tr>
+      <tr><td>Random</td><td>open-world (post hoc)</td><td><span data-r="rnaas.random_h0.cw_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.random_h0.flag_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.random_h0.auroc_h0" data-fmt="f3"></span></td></tr>
+      <tr><td>Closed-world EIG</td><td>closed-world</td><td><span data-r="rnaas.B3.cw_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.B3.flag_withheld" data-fmt="pct"></span></td><td>—</td></tr>
+      <tr><td>Closed-world EIG</td><td>open-world (post hoc)</td><td><span data-r="rnaas.B3_h0.cw_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.B3_h0.flag_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.B3_h0.auroc_h0" data-fmt="f3"></span></td></tr>
+      <tr><td>Open-world EIG (P)</td><td>open-world</td><td><span data-r="rnaas.P.cw_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.P.flag_withheld" data-fmt="pct"></span></td><td><span data-r="rnaas.P.auroc_h0" data-fmt="f3"></span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">Source: research/results/rnaas_note/numbers.json, generated by research/figures/rnaas_note.py from research/results/phase1_full/ (seeds <span data-r="rnaas.seeds"></span>).</p>
+
+  <aside class="note"><span class="tag">what this means for the main paper</span>This result complicates hypothesis H3 as currently framed. Simply including h₀ in the planner's predictive mixture did not make it a better inadequacy detector than random timing. That is the argument for the explicit adequacy term β·I(Z; Y) and the preservation mode in the Phase 2 utility. Phase 2 has to show that <em>that</em> term closes the gap, and this note is the honest baseline it must beat.</aside>
+
+  <h2>Submission steps</h2>
+  <ul class="checklist">
+    <li class="done">Run the controlled experiment at full scale (3 seeds × 1,000 events) and generate every number from result files.</li>
+    <li class="done">Draft in AASTeX v7 within the limits: ≤150-word abstract, one table.</li>
+    <li>Replace the author placeholders in <code>research/papers/rnaas/note.tex</code>: name, ORCID, affiliation, email, any co-authors. Single-author notes should use “I”, not “we”.</li>
+    <li>Add a LICENSE file to the repository, tag a release, and mint a Zenodo DOI. Cite it in Code availability.</li>
+    <li>Rebuild: <code>python -m research.figures.rnaas_note</code>, then <code>bash research/papers/rnaas/build.sh</code>. Check the editorial word count.</li>
+    <li>Submit at aas.msubmit.net. After acceptance, post to arXiv (astro-ph.IM) and add the DOI to this site.</li>
+  </ul>
+
+  <p class="foot"><a href="index.html">← All venues</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+{
+  "configs": [
+    {
+      "seed": 1,
+      "n_events": 1000,
+      "tag": "full"
+    },
+    {
+      "seed": 2,
+      "n_events": 1000,
+      "tag": "full"
+    },
+    {
+      "seed": 3,
+      "n_events": 1000,
+      "tag": "full"
+    }
+  ],
+  "n_events_total": 3000,
+  "pooled": {
+    "random": {
+      "label": "Random times, closed-world posterior",
+      "n_modeled": 1974,
+      "n_withheld": 1026,
+      "acc_modeled": 0.9756838905775076,
+      "acc_modeled_ci": [
+        0.9679092205310885,
+        0.9816107683269831
+      ],
+      "cw_modeled": 0.00303951367781155,
+      "cw_modeled_ci": [
+        0.00139375804053874,
+        0.006615710468760396
+      ],
+      "cw_withheld": 0.9122807017543859,
+      "cw_withheld_ci": [
+        0.893397271655365,
+        0.9280883975261799
+      ],
+      "flag_withheld": 0.0,
+      "flag_withheld_ci": [
+        0.0,
+        0.0037301458862113875
+      ],
+      "auroc_h0": null
+    },
+    "random_h0": {
+      "label": "Random times, open-world posterior (post hoc)",
+      "n_modeled": 1974,
+      "n_withheld": 1026,
+      "acc_modeled": 0.9741641337386018,
+      "acc_modeled_ci": [
+        0.9661911423592892,
+        0.9802952363107375
+      ],
+      "cw_modeled": 0.0025329280648429585,
+      "cw_modeled_ci": [
+        0.001082385777110686,
+        0.005915879336173465
+      ],
+      "cw_withheld": 0.0594541910331384,
+      "cw_withheld_ci": [
+        0.046561744933340976,
+        0.07563323740694664
+      ],
+      "flag_withheld": 0.8898635477582846,
+      "flag_withheld_ci": [
+        0.8692339756157378,
+        0.9075846240831228
+      ],
+      "auroc_h0": 0.9710461141032249
+    },
+    "B3": {
+      "label": "Closed-world EIG, closed-world posterior",
+      "n_modeled": 1974,
+      "n_withheld": 1026,
+      "acc_modeled": 0.9949341438703141,
+      "acc_modeled_ci": [
+        0.9906997297798444,
+        0.9972459881267967
+      ],
+      "cw_modeled": 0.0010131712259371835,
+      "cw_modeled_ci": [
+        0.00027789207673854137,
+        0.003686762848500652
+      ],
+      "cw_withheld": 0.9990253411306043,
+      "cw_withheld_ci": [
+        0.994499879559675,
+        0.9998279280548666
+      ],
+      "flag_withheld": 0.0,
+      "flag_withheld_ci": [
+        0.0,
+        0.0037301458862113875
+      ],
+      "auroc_h0": null
+    },
+    "B3_h0": {
+      "label": "Closed-world EIG, open-world posterior (post hoc)",
+      "n_modeled": 1974,
+      "n_withheld": 1026,
+      "acc_modeled": 0.9924012158054711,
+      "acc_modeled_ci": [
+        0.9875000804164495,
+        0.9953896205101165
+      ],
+      "cw_modeled": 0.001519756838905775,
+      "cw_modeled_ci": [
+        0.0005169860885494526,
+        0.004458872232704726
+      ],
+      "cw_withheld": 0.28362573099415206,
+      "cw_withheld_ci": [
+        0.25689104162793575,
+        0.3119746355391967
+      ],
+      "flag_withheld": 0.665692007797271,
+      "flag_withheld_ci": [
+        0.636255353749658,
+        0.6938925511223577
+      ],
+      "auroc_h0": 0.8985737590627475
+    },
+    "P": {
+      "label": "Open-world EIG, open-world posterior",
+      "n_modeled": 1974,
+      "n_withheld": 1026,
+      "acc_modeled": 0.9929078014184397,
+      "acc_modeled_ci": [
+        0.9881302907286456,
+        0.9957706135939355
+      ],
+      "cw_modeled": 0.0025329280648429585,
+      "cw_modeled_ci": [
+        0.001082385777110686,
+        0.005915879336173465
+      ],
+      "cw_withheld": 0.2290448343079922,
+      "cw_withheld_ci": [
+        0.2043708527944412,
+        0.25574022041485067
+      ],
+      "flag_withheld": 0.723196881091618,
+      "flag_withheld_ci": [
+        0.6950256059610289,
+        0.7497030423665687
+      ],
+      "auroc_h0": 0.9359717260053206
+    }
+  },
+  "per_seed": {
+    "1": {
+      "random": {
+        "label": "Random times, closed-world posterior",
+        "n_modeled": 675,
+        "n_withheld": 325,
+        "acc_modeled": 0.9792592592592593,
+        "acc_modeled_ci": [
+          0.965488743711488,
+          0.9876056666773979
+        ],
+        "cw_modeled": 0.0,
+        "cw_modeled_ci": [
+          0.0,
+          0.005658845421177682
+        ],
+        "cw_withheld": 0.9261538461538461,
+        "cw_withheld_ci": [
+          0.8924748232492453,
+          0.9498763843580363
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.011681796128640447
+        ],
+        "auroc_h0": null
+      },
+      "random_h0": {
+        "label": "Random times, open-world posterior (post hoc)",
+        "n_modeled": 675,
+        "n_withheld": 325,
+        "acc_modeled": 0.9777777777777777,
+        "acc_modeled_ci": [
+          0.9636606299101392,
+          0.9864875844651798
+        ],
+        "cw_modeled": 0.0,
+        "cw_modeled_ci": [
+          0.0,
+          0.005658845421177682
+        ],
+        "cw_withheld": 0.04923076923076923,
+        "cw_withheld_ci": [
+          0.03052742508605739,
+          0.07846570188530153
+        ],
+        "flag_withheld": 0.9046153846153846,
+        "flag_withheld_ci": [
+          0.8677901350100132,
+          0.9319873653535793
+        ],
+        "auroc_h0": 0.9738347578347578
+      },
+      "B3": {
+        "label": "Closed-world EIG, closed-world posterior",
+        "n_modeled": 675,
+        "n_withheld": 325,
+        "acc_modeled": 0.9925925925925926,
+        "acc_modeled_ci": [
+          0.9827782059820079,
+          0.9968319685289798
+        ],
+        "cw_modeled": 0.0014814814814814814,
+        "cw_modeled_ci": [
+          0.0002615657428692566,
+          0.008343475691875307
+        ],
+        "cw_withheld": 1.0,
+        "cw_withheld_ci": [
+          0.9883182038713596,
+          1.0
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.011681796128640447
+        ],
+        "auroc_h0": null
+      },
+      "B3_h0": {
+        "label": "Closed-world EIG, open-world posterior (post hoc)",
+        "n_modeled": 675,
+        "n_withheld": 325,
+        "acc_modeled": 0.9896296296296296,
+        "acc_modeled_ci": [
+          0.9787500851685208,
+          0.9949676973153333
+        ],
+        "cw_modeled": 0.002962962962962963,
+        "cw_modeled_ci": [
+          0.0008129277225931248,
+          0.010738309725718317
+        ],
+        "cw_withheld": 0.27384615384615385,
+        "cw_withheld_ci": [
+          0.22821841351121233,
+          0.32475766043004967
+        ],
+        "flag_withheld": 0.6707692307692308,
+        "flag_withheld_ci": [
+          0.6179436148220532,
+          0.7196050640386267
+        ],
+        "auroc_h0": 0.8964239316239316
+      },
+      "P": {
+        "label": "Open-world EIG, open-world posterior",
+        "n_modeled": 675,
+        "n_withheld": 325,
+        "acc_modeled": 0.9911111111111112,
+        "acc_modeled_ci": [
+          0.9807440219409426,
+          0.9959199565564786
+        ],
+        "cw_modeled": 0.002962962962962963,
+        "cw_modeled_ci": [
+          0.0008129277225931248,
+          0.010738309725718317
+        ],
+        "cw_withheld": 0.20615384615384616,
+        "cw_withheld_ci": [
+          0.1657280785463062,
+          0.2534449154862179
+        ],
+        "flag_withheld": 0.7384615384615385,
+        "flag_withheld_ci": [
+          0.6880950389175389,
+          0.783256719851879
+        ],
+        "auroc_h0": 0.9444193732193732
+      }
+    },
+    "2": {
+      "random": {
+        "label": "Random times, closed-world posterior",
+        "n_modeled": 640,
+        "n_withheld": 360,
+        "acc_modeled": 0.98125,
+        "acc_modeled_ci": [
+          0.9675150106245838,
+          0.9892422647927654
+        ],
+        "cw_modeled": 0.003125,
+        "cw_modeled_ci": [
+          0.0008574064404012196,
+          0.011321770239088935
+        ],
+        "cw_withheld": 0.9138888888888889,
+        "cw_withheld_ci": [
+          0.8803647398089486,
+          0.9386733129634351
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.01055805705349616
+        ],
+        "auroc_h0": null
+      },
+      "random_h0": {
+        "label": "Random times, open-world posterior (post hoc)",
+        "n_modeled": 640,
+        "n_withheld": 360,
+        "acc_modeled": 0.9796875,
+        "acc_modeled_ci": [
+          0.9655594324522214,
+          0.9880914881748117
+        ],
+        "cw_modeled": 0.003125,
+        "cw_modeled_ci": [
+          0.0008574064404012196,
+          0.011321770239088935
+        ],
+        "cw_withheld": 0.07222222222222222,
+        "cw_withheld_ci": [
+          0.04975995890899819,
+          0.10371748990343742
+        ],
+        "flag_withheld": 0.8777777777777778,
+        "flag_withheld_ci": [
+          0.8398978964381357,
+          0.9076804604547782
+        ],
+        "auroc_h0": 0.9691710069444445
+      },
+      "B3": {
+        "label": "Closed-world EIG, closed-world posterior",
+        "n_modeled": 640,
+        "n_withheld": 360,
+        "acc_modeled": 0.9953125,
+        "acc_modeled_ci": [
+          0.9863098951015309,
+          0.998404573428663
+        ],
+        "cw_modeled": 0.0015625,
+        "cw_modeled_ci": [
+          0.0002758728825302467,
+          0.00879694900664384
+        ],
+        "cw_withheld": 1.0,
+        "cw_withheld_ci": [
+          0.9894419429465038,
+          1.0
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.01055805705349616
+        ],
+        "auroc_h0": null
+      },
+      "B3_h0": {
+        "label": "Closed-world EIG, open-world posterior (post hoc)",
+        "n_modeled": 640,
+        "n_withheld": 360,
+        "acc_modeled": 0.99375,
+        "acc_modeled_ci": [
+          0.984041222022601,
+          0.9975668917172767
+        ],
+        "cw_modeled": 0.0015625,
+        "cw_modeled_ci": [
+          0.0002758728825302467,
+          0.00879694900664384
+        ],
+        "cw_withheld": 0.275,
+        "cw_withheld_ci": [
+          0.23143368734382774,
+          0.3233174383302455
+        ],
+        "flag_withheld": 0.6833333333333333,
+        "flag_withheld_ci": [
+          0.6335605392119648,
+          0.7292348398684201
+        ],
+        "auroc_h0": 0.9149782986111111
+      },
+      "P": {
+        "label": "Open-world EIG, open-world posterior",
+        "n_modeled": 640,
+        "n_withheld": 360,
+        "acc_modeled": 0.9921875,
+        "acc_modeled_ci": [
+          0.9818432752691468,
+          0.9966584836804149
+        ],
+        "cw_modeled": 0.003125,
+        "cw_modeled_ci": [
+          0.0008574064404012196,
+          0.011321770239088935
+        ],
+        "cw_withheld": 0.24444444444444444,
+        "cw_withheld_ci": [
+          0.20290166050614775,
+          0.2913835686545281
+        ],
+        "flag_withheld": 0.7,
+        "flag_withheld_ci": [
+          0.6507539968568938,
+          0.7450227803217075
+        ],
+        "auroc_h0": 0.9257725694444444
+      }
+    },
+    "3": {
+      "random": {
+        "label": "Random times, closed-world posterior",
+        "n_modeled": 659,
+        "n_withheld": 341,
+        "acc_modeled": 0.9666160849772383,
+        "acc_modeled_ci": [
+          0.9499716617182556,
+          0.9778520158138653
+        ],
+        "cw_modeled": 0.006069802731411229,
+        "cw_modeled_ci": [
+          0.002362884851647139,
+          0.01550180771191294
+        ],
+        "cw_withheld": 0.8973607038123167,
+        "cw_withheld_ci": [
+          0.8605981781249585,
+          0.9252702057960298
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.011139782593885665
+        ],
+        "auroc_h0": null
+      },
+      "random_h0": {
+        "label": "Random times, open-world posterior (post hoc)",
+        "n_modeled": 659,
+        "n_withheld": 341,
+        "acc_modeled": 0.9650986342943855,
+        "acc_modeled_ci": [
+          0.9481738174893906,
+          0.9766325472702682
+        ],
+        "cw_modeled": 0.004552352048558422,
+        "cw_modeled_ci": [
+          0.0015493927721489083,
+          0.013297987018948989
+        ],
+        "cw_withheld": 0.05571847507331378,
+        "cw_withheld_ci": [
+          0.035957306796931945,
+          0.08537804254602219
+        ],
+        "flag_withheld": 0.8885630498533724,
+        "flag_withheld_ci": [
+          0.850741506880895,
+          0.9177275770270825
+        ],
+        "auroc_h0": 0.9702161365972615
+      },
+      "B3": {
+        "label": "Closed-world EIG, closed-world posterior",
+        "n_modeled": 659,
+        "n_withheld": 341,
+        "acc_modeled": 0.9969650986342944,
+        "acc_modeled_ci": [
+          0.9890026073177738,
+          0.9991673256635907
+        ],
+        "cw_modeled": 0.0,
+        "cw_modeled_ci": [
+          0.0,
+          0.0057954414737113515
+        ],
+        "cw_withheld": 0.9970674486803519,
+        "cw_withheld_ci": [
+          0.9835783057488691,
+          0.999482144986242
+        ],
+        "flag_withheld": 0.0,
+        "flag_withheld_ci": [
+          0.0,
+          0.011139782593885665
+        ],
+        "auroc_h0": null
+      },
+      "B3_h0": {
+        "label": "Closed-world EIG, open-world posterior (post hoc)",
+        "n_modeled": 659,
+        "n_withheld": 341,
+        "acc_modeled": 0.9939301972685888,
+        "acc_modeled_ci": [
+          0.9844981922880871,
+          0.997637115148353
+        ],
+        "cw_modeled": 0.0,
+        "cw_modeled_ci": [
+          0.0,
+          0.0057954414737113515
+        ],
+        "cw_withheld": 0.3020527859237537,
+        "cw_withheld_ci": [
+          0.255746877593203,
+          0.35276887211405383
+        ],
+        "flag_withheld": 0.6422287390029325,
+        "flag_withheld_ci": [
+          0.5900270607030274,
+          0.6912616228406474
+        ],
+        "auroc_h0": 0.883770397696679
+      },
+      "P": {
+        "label": "Open-world EIG, open-world posterior",
+        "n_modeled": 659,
+        "n_withheld": 341,
+        "acc_modeled": 0.9954476479514416,
+        "acc_modeled_ci": [
+          0.9867020129810511,
+          0.9984506072278512
+        ],
+        "cw_modeled": 0.0015174506828528073,
+        "cw_modeled_ci": [
+          0.00026791754404219357,
+          0.00854483670213134
+        ],
+        "cw_withheld": 0.23460410557184752,
+        "cw_withheld_ci": [
+          0.19273806504092159,
+          0.28238305123325247
+        ],
+        "flag_withheld": 0.7331378299120235,
+        "flag_withheld_ci": [
+          0.683783830082488,
+          0.7772976202622984
+        ],
+        "auroc_h0": 0.9386611723975276
+      }
+    }
+  },
+  "paired_flag_P_vs_B3h0": {
+    "P_only": 282,
+    "B3h0_only": 223,
+    "mcnemar_exact_p": 0.00978351460975264
+  }
+}

@@ -60,3 +60,11 @@ def is_target_visible(sat_pos_eci_km: np.ndarray, target_dir_eci: np.ndarray) ->
     """True iff Earth does not occult the fixed sky direction `target_dir_eci`
     as seen from the satellite at `sat_pos_eci_km`."""
     return visibility_margin_deg(sat_pos_eci_km, target_dir_eci) >= 0.0
+
+
+def radec_to_unit_eci(ra_deg: float, dec_deg: float) -> np.ndarray:
+    """Unit vector toward a real sky position. TEME (SGP4's output frame) is
+    treated as equatorial J2000; the < 0.5 deg precession difference over
+    2018-2026 is far below the visibility margins that matter here."""
+    ra, dec = np.radians(ra_deg), np.radians(dec_deg)
+    return np.array([np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)])

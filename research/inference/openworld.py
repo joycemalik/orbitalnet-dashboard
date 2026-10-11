@@ -103,3 +103,34 @@ def open_world_posterior(
     m = max(log_post.values())
     log_z = m + np.log(sum(np.exp(v - m) for v in log_post.values()))
     return {k: float(np.exp(v - log_z)) for k, v in log_post.items()}
+
+
+@dataclass
+class AmplitudeMarginalGP:
+    """Phase 3 h0 model. Real events span ~3 orders of magnitude in flux, so a
+    single fixed GP signal variance would make h0's evidence depend on
+    brightness rather than shape. This GP's signal std is marginalized over
+    the SAME amplitude grid (same uniform prior) the modeled classes
+    marginalize over, so h0 and the K classes are compared on equal footing.
+    `predict` (used for planning only) uses the evidence-maximizing amplitude."""
+
+    amplitude_grid: np.ndarray
+    lengthscale: float = 10.0
+    sigma_n: float = SIGMA0
+
+    def _gp(self, amp: float) -> SimpleGP:
+        return SimpleGP(lengthscale=self.lengthscale, var_f=float(amp) ** 2, sigma_n=self.sigma_n)
+
+    def _per_amp_lml(self, t, y, sigma_n_arr) -> np.ndarray:
+        return np.array([self._gp(a).log_marginal_likelihood(t, y, sigma_n_arr) for a in self.amplitude_grid])
+
+    def log_marginal_likelihood(self, t, y, sigma_n_arr=None) -> float:
+        lml = self._per_amp_lml(t, y, sigma_n_arr)
+        return float(np.logaddexp.reduce(lml) - np.log(len(lml)))
+
+    def predict(self, t_obs, y_obs, t_star, sigma_n_arr=None, candidate_sigma_n=None):
+        if len(t_obs) == 0:
+            best = float(np.exp(np.mean(np.log(self.amplitude_grid))))
+        else:
+            best = float(self.amplitude_grid[int(np.argmax(self._per_amp_lml(t_obs, y_obs, sigma_n_arr)))])
+        return self._gp(best).predict(t_obs, y_obs, t_star, sigma_n_arr, candidate_sigma_n)

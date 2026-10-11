@@ -60,3 +60,49 @@ def contact_fraction(schedule: ContactSchedule) -> float:
     """Fraction of (time, satellite) cells with visibility — used directly by
     the Phase 4 contact-fraction sweep."""
     return float(np.mean(schedule.visibility))
+
+
+def build_contact_schedule_historical(
+    fleets_by_epoch: list[tuple[datetime.datetime, dict[str, Satrec]]],
+    satellite_names: tuple[str, ...],
+    t0: datetime.datetime,
+    candidate_times_days: np.ndarray,
+    target_dir: np.ndarray,
+    max_tle_age_days: float,
+) -> tuple[ContactSchedule, np.ndarray]:
+    """Phase 3: real date, real sky direction, archived TLEs. For each
+    candidate time t0 + t, each satellite is propagated from the element set
+    whose epoch is nearest in time (from `fleets_by_epoch`, sorted by epoch).
+    Cells whose nearest TLE is older/newer than `max_tle_age_days`, or whose
+    satellite is absent from that file, are marked NOT visible rather than
+    propagated far outside SGP4's useful range. Returns (schedule, tle_age_days)."""
+    epochs = np.array([e.timestamp() for e, _ in fleets_by_epoch])
+    n_times, n_sats = len(candidate_times_days), len(satellite_names)
+    margin = np.full((n_times, n_sats), -180.0)
+    tle_age = np.full((n_times, n_sats), np.inf)
+
+    for i, t_days in enumerate(candidate_times_days):
+        dt = t0 + datetime.timedelta(days=float(t_days))
+        jd, fr = datetime_to_jd_fr(dt)
+        for j, name in enumerate(satellite_names):
+            # nearest-epoch file that actually contains this satellite
+            for k in np.argsort(np.abs(epochs - dt.timestamp())):
+                satrec = fleets_by_epoch[k][1].get(name)
+                if satrec is None:
+                    continue
+                age = abs(epochs[k] - dt.timestamp()) / 86400.0
+                if age <= max_tle_age_days:
+                    pos, _vel, err = propagate_eci_km(satrec, jd, fr)
+                    if err == 0:
+                        margin[i, j] = visibility_margin_deg(pos, target_dir)
+                        tle_age[i, j] = age
+                break
+
+    schedule = ContactSchedule(
+        satellite_names=satellite_names,
+        candidate_times_days=np.asarray(candidate_times_days, dtype=float),
+        visibility=margin >= 0.0,
+        margin_deg=margin,
+        target_dir_eci=target_dir,
+    )
+    return schedule, tle_age

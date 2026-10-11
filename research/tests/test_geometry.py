@@ -38,3 +38,14 @@ def test_perpendicular_direction_is_visible_for_leo():
     target_dir = np.array([1.0, 0.0, 0.0])
     margin = visibility_margin_deg(r_sat, target_dir)
     assert margin > 0
+
+
+def test_sun_direction_at_equinox_and_solstice():
+    from research.orbitsim.geometry import sun_unit_vector_eci
+    from research.orbitsim.tle import datetime_to_jd_fr
+    import datetime
+    jd, fr = datetime_to_jd_fr(datetime.datetime(2024, 3, 20, 3, 6))   # March equinox
+    assert sun_unit_vector_eci(jd + fr) == pytest.approx([1.0, 0.0, 0.0], abs=0.01)
+    jd, fr = datetime_to_jd_fr(datetime.datetime(2024, 6, 20, 20, 51))  # June solstice: dec = +23.44
+    v = sun_unit_vector_eci(jd + fr)
+    assert np.degrees(np.arcsin(v[2])) == pytest.approx(23.44, abs=0.05)

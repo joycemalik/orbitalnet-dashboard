@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 from sgp4.api import Satrec
 
-from research.orbitsim.geometry import random_sky_direction, visibility_margin_deg
+from research.orbitsim.geometry import random_sky_direction, sun_separation_deg, visibility_margin_deg
 from research.orbitsim.tle import datetime_to_jd_fr, propagate_eci_km
 
 REFERENCE_EPOCH = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
@@ -69,6 +69,7 @@ def build_contact_schedule_historical(
     candidate_times_days: np.ndarray,
     target_dir: np.ndarray,
     max_tle_age_days: float,
+    sun_exclusion_deg: float = 0.0,
 ) -> tuple[ContactSchedule, np.ndarray]:
     """Phase 3: real date, real sky direction, archived TLEs. For each
     candidate time t0 + t, each satellite is propagated from the element set
@@ -84,6 +85,8 @@ def build_contact_schedule_historical(
     for i, t_days in enumerate(candidate_times_days):
         dt = t0 + datetime.timedelta(days=float(t_days))
         jd, fr = datetime_to_jd_fr(dt)
+        if sun_exclusion_deg > 0 and sun_separation_deg(target_dir, jd + fr) < sun_exclusion_deg:
+            continue  # target too close to the Sun for every satellite at this time
         for j, name in enumerate(satellite_names):
             # nearest-epoch file that actually contains this satellite
             for k in np.argsort(np.abs(epochs - dt.timestamp())):

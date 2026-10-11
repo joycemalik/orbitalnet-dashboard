@@ -1,0 +1,58 @@
+{
+  "B0_fixed_cadence": {
+    "n_modeled": 347,
+    "n_withheld": 92,
+    "accuracy_modeled": 0.3746397694524496,
+    "accuracy_withheld": 0.0,
+    "confident_wrong_rate_modeled": 0.043227665706051875,
+    "confident_wrong_rate_withheld": 0.021739130434782608,
+    "mean_log_score": -4.066130965380523,
+    "mean_obs_used": 5.0
+  },
+  "B1_cnp_reimplementation": {
+    "n_modeled": 347,
+    "n_withheld": 92,
+    "accuracy_modeled": 0.45244956772334294,
+    "accuracy_withheld": 0.0,
+    "confident_wrong_rate_modeled": 0.2420749279538905,
+    "confident_wrong_rate_withheld": 0.4673913043478261,
+    "mean_log_score": -5.695722665674726,
+    "mean_obs_used": 5.0
+  },
+  "B2_classifier_entropy": {
+    "n_modeled": 347,
+    "n_withheld": 92,
+    "accuracy_modeled": 0.5360230547550432,
+    "accuracy_withheld": 0.0,
+    "confident_wrong_rate_modeled": 0.28530259365994237,
+    "confident_wrong_rate_withheld": 0.75,
+    "mean_log_score": -6.059004380616749,
+    "mean_obs_used": 5.0
+  },
+  "B3_closed_world_eig": {
+    "n_modeled": 347,
+    "n_withheld": 92,
+    "accuracy_modeled": 0.521613832853026,
+    "accuracy_withheld": 0.0,
+    "confident_wrong_rate_modeled": 0.3314121037463977,
+    "confident_wrong_rate_withheld": 0.7717391304347826,
+    "mean_log_score": -6.308713831798537,
+    "mean_obs_used": 5.0
+  },
+  "P_open_world_eig": {
+    "n_modeled": 347,
+    "n_withheld": 92,
+    "accuracy_modeled": 0.3314121037463977,
+    "accuracy_withheld": 0.6304347826086957,
+    "confident_wrong_rate_modeled": 0.37752161383285304,
+    "confident_wrong_rate_withheld": 0.08695652173913043,
+    "mean_log_score": -4.827815971925794,
+    "mean_obs_used": 5.0,
+    "auroc_p_h0_withheld_vs_modeled": 0.6433717579250721
+  },
+  "git_commit": "6ba1d6da0de72f312e24fddc917ef90ffa1a6411",
+  "config_hash": "22841514853cdeed",
+  "runtime_s": 2733.3,
+  "n_scored": 439,
+  "n_no_contact": 0
+}

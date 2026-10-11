@@ -27,6 +27,7 @@ from research.inference.openworld import SimpleGP
 from research.transients.noise import ZEROPOINT_MAG
 
 R_BAND_FID = 2
+G_BAND_FID = 1
 MIN_DETECTIONS = 8  # fewer points cannot pin down a light-curve shape
 TRUTH_GP_LENGTHSCALE = 8.0  # days; SN-scale evolution (vs 1.2 d for the fast synthetic classes)
 
@@ -57,6 +58,11 @@ class RealEvent:
     t_days: np.ndarray
     flux: np.ndarray
     flux_err: np.ndarray
+    # Phase 4 (colour): g-band detections on the SAME time axis (days since the
+    # first r detection, so g times can be negative). None when not loaded.
+    g_t_days: np.ndarray | None = None
+    g_flux: np.ndarray | None = None
+    g_flux_err: np.ndarray | None = None
 
     @property
     def is_withheld(self) -> bool:
@@ -70,6 +76,39 @@ class RealEvent:
         K = gp.kernel(self.t_days, self.t_days) + np.diag(self.flux_err ** 2)
         alpha = np.linalg.solve(K, self.flux)
         return gp.kernel(t, self.t_days) @ alpha
+
+    def truth_flux_g(self, t: np.ndarray) -> np.ndarray:
+        """Same GP construction as `truth_flux`, through the real g detections.
+        The signal scale is the r-band peak so both bands share one prior scale."""
+        gp = SimpleGP(lengthscale=TRUTH_GP_LENGTHSCALE, var_f=float(max(np.max(self.flux), np.max(self.g_flux)) ** 2))
+        t = np.asarray(t, dtype=float)
+        K = gp.kernel(self.g_t_days, self.g_t_days) + np.diag(self.g_flux_err ** 2)
+        alpha = np.linalg.solve(K, self.g_flux)
+        return gp.kernel(t, self.g_t_days) @ alpha
+
+    @property
+    def last_time_with_truth(self) -> float:
+        """Latest time both loaded bands still have real data (no extrapolation)."""
+        if self.g_t_days is None:
+            return float(self.t_days[-1])
+        return float(min(self.t_days[-1], self.g_t_days[-1]))
+
+
+def _band_detections(raw: dict, fid: int) -> list[dict]:
+    dets = [d for d in raw.get("detections", [])
+            if d.get("fid") == fid and d.get("isdiffpos", 1) in (1, "t")
+            and d.get("magpsf") is not None and d.get("sigmapsf") is not None]
+    dets.sort(key=lambda d: d["mjd"])
+    return dets
+
+
+def parse_g_band(raw: dict, t0_mjd: float) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    dets = _band_detections(raw, G_BAND_FID)
+    if len(dets) < MIN_DETECTIONS:
+        return None
+    mjd = np.array([d["mjd"] for d in dets])
+    flux = mag_to_flux([d["magpsf"] for d in dets])
+    return mjd - t0_mjd, flux, flux_err_from_mag_err(flux, [d["sigmapsf"] for d in dets])
 
 
 def parse_lightcurve(raw: dict) -> tuple[float, np.ndarray, np.ndarray, np.ndarray] | None:
@@ -85,8 +124,9 @@ def parse_lightcurve(raw: dict) -> tuple[float, np.ndarray, np.ndarray, np.ndarr
     return float(mjd[0]), mjd - mjd[0], flux, err
 
 
-def load_real_events(raw_dir: Path = RAW_DIR) -> tuple[list[RealEvent], dict[str, int]]:
-    """Returns (events, exclusion_counts). Exclusions are reported, never silent."""
+def load_real_events(raw_dir: Path = RAW_DIR, require_g: bool = False) -> tuple[list[RealEvent], dict[str, int]]:
+    """Returns (events, exclusion_counts). Exclusions are reported, never silent.
+    `require_g` (Phase 4) also loads g band and drops events with too few g points."""
     selection = json.loads((raw_dir / "selection.json").read_text())
     events: list[RealEvent] = []
     excluded = {"missing_download": 0, "too_few_r_detections": 0}
@@ -101,7 +141,13 @@ def load_real_events(raw_dir: Path = RAW_DIR) -> tuple[list[RealEvent], dict[str
             continue
         t0, t, f, e = parsed
         ra, dec = sexagesimal_to_deg(obj["ra"], obj["dec"])
-        events.append(RealEvent(obj["oid"], obj["cls"], obj["bts_type"], ra, dec, t0, t, f, e))
+        g = (None, None, None)
+        if require_g:
+            g = parse_g_band(json.loads(path.read_text()), t0)
+            if g is None:
+                excluded["too_few_g_detections"] = excluded.get("too_few_g_detections", 0) + 1
+                continue
+        events.append(RealEvent(obj["oid"], obj["cls"], obj["bts_type"], ra, dec, t0, t, f, e, *g))
     events.sort(key=lambda ev: (ev.t0_mjd, ev.oid))
     return events, excluded
 
@@ -135,6 +181,55 @@ def build_class_templates(events: list[RealEvent]) -> dict[str, np.ndarray]:
         med[last + 1:] = med[last]
         templates[cls] = np.clip(med / np.max(med), 0.0, None)
     return templates
+
+
+def build_class_templates_g(events: list[RealEvent]) -> dict[str, np.ndarray]:
+    """g-band companion to `build_class_templates`: each event's g truth curve
+    is divided by the peak of its R-band truth curve (not its own g peak), so
+    the template carries the class's g/r colour evolution, not just its shape.
+    Normalized so the class's r template peak is 1 (median g/r ratio kept)."""
+    templates: dict[str, np.ndarray] = {}
+    for cls in MODELED_CLASSES:
+        curves = []
+        for ev in events:
+            if ev.true_class != cls or ev.g_flux is None:
+                continue
+            r_peak = np.max(ev.truth_flux(TEMPLATE_GRID_DAYS))
+            f = ev.truth_flux_g(TEMPLATE_GRID_DAYS) / r_peak
+            f[(TEMPLATE_GRID_DAYS > ev.g_t_days[-1]) | (TEMPLATE_GRID_DAYS > ev.t_days[-1])] = np.nan
+            curves.append(f)
+        if not curves:
+            raise ValueError(f"no template-split g-band events for class {cls!r}")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            med = np.nanmedian(np.array(curves), axis=0)
+        covered = ~np.isnan(med)
+        last = np.flatnonzero(covered)[-1]
+        med[last + 1:] = med[last]
+        templates[cls] = np.clip(np.nan_to_num(med), 0.0, None)  # uncovered early grid -> 0
+    return templates
+
+
+# Phase 4 band encoding: a g-band measurement at time t is stored at
+# t + G_TIME_OFFSET_DAYS. Every flux function/GP then distinguishes bands by
+# time alone, so ClosedWorldBelief, the planners and the GP need no changes;
+# with GP lengthscales of days, the 1e4-day offset gives exactly zero r-g
+# covariance (bands independent given the shared amplitude).
+G_TIME_OFFSET_DAYS = 1.0e4
+
+
+def two_band_flux_fn_resolver(templates_r: dict[str, np.ndarray], templates_g: dict[str, np.ndarray]):
+    def resolve(cls: str):
+        r, g = templates_r[cls], templates_g[cls]
+
+        def f(t, amplitude):
+            t = np.asarray(t, dtype=float)
+            is_g = t >= G_TIME_OFFSET_DAYS / 2
+            vals = np.where(is_g, np.interp(t - G_TIME_OFFSET_DAYS, TEMPLATE_GRID_DAYS, g),
+                            np.interp(t, TEMPLATE_GRID_DAYS, r))
+            return amplitude * vals
+        return f
+    return resolve
 
 
 def template_flux_fn_resolver(templates: dict[str, np.ndarray]):
@@ -174,5 +269,5 @@ class StretchAmplitudeGrid:
         return resolve
 
 
-__all__ = ["StretchAmplitudeGrid", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
+__all__ = ["StretchAmplitudeGrid", "build_class_templates_g", "two_band_flux_fn_resolver", "G_TIME_OFFSET_DAYS", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
            "MODELED_CLASSES", "WITHHELD_CLASSES"]

@@ -12,6 +12,7 @@
     if (v == null){ el.textContent = 'not run'; el.className = 'pending'; return; }
     if (fmt === 'pct') v = (100*v).toFixed(1) + '%';
     else if (fmt === 'f3') v = Number(v).toFixed(3);
+    else if (fmt === 'g2') v = String(Number(Number(v).toPrecision(2)));
     el.textContent = v;
     el.classList.add('r');
   });

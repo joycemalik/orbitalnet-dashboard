@@ -1,0 +1,19 @@
+{
+  "name": "orbitalnet-story",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "data": "node scripts/build-sats.mjs"
+  },
+  "dependencies": {
+    "lenis": "1.1.13",
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "vite": "5.4.10"
+  }
+}

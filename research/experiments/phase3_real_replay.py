@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import subprocess
 import time
 from pathlib import Path
 
@@ -41,7 +42,10 @@ from research.planners.phase2 import MODE_SWITCH_TAU, STRATEGIES_P2, fixed_caden
 from research.transients.noise import assign_instruments, noise_sigma_from_limiting_magnitude
 from research.transients.real_events import (
     MODELED_CLASSES,
+    G_TIME_OFFSET_DAYS,
     RealEvent,
+    build_class_templates_g,
+    two_band_flux_fn_resolver,
     StretchAmplitudeGrid,
     build_class_templates,
     load_real_events,
@@ -79,7 +83,7 @@ def split_events(events: list[RealEvent]) -> dict[str, list[RealEvent]]:
     return {"template": template, "validation": scored[:half], "test": scored[half:]}
 
 
-def load_fleet_archive() -> tuple[list[tuple[datetime.datetime, dict]], tuple[str, ...], list[str]]:
+def load_fleet_archive(n_satellites: int = N_SATELLITES) -> tuple[list[tuple[datetime.datetime, dict]], tuple[str, ...], list[str]]:
     names_all = tuple(json.loads((TLE_DIR / "fleet.json").read_text()).keys())
     archive, empty = [], []
     for path in sorted(TLE_DIR.glob("*.tle")):
@@ -89,7 +93,7 @@ def load_fleet_archive() -> tuple[list[tuple[datetime.datetime, dict]], tuple[st
             continue
         epoch = datetime.datetime.fromisoformat(path.stem).replace(tzinfo=datetime.timezone.utc)
         archive.append((epoch, fleet))
-    return archive, names_all[:N_SATELLITES], empty
+    return archive, names_all[:n_satellites], empty
 
 
 def mjd_to_datetime(mjd: float) -> datetime.datetime:
@@ -97,14 +101,20 @@ def mjd_to_datetime(mjd: float) -> datetime.datetime:
 
 
 def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver,
-                  param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS) -> dict | None:
+                  param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS,
+                  budget: int = N_OBS_BUDGET, bands: str = "r", sun_exclusion_deg: float = 0.0) -> dict | None:
+    """bands="r": Phase 3 (one r-band flux per pointing). bands="gr": Phase 4,
+    each pointing returns simultaneous r AND g fluxes (dual-band imager); the
+    g value enters the belief/GP at t + G_TIME_OFFSET_DAYS. Planners still
+    score candidates on r-band predictions only (documented simplification),
+    so any gain is from the colour information in the measurements."""
     rng = np.random.default_rng(seed_seq)
     schedule, tle_age = build_contact_schedule_historical(
         archive, sat_names, mjd_to_datetime(ev.t0_mjd), CANDIDATE_TIMES_DAYS,
-        radec_to_unit_eci(ev.ra_deg, ev.dec_deg), MAX_TLE_AGE_DAYS)
+        radec_to_unit_eci(ev.ra_deg, ev.dec_deg), MAX_TLE_AGE_DAYS, sun_exclusion_deg)
     # No extrapolation of the real light curve: times after the last real
     # detection have no ground truth, so they are not offered to any strategy.
-    schedule.visibility &= (CANDIDATE_TIMES_DAYS <= ev.t_days[-1])[:, None]
+    schedule.visibility &= (CANDIDATE_TIMES_DAYS <= ev.last_time_with_truth)[:, None]
     if not schedule.visibility.any():
         return None
 
@@ -112,6 +122,10 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
     instrument_sigma = np.array([noise_sigma_from_limiting_magnitude(instruments[n]) for n in schedule.satellite_names])
     true_flux = ev.truth_flux(CANDIDATE_TIMES_DAYS)
     observed = true_flux[:, None] + rng.normal(size=schedule.visibility.shape) * instrument_sigma[None, :]
+    if bands == "gr":
+        # drawn AFTER the r noise, so the r values are identical to the r-only arm
+        true_flux_g = ev.truth_flux_g(CANDIDATE_TIMES_DAYS)
+        observed_g = true_flux_g[:, None] + rng.normal(size=schedule.visibility.shape) * instrument_sigma[None, :]
 
     per_strategy = {}
     for (name, planner_fn), child in zip(STRATEGIES_P2.items(), seed_seq.spawn(len(STRATEGIES_P2))):
@@ -123,7 +137,7 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
         is_ow = name == "P_open_world_eig"
         streak, switch_step = 0, None
 
-        for step in range(N_OBS_BUDGET):
+        for step in range(budget):
             if not remaining.any():
                 break
             fn = fixed_cadence_planner if (is_ow and switch_step is not None) else planner_fn
@@ -132,6 +146,10 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
             t, y, s = float(CANDIDATE_TIMES_DAYS[i]), float(observed[i, j]), float(instrument_sigma[j])
             t_obs.append(t); y_obs.append(y); s_obs.append(s)
             belief.update(t, y, s)
+            if bands == "gr":
+                yg = float(observed_g[i, j])
+                t_obs.append(t + G_TIME_OFFSET_DAYS); y_obs.append(yg); s_obs.append(s)
+                belief.update(t + G_TIME_OFFSET_DAYS, yg, s)
             post = (open_world_posterior(belief, np.array(t_obs), np.array(y_obs), gp, np.array(s_obs))
                     if is_ow else belief.class_posterior())
             history.append({"t": t, "sat": schedule.satellite_names[j], "sigma": s, "y": y,
@@ -146,7 +164,7 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
         correct = (decision == ev.true_class) if not ev.is_withheld else (is_ow and decision == "h0")
         confident = final[decision] >= CONFIDENT_THRESHOLD
         per_strategy[name] = {
-            "n_obs_used": len(t_obs), "decision": decision, "max_posterior": final[decision],
+            "n_obs_used": len(history), "decision": decision, "max_posterior": final[decision],
             "confident": bool(confident), "correct": bool(correct),
             "confident_wrong": bool(confident and not correct),
             "log_score": log_score(final, ev.true_class, MODELED_CLASSES),
@@ -196,19 +214,37 @@ def main() -> None:
     ap.add_argument("--stretch-range", type=float, nargs=2, default=DEFAULT_STRETCH_RANGE)
     ap.add_argument("--gp-lengthscale", type=float, default=H0_GP_LENGTHSCALE_DAYS)
     ap.add_argument("--tag", default="", help="suffix for the results directory (tuning variants)")
+    ap.add_argument("--bands", choices=("r", "gr"), default="r")
+    ap.add_argument("--require-g", action="store_true",
+                    help="restrict to events with enough g points (Phase 4 event set, also for its r-only arm)")
+    ap.add_argument("--budget", type=int, default=N_OBS_BUDGET)
+    ap.add_argument("--n-satellites", type=int, default=N_SATELLITES)
+    ap.add_argument("--results-dir", default=str(RESULTS_DIR))
+    ap.add_argument("--sun-exclusion-deg", type=float, default=0.0, help="0 = off (Phase 3 default)")
     args = ap.parse_args()
     if args.split == "test" and not (REPO_ROOT / "research" / "PREREGISTRATION.md").exists():
         raise SystemExit("Test split is locked until research/PREREGISTRATION.md is committed.")
 
     t_start = time.time()
-    events, load_exclusions = load_real_events()
+    # Provenance for runs launched from an uncommitted tree: snapshot the exact
+    # diff and commit at START (code may be edited while a long run is going).
+    diff = subprocess.run(["git", "diff", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True).stdout
+    commit_at_start = git_commit_hash()
+    if args.bands == "gr":
+        args.require_g = True
+    events, load_exclusions = load_real_events(require_g=args.require_g)
     splits = split_events(events)
     templates = build_class_templates(splits["template"])
-    archive, sat_names, empty_tle_weeks = load_fleet_archive()
+    archive, sat_names, empty_tle_weeks = load_fleet_archive(args.n_satellites)
     lo, hi = args.stretch_range
     if lo == hi == 1.0:
         param_grid, resolver = AMPLITUDE_GRID, template_flux_fn_resolver(templates)
+        if args.bands == "gr":
+            templates_g = build_class_templates_g(splits["template"])
+            resolver = two_band_flux_fn_resolver(templates, templates_g)
     else:
+        if args.bands == "gr":
+            raise SystemExit("stretch + two-band is not implemented")
         grid = StretchAmplitudeGrid(TEMPLATE_AMPLITUDE_GRID, np.exp(np.linspace(np.log(lo), np.log(hi), N_STRETCH)))
         param_grid, resolver = grid.params, grid.resolver(templates)
 
@@ -216,7 +252,8 @@ def main() -> None:
     seeds = np.random.SeedSequence(args.seed).spawn(len(chosen))
     records, no_contact = [], []
     for k, (ev, ss) in enumerate(zip(chosen, seeds)):
-        rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale)
+        rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale,
+                            args.budget, args.bands, args.sun_exclusion_deg)
         if rec is None:
             no_contact.append(ev.oid)
         else:
@@ -226,7 +263,7 @@ def main() -> None:
 
     config = {
         "split": args.split, "seed": args.seed, "n_events_requested": args.n_events,
-        "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": N_OBS_BUDGET,
+        "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": args.budget, "bands": args.bands, "require_g": args.require_g, "sun_exclusion_deg": args.sun_exclusion_deg,
         "satellites": list(sat_names), "limiting_magnitudes": LIMITING_MAGNITUDE_CHOICES,
         "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": args.gp_lengthscale,
         "stretch_range": list(args.stretch_range), "n_stretch": N_STRETCH if args.stretch_range[0] != args.stretch_range[1] else 1,
@@ -235,13 +272,18 @@ def main() -> None:
         "split_sizes": {k: len(v) for k, v in splits.items()},
         "split_date_ranges_mjd": {k: [v[0].t0_mjd, v[-1].t0_mjd] for k, v in splits.items() if v},
     }
-    out_dir = RESULTS_DIR / f"{args.split}_seed{args.seed}{'_' + args.tag if args.tag else ''}"
+    out_dir = Path(args.results_dir) / f"{args.split}_seed{args.seed}{'_' + args.tag if args.tag else ''}"
     out_dir.mkdir(parents=True, exist_ok=True)
-    provenance = {"git_commit": git_commit_hash(), "config_hash": config_hash(config),
+    provenance = {"git_commit": commit_at_start, "config_hash": config_hash(config),
                   "runtime_s": round(time.time() - t_start, 1)}
+    if diff:
+        provenance["git_dirty"] = True
+        (out_dir / "git_diff.patch").write_text(diff, encoding="utf-8")
     atomic_write_json(out_dir / "config.json", {**config, **provenance})
     atomic_write_json(out_dir / "templates.json", {"grid_days": np.linspace(0.0, 90.0, 181).tolist(),
-                                                   **{c: v.tolist() for c, v in templates.items()}})
+                                                   **{c: v.tolist() for c, v in templates.items()},
+                                                   **({f"{c}_g": v.tolist() for c, v in templates_g.items()}
+                                                      if args.bands == "gr" else {})})
     atomic_write_json(out_dir / "exclusions.json", {
         "loader": load_exclusions, "no_feasible_contact": no_contact, "empty_tle_weeks": empty_tle_weeks})
     with open(out_dir / "events.jsonl", "w", encoding="utf-8") as f:

@@ -3,6 +3,77 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 3 — PREREGISTERED TEST RESULT (2026-10-12)
+
+Run exactly as frozen in PREREGISTRATION.md (commit 6ba1d6d, recorded in
+every test config.json): test split, 439 real events (347 SNe, 92 real
+unmodeled: TDE/SLSN/Ibn), noise seeds 1-3. Analysis:
+`results/phase3/analysis_test.json` (stratified paired bootstrap, 10k).
+
+| | seed 1 | seed 2 | seed 3 | verdict |
+|---|---|---|---|---|
+| H1: P - B3 confident-wrong, unmodeled | -0.543 [-0.652, -0.435] | -0.685 [-0.783, -0.587] | -0.576 [-0.685, -0.457] | **PASS** |
+| H2: AUROC of P(h0) | 0.625 [0.560, 0.687] | 0.643 [0.580, 0.704] | 0.641 [0.578, 0.701] | **PASS** |
+| H3: P - B3 confident-wrong, SNe (< +0.05) | +0.043 [-0.017, 0.104] | +0.046 [-0.014, 0.107] | +0.000 [-0.061, 0.061] | **FAIL** |
+
+Reported (seed 1 / 2 / 3):
+- Confident-wrong on real unmodeled events: B3 0.717/0.772/0.750,
+  B1 (live-stack CNP auction) 0.391/0.467/0.402, **P 0.174/0.087/0.174**.
+  P - B1: -0.217/-0.380/-0.228, all CIs below 0.
+- P identifies unmodeled events as h0: 0.554/0.630/0.587 (baselines: 0 by construction).
+- Cost: P calls 41%/41%/36% of ordinary SNe "unknown" (validation: 29% —
+  worse on test). SN accuracy P 0.31-0.35 vs B3 0.50-0.52 (chance 0.33).
+
+What this means:
+- The headline survives a sealed test: on real data, closed-world planners
+  are confidently wrong about ~3/4 of genuinely unmodeled transients; the
+  open-world planner cuts that ~4-9x and flags ~60% of them as unknown.
+- H3 failed: we cannot claim P is no worse on ordinary SNe; the CI allows
+  up to ~10 points more confident errors. Combined with a ~40% false
+  "unknown" rate and SN accuracy at chance, P on single-band data buys
+  safety on unknowns by giving up classification of knowns. That is the
+  honest trade-off, and the reason for Phase 4 (colour).
+- Caveat on the metric: B0 (fixed cadence) is almost never confident, so
+  its confident-wrong rate is ~2% — low confident-wrong alone is not
+  success; P's case rests on H1 *together with* actually flagging h0.
+
+## Phase 4 — colour: two-band (g+r) replay (2026-10-12)
+
+Motivation: Phase 3 validation showed P can barely rank real unmodeled
+events above ordinary SNe (AUROC ~0.59) from 5 single-band points, and SN
+Ia vs Ibc are confused — exactly the cases astronomers separate with
+colour. Hypothesis: giving every pointing a simultaneous g and r flux
+(a dual-band imager) lets the open-world planner separate the classes.
+
+### Design (written BEFORE any Phase 4 run was seen)
+- Event set: Phase 3 events that ALSO have >= 8 g-band detections
+  (1,121 usable; split 394 template / 363 validation / 364 test). Both arms
+  below use this same event set, so the comparison is paired.
+- g templates: each template-split event's g truth curve divided by its
+  r-band PEAK, median per class — keeps the class colour evolution.
+- Each pointing returns r and g at once (same instrument noise per band);
+  the g value enters belief/GP at t + 1e4 d (zero cross-band GP covariance,
+  shared amplitude). Planners still score candidates on r-band predictions
+  only — colour enters through the measurements, not the choice.
+- g-band noise is drawn after r noise, so the r values are bit-identical
+  between arms (tested).
+- Arms: r@5 (Phase 3 config on this event set), gr@5 (same pointings,
+  colour added), r@10 (same NUMBER of fluxes as gr@5 — controls for "it's
+  just more data").
+
+### Validation tuning protocol (fixed now)
+Validation split, seed 1. gr@5 with h0 GP lengthscale in {5, 10, 20} d;
+r@5 and r@10 at the frozen Phase 3 lengthscale (5 d). Selection rule for
+the gr config: same as Phase 3 (max P AUROC; ties within 0.01 -> lower P
+confident-wrong on modeled). Then PREREGISTRATION_PHASE4.md, then test.
+
+### Declared test-set reuse
+The Phase 4 test events are a subset of the Phase 3 test events. Phase 4
+was designed while the Phase 3 test run was still in progress (before its
+numbers were seen), but Phase 3 test results WILL be seen before Phase 4's
+test run, so Phase 4 is a second look at those events. Its config was chosen on validation only, and
+this reuse must be stated wherever Phase 4 test numbers are reported.
+
 ## Phase 3 — real-data counterfactual replay: infrastructure (2026-10-11)
 
 Status: pipeline built and tested; NO results yet. Raw data download is

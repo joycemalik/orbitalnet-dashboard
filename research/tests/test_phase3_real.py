@@ -147,3 +147,48 @@ def test_stretch_grid_decodes_amplitude_and_stretch():
     assert f(t, np.full(3, 3.0)) == pytest.approx(base(t / 2.0, 3.0))    # A=3, s=2
     # broadcasting used by the planners: (n_t, 1) x (1, n_params)
     assert f(t[:, None], g.params[None, :]).shape == (3, 4)
+
+
+def _event_gr(oid, cls, t0_mjd, colour=0.6, **kw):
+    ev = _event(oid, cls, t0_mjd, **kw)
+    import dataclasses
+    return dataclasses.replace(ev, g_t_days=ev.t_days.copy(), g_flux=colour * ev.flux, g_flux_err=colour * ev.flux_err)
+
+
+def test_g_template_keeps_colour_relative_to_r_peak():
+    from research.transients.real_events import build_class_templates_g
+    events = [_event_gr(f"{c}{i}", c, 58000.0, colour=col, tau=t)
+              for c, t, col in (("sn_ia", 8, 0.9), ("sn_ii", 60, 0.5), ("sn_ibc", 20, 0.3)) for i in range(2)]
+    tg, tr = build_class_templates_g(events), build_class_templates(events)
+    i = int(np.argmax(tr["sn_ii"]))
+    assert tg["sn_ii"][i] == pytest.approx(0.5, abs=0.05)
+    assert tg["sn_ibc"][i] == pytest.approx(0.3, abs=0.05)
+
+
+def test_two_band_resolver_routes_by_time_offset():
+    from research.transients.real_events import G_TIME_OFFSET_DAYS, build_class_templates_g, two_band_flux_fn_resolver
+    events = [_event_gr(f"{c}{i}", c, 58000.0, colour=0.5, tau=t)
+              for c, t in (("sn_ia", 8), ("sn_ii", 60), ("sn_ibc", 20)) for i in range(2)]
+    tr, tg = build_class_templates(events), build_class_templates_g(events)
+    f = two_band_flux_fn_resolver(tr, tg)("sn_ia")
+    r = template_flux_fn_resolver(tr)("sn_ia")
+    assert f(np.array([12.0]), 2.0) == pytest.approx(r(np.array([12.0]), 2.0))
+    assert f(np.array([12.0 + G_TIME_OFFSET_DAYS]), 2.0) == pytest.approx(0.5 * r(np.array([12.0]), 2.0), rel=0.05)
+    # the offset gives zero GP covariance between bands
+    assert SimpleGP(lengthscale=20.0).kernel(np.array([0.0]), np.array([G_TIME_OFFSET_DAYS]))[0, 0] == 0.0
+
+
+def test_two_band_arm_sees_same_r_values_as_r_arm(monkeypatch):
+    from research.transients.real_events import build_class_templates_g, two_band_flux_fn_resolver
+    archive, names, epoch = _archive_from_repo_tles(n=8)
+    mjd = (epoch - datetime.datetime(1858, 11, 17, tzinfo=datetime.timezone.utc)).total_seconds() / 86400.0
+    monkeypatch.setattr(p3, "MAX_TLE_AGE_DAYS", 1e9)
+    tev = [_event_gr(f"{c}{i}", c, 58000.0, tau=t) for c, t in (("sn_ia", 8), ("sn_ii", 60), ("sn_ibc", 20)) for i in range(2)]
+    tr, tg = build_class_templates(tev), build_class_templates_g(tev)
+    ev = _event_gr("z", "sn_ii", mjd)
+    r_rec = p3.run_one_event(ev, np.random.SeedSequence(3), archive, names, template_flux_fn_resolver(tr), bands="r")
+    gr_rec = p3.run_one_event(ev, np.random.SeedSequence(3), archive, names, two_band_flux_fn_resolver(tr, tg), bands="gr")
+    # B0 is data-independent, so it picks the same cells in both arms: r values must match exactly
+    h_r = r_rec["strategies"]["B0_fixed_cadence"]["history"]
+    h_gr = gr_rec["strategies"]["B0_fixed_cadence"]["history"]
+    assert [(h["t"], h["sat"], h["y"]) for h in h_r] == [(h["t"], h["sat"], h["y"]) for h in h_gr]

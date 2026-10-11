@@ -68,3 +68,18 @@ def radec_to_unit_eci(ra_deg: float, dec_deg: float) -> np.ndarray:
     2018-2026 is far below the visibility margins that matter here."""
     ra, dec = np.radians(ra_deg), np.radians(dec_deg)
     return np.array([np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)])
+
+
+def sun_unit_vector_eci(jd_plus_fr: float) -> np.ndarray:
+    """Low-precision Sun direction (Astronomical Almanac, ~0.01 deg; plenty for
+    a tens-of-degrees exclusion cone), equatorial frame."""
+    n = jd_plus_fr - 2451545.0
+    L = np.radians((280.460 + 0.9856474 * n) % 360.0)
+    g = np.radians((357.528 + 0.9856003 * n) % 360.0)
+    lam = L + np.radians(1.915) * np.sin(g) + np.radians(0.020) * np.sin(2 * g)
+    eps = np.radians(23.439 - 4.0e-7 * n)
+    return np.array([np.cos(lam), np.cos(eps) * np.sin(lam), np.sin(eps) * np.sin(lam)])
+
+
+def sun_separation_deg(target_dir_eci: np.ndarray, jd_plus_fr: float) -> float:
+    return float(np.degrees(np.arccos(np.clip(np.dot(target_dir_eci, sun_unit_vector_eci(jd_plus_fr)), -1.0, 1.0))))

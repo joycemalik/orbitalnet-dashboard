@@ -58,10 +58,30 @@ def phase3() -> dict | None:
     runs = sorted((RESULTS_DIR / "phase3").glob("*/summary.json")) if (RESULTS_DIR / "phase3").exists() else []
     if not runs:
         return None
-    return {
+    out = {
         "n_runs": len(runs),
         "n_scored_total": sum((_read_json(p) or {}).get("n_scored", 0) or 0 for p in runs),
     }
+    # Preregistered test outcome (research/PREREGISTRATION.md), if it exists.
+    for key, fname in (("test", "analysis_test.json"), ("phase4_test", "analysis_phase4_test.json")):
+        a = _read_json(RESULTS_DIR / "phase3" / fname)
+        if a is None:
+            continue
+        r0 = a["runs"][0]
+        out[key] = {
+            "overall_pass": a["overall_pass_all_seeds"],
+            "n_seeds": len(a["runs"]), "n_events": r0["n_events"],
+            "n_withheld": r0["n_withheld"], "n_modeled": r0["n_modeled"],
+            "seeds": [{
+                "H1": r["H1_P_vs_B3_confident_wrong_withheld"], "H2": r["H2_auroc_p_h0"],
+                "H3": r["H3_P_vs_B3_confident_wrong_modeled"],
+                "cw_withheld": r["reported"]["confident_wrong_withheld"],
+                "cw_modeled": r["reported"]["confident_wrong_modeled"],
+                "acc_modeled": r["reported"]["accuracy_modeled"],
+                "h0_false_alarm": r["reported"]["P_h0_false_alarm_modeled"],
+            } for r in a["runs"]],
+        }
+    return out
 
 
 def rnaas() -> dict | None:

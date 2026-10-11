@@ -96,14 +96,10 @@ def classifier_entropy_planner(rng: np.random.Generator, schedule: ContactSchedu
     in for a real classifier's predicted-class-entropy signal, which this
     project does not otherwise have a trained classifier to compute."""
     cells = _feasible_cells(remaining_mask)
-    amp_est = _per_class_posterior_mean_amplitude(belief)
     t_cands = schedule.candidate_times_days[cells[:, 0]]
     sigma_cands = instrument_sigma[cells[:, 1]]
 
-    means = np.stack([
-        belief.flux_fn_resolver(cls)(t_cands, np.full_like(t_cands, amp_est[k]))
-        for k, cls in enumerate(belief.classes)
-    ], axis=1)  # (n_cells, n_classes)
+    means = _per_class_posterior_mean_flux(belief, t_cands)  # (n_cells, n_classes)
     disagreement = np.var(means, axis=1) / (sigma_cands ** 2 + 1e-12)
     best = int(np.argmax(disagreement))
     return int(cells[best, 0]), int(cells[best, 1])
@@ -147,6 +143,22 @@ def _per_class_posterior_mean_amplitude(belief: ClosedWorldBelief) -> np.ndarray
     return out
 
 
+def _per_class_posterior_mean_flux(belief: ClosedWorldBelief, t: np.ndarray) -> np.ndarray:
+    """(n_t, n_classes) posterior-mean predicted flux per class, averaging
+    over that class's nuisance grid. For models linear in amplitude (all of
+    Phase 2's) this equals f(t, posterior-mean amplitude) exactly; it stays
+    correct when the nuisance grid also carries a non-linear parameter
+    (Phase 3's template stretch)."""
+    out = np.empty((len(t), len(belief.classes)))
+    for i, cls in enumerate(belief.classes):
+        row = belief.log_joint[i]
+        p = np.exp(row - np.max(row))
+        p = p / p.sum()
+        means = belief.flux_fn_resolver(cls)(np.asarray(t, dtype=float)[:, None], belief.amplitude_grid[None, :])
+        out[:, i] = means @ p
+    return out
+
+
 def _next_visible_index(visibility: np.ndarray) -> np.ndarray:
     """For each (time_idx, sat_idx) cell, the smallest LATER time_idx where
     that satellite is visible again, or -1 if there is none."""
@@ -167,21 +179,14 @@ def _decay_term_batch(belief: ClosedWorldBelief, schedule: ContactSchedule, inst
     feasible slot for the same satellite (see module docstring)."""
     class_post = belief.class_posterior()
     b = np.array([class_post[c] for c in belief.classes])
-    amp_est = _per_class_posterior_mean_amplitude(belief)
 
     next_idx = _next_visible_index(schedule.visibility)
     next_i = next_idx[cells[:, 0], cells[:, 1]]
     has_next = next_i >= 0
     t_next = np.where(has_next, schedule.candidate_times_days[np.clip(next_i, 0, None)], 0.0)
 
-    means_now = np.stack([
-        belief.flux_fn_resolver(cls)(t_cands, np.full_like(t_cands, amp_est[k]))
-        for k, cls in enumerate(belief.classes)
-    ], axis=1)  # (n_cells, n_classes)
-    means_next = np.stack([
-        belief.flux_fn_resolver(cls)(t_next, np.full_like(t_next, amp_est[k]))
-        for k, cls in enumerate(belief.classes)
-    ], axis=1)
+    means_now = _per_class_posterior_mean_flux(belief, t_cands)  # (n_cells, n_classes)
+    means_next = _per_class_posterior_mean_flux(belief, t_next)
 
     snr_now2 = (means_now / sigma_cands[:, None]) ** 2
     snr_next2 = np.where(has_next[:, None], (means_next / sigma_cands[:, None]) ** 2, 0.0)

@@ -42,6 +42,7 @@ from research.transients.noise import assign_instruments, noise_sigma_from_limit
 from research.transients.real_events import (
     MODELED_CLASSES,
     RealEvent,
+    StretchAmplitudeGrid,
     build_class_templates,
     load_real_events,
     template_flux_fn_resolver,
@@ -58,7 +59,11 @@ N_OBS_BUDGET = 5
 N_SATELLITES = 8                  # same as Phase 2's nominal scenario
 LIMITING_MAGNITUDE_CHOICES = (19.0, 20.0, 21.0)
 AMPLITUDE_GRID = np.exp(np.linspace(np.log(0.5), np.log(200.0), 25))  # covers 1st-99th pct peak flux
-H0_GP_LENGTHSCALE_DAYS = 10.0     # tunable on validation only
+# Validation-tunable (see research/LOG.md Phase 3 tuning protocol):
+H0_GP_LENGTHSCALE_DAYS = 10.0
+TEMPLATE_AMPLITUDE_GRID = np.exp(np.linspace(np.log(0.5), np.log(200.0), 15))
+DEFAULT_STRETCH_RANGE = (1.0, 1.0)  # (1, 1) = no stretch = the first validation run
+N_STRETCH = 7
 MAX_TLE_AGE_DAYS = 7.0
 CONFIDENT_THRESHOLD = 0.95
 SPLITS = ("template", "validation", "test")
@@ -91,7 +96,8 @@ def mjd_to_datetime(mjd: float) -> datetime.datetime:
     return datetime.datetime(1858, 11, 17, tzinfo=datetime.timezone.utc) + datetime.timedelta(days=mjd)
 
 
-def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver) -> dict | None:
+def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver,
+                  param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS) -> dict | None:
     rng = np.random.default_rng(seed_seq)
     schedule, tle_age = build_contact_schedule_historical(
         archive, sat_names, mjd_to_datetime(ev.t0_mjd), CANDIDATE_TIMES_DAYS,
@@ -109,8 +115,8 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
 
     per_strategy = {}
     for (name, planner_fn), child in zip(STRATEGIES_P2.items(), seed_seq.spawn(len(STRATEGIES_P2))):
-        belief = ClosedWorldBelief.with_uniform_prior(MODELED_CLASSES, AMPLITUDE_GRID, flux_resolver)
-        gp = AmplitudeMarginalGP(AMPLITUDE_GRID, lengthscale=H0_GP_LENGTHSCALE_DAYS)
+        belief = ClosedWorldBelief.with_uniform_prior(MODELED_CLASSES, param_grid, flux_resolver)
+        gp = AmplitudeMarginalGP(AMPLITUDE_GRID, lengthscale=gp_lengthscale)
         remaining = schedule.visibility.copy()
         t_obs, y_obs, s_obs, history = [], [], [], []
         planner_rng = np.random.default_rng(child)
@@ -187,6 +193,9 @@ def main() -> None:
     ap.add_argument("--split", choices=("validation", "test"), default="validation")
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--n-events", type=int, required=True, help="first N events of the split (chronological)")
+    ap.add_argument("--stretch-range", type=float, nargs=2, default=DEFAULT_STRETCH_RANGE)
+    ap.add_argument("--gp-lengthscale", type=float, default=H0_GP_LENGTHSCALE_DAYS)
+    ap.add_argument("--tag", default="", help="suffix for the results directory (tuning variants)")
     args = ap.parse_args()
     if args.split == "test" and not (REPO_ROOT / "research" / "PREREGISTRATION.md").exists():
         raise SystemExit("Test split is locked until research/PREREGISTRATION.md is committed.")
@@ -195,14 +204,19 @@ def main() -> None:
     events, load_exclusions = load_real_events()
     splits = split_events(events)
     templates = build_class_templates(splits["template"])
-    resolver = template_flux_fn_resolver(templates)
     archive, sat_names, empty_tle_weeks = load_fleet_archive()
+    lo, hi = args.stretch_range
+    if lo == hi == 1.0:
+        param_grid, resolver = AMPLITUDE_GRID, template_flux_fn_resolver(templates)
+    else:
+        grid = StretchAmplitudeGrid(TEMPLATE_AMPLITUDE_GRID, np.exp(np.linspace(np.log(lo), np.log(hi), N_STRETCH)))
+        param_grid, resolver = grid.params, grid.resolver(templates)
 
     chosen = splits[args.split][: args.n_events]
     seeds = np.random.SeedSequence(args.seed).spawn(len(chosen))
     records, no_contact = [], []
     for k, (ev, ss) in enumerate(zip(chosen, seeds)):
-        rec = run_one_event(ev, ss, archive, sat_names, resolver)
+        rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale)
         if rec is None:
             no_contact.append(ev.oid)
         else:
@@ -214,12 +228,14 @@ def main() -> None:
         "split": args.split, "seed": args.seed, "n_events_requested": args.n_events,
         "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": N_OBS_BUDGET,
         "satellites": list(sat_names), "limiting_magnitudes": LIMITING_MAGNITUDE_CHOICES,
-        "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": H0_GP_LENGTHSCALE_DAYS,
+        "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": args.gp_lengthscale,
+        "stretch_range": list(args.stretch_range), "n_stretch": N_STRETCH if args.stretch_range[0] != args.stretch_range[1] else 1,
+        "template_amplitude_grid": TEMPLATE_AMPLITUDE_GRID.tolist(), "tag": args.tag,
         "max_tle_age_days": MAX_TLE_AGE_DAYS, "confident_threshold": CONFIDENT_THRESHOLD,
         "split_sizes": {k: len(v) for k, v in splits.items()},
         "split_date_ranges_mjd": {k: [v[0].t0_mjd, v[-1].t0_mjd] for k, v in splits.items() if v},
     }
-    out_dir = RESULTS_DIR / f"{args.split}_seed{args.seed}"
+    out_dir = RESULTS_DIR / f"{args.split}_seed{args.seed}{'_' + args.tag if args.tag else ''}"
     out_dir.mkdir(parents=True, exist_ok=True)
     provenance = {"git_commit": git_commit_hash(), "config_hash": config_hash(config),
                   "runtime_s": round(time.time() - t_start, 1)}

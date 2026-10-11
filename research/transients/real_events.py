@@ -145,5 +145,34 @@ def template_flux_fn_resolver(templates: dict[str, np.ndarray]):
     return resolver
 
 
-__all__ = ["RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
+class StretchAmplitudeGrid:
+    """Nuisance grid for template classes: every (amplitude A, stretch s)
+    pair, f(t) = A * template(t / s). s > 1 is a slower-evolving event, the
+    standard SN light-curve "stretch". ClosedWorldBelief's nuisance axis
+    holds one float per cell; here that float is the pair's index, decoded
+    by the resolver, so every planner/EIG routine works unchanged. The prior
+    stays uniform over the grid = log-uniform in both A and s."""
+
+    def __init__(self, amplitudes: np.ndarray, stretches: np.ndarray):
+        self.amplitudes = np.asarray(amplitudes, dtype=float)
+        self.stretches = np.asarray(stretches, dtype=float)
+        n = len(self.amplitudes) * len(self.stretches)
+        self.params = np.arange(n, dtype=float)
+        self.amp_of = np.repeat(self.amplitudes, len(self.stretches))
+        self.stretch_of = np.tile(self.stretches, len(self.amplitudes))
+
+    def resolver(self, templates: dict[str, np.ndarray]):
+        def resolve(cls: str):
+            shape = templates[cls]
+
+            def f(t, param):
+                t, param = np.broadcast_arrays(np.asarray(t, dtype=float), np.asarray(param, dtype=float))
+                idx = np.rint(param).astype(int)
+                vals = np.interp((t / self.stretch_of[idx]).ravel(), TEMPLATE_GRID_DAYS, shape)
+                return self.amp_of[idx] * vals.reshape(t.shape)
+            return f
+        return resolve
+
+
+__all__ = ["StretchAmplitudeGrid", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
            "MODELED_CLASSES", "WITHHELD_CLASSES"]

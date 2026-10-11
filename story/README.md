@@ -1,4 +1,20 @@
-# OrbitalNet · Differential Diagnosis for the Sky
+# space_research.joycemalik.com
+
+The public home of the OrbitalNet research, built from this repository:
+
+| Path | What | Source |
+|---|---|---|
+| `/` | Landing page with a live 3D Earth and all 10,109 orbits | `index.html`, `src/landing.*` |
+| `/film/` | The film (below) | `film/index.html`, `src/main.js` |
+| `/paper/` | The manuscript page, plus `/paper/manuscript.pdf` | copied from `../docs/` and the PDF at the repo root |
+| `/paper/venues/` | Submission roadmap | copied from `../docs/venues/` |
+| `/notebook/` | Lab notebook: phase log and research plan | rendered from `../research/LOG.md` and `../research/PLAN.md` |
+
+`scripts/collect.mjs` copies and renders the `/paper/` and `/notebook/` pages into
+`public/` before every `dev` and `build`, so they always match the repo. Those
+generated folders are git-ignored; edit the sources, not the output.
+
+# The film · Differential Diagnosis for the Sky
 
 A scroll-driven, first-person 3D film about OrbitalNet, told in seven acts and
 sixteen shots: the GW170817 neutron-star merger, the light's 130-million-year
@@ -21,7 +37,7 @@ world state, subtitles and the music cue.
 ```bash
 cd story
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173  (/, /film/, /paper/, /notebook/)
 npm run build      # production build in dist/
 ```
 
@@ -29,8 +45,10 @@ Deep links open a shot directly: `/#s0` … `/#s15`.
 
 ## Deploy on Vercel
 
-Import the repo in Vercel and set **Root Directory** to `story`. The framework
-(Vite), build command and output directory are picked up from `vercel.json`.
+Import the repo in Vercel and set **Root Directory** to `story`. Keep the project
+setting *Include files outside the root directory in the Build Step* switched on
+(it is by default): the build reads `../docs`, `../research` and the manuscript PDF.
+Then add the domain `space_research.joycemalik.com` under Settings → Domains.
 
 ## What is real and what is illustrative
 

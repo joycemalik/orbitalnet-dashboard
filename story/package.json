@@ -1,10 +1,13 @@
 {
-  "name": "orbitalnet-story",
+  "name": "orbitalnet-space-research",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "collect": "node scripts/collect.mjs",
+    "predev": "node scripts/collect.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/collect.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "data": "node scripts/build-sats.mjs"
@@ -14,6 +17,7 @@
     "three": "0.169.0"
   },
   "devDependencies": {
-    "vite": "5.4.10"
+    "vite": "5.4.10",
+    "marked": "14.1.3"
   }
 }

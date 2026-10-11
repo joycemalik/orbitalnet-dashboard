@@ -24,7 +24,170 @@ window.RESULTS = {
     }
   },
   "phase2": null,
-  "phase3": null,
+  "phase3": {
+    "n_runs": 9,
+    "n_scored_total": 3951,
+    "test": {
+      "overall_pass": {
+        "H1": true,
+        "H2": true,
+        "H3": false
+      },
+      "n_seeds": 3,
+      "n_events": 439,
+      "n_withheld": 92,
+      "n_modeled": 347,
+      "seeds": [
+        {
+          "H1": {
+            "estimate": -0.5434782608695652,
+            "ci95": [
+              -0.6521739130434783,
+              -0.4347826086956521
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.6254855281293071,
+            "ci95": [
+              0.5596255951635133,
+              0.6874165987971431
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.04322766570605191,
+            "ci95": [
+              -0.017291066282420775,
+              0.10374639769452448
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.021739130434782608,
+            "B1_cnp_reimplementation": 0.391304347826087,
+            "B2_classifier_entropy": 0.7391304347826086,
+            "B3_closed_world_eig": 0.717391304347826,
+            "P_open_world_eig": 0.17391304347826086
+          },
+          "cw_modeled": {
+            "B0_fixed_cadence": 0.03170028818443804,
+            "B1_cnp_reimplementation": 0.21613832853025935,
+            "B2_classifier_entropy": 0.2824207492795389,
+            "B3_closed_world_eig": 0.3371757925072046,
+            "P_open_world_eig": 0.3804034582132565
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.3400576368876081,
+            "B1_cnp_reimplementation": 0.4495677233429395,
+            "B2_classifier_entropy": 0.5446685878962536,
+            "B3_closed_world_eig": 0.4956772334293948,
+            "P_open_world_eig": 0.30547550432276654
+          },
+          "h0_false_alarm": 0.41210374639769454
+        },
+        {
+          "H1": {
+            "estimate": -0.6847826086956521,
+            "ci95": [
+              -0.7826086956521738,
+              -0.5869565217391305
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.6433717579250721,
+            "ci95": [
+              0.5803157499060269,
+              0.704330206114522
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.04610951008645536,
+            "ci95": [
+              -0.014409221902017266,
+              0.10662824207492794
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.021739130434782608,
+            "B1_cnp_reimplementation": 0.4673913043478261,
+            "B2_classifier_entropy": 0.75,
+            "B3_closed_world_eig": 0.7717391304347826,
+            "P_open_world_eig": 0.08695652173913043
+          },
+          "cw_modeled": {
+            "B0_fixed_cadence": 0.043227665706051875,
+            "B1_cnp_reimplementation": 0.2420749279538905,
+            "B2_classifier_entropy": 0.28530259365994237,
+            "B3_closed_world_eig": 0.3314121037463977,
+            "P_open_world_eig": 0.37752161383285304
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.3746397694524496,
+            "B1_cnp_reimplementation": 0.45244956772334294,
+            "B2_classifier_entropy": 0.5360230547550432,
+            "B3_closed_world_eig": 0.521613832853026,
+            "P_open_world_eig": 0.3314121037463977
+          },
+          "h0_false_alarm": 0.4092219020172911
+        },
+        {
+          "H1": {
+            "estimate": -0.5760869565217391,
+            "ci95": [
+              -0.6847826086956522,
+              -0.4565217391304348
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.6407561709059015,
+            "ci95": [
+              0.5781383128680616,
+              0.7012126456584389
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.0,
+            "ci95": [
+              -0.06051873198847263,
+              0.06051873198847263
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.010869565217391304,
+            "B1_cnp_reimplementation": 0.40217391304347827,
+            "B2_classifier_entropy": 0.7282608695652174,
+            "B3_closed_world_eig": 0.75,
+            "P_open_world_eig": 0.17391304347826086
+          },
+          "cw_modeled": {
+            "B0_fixed_cadence": 0.043227665706051875,
+            "B1_cnp_reimplementation": 0.22478386167146974,
+            "B2_classifier_entropy": 0.29971181556195964,
+            "B3_closed_world_eig": 0.3371757925072046,
+            "P_open_world_eig": 0.3371757925072046
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.36023054755043227,
+            "B1_cnp_reimplementation": 0.46397694524495675,
+            "B2_classifier_entropy": 0.5273775216138329,
+            "B3_closed_world_eig": 0.5129682997118156,
+            "P_open_world_eig": 0.35446685878962536
+          },
+          "h0_false_alarm": 0.36023054755043227
+        }
+      ]
+    }
+  },
   "rnaas": {
     "n_events": 3000,
     "n_seeds": 3,

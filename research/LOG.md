@@ -25,6 +25,42 @@ real scatter lowers false "unknown" calls without losing the unknowns.
 - Validation grid (seed 1, two-band event set, GP lengthscale 5 d):
   bands {r, gr} x kappa {0.5, 1, 2}. kappa=0 arms are the Phase 4 runs.
 
+### Phases 4+5 validation outcome (seed 1, 362 common events, 81 unmodeled)
+Source: results/phase5/compare_validation_all.json. P = open-world planner.
+
+| arm | P AUROC | P acc SNe | P false "unknown" | P flags unknowns | P cw unknown | B3 cw unknown | B3 acc SNe |
+|---|---|---|---|---|---|---|---|
+| r@5 (Phase 3 config) | 0.614 | 0.406 | 0.295 | 0.519 | 0.222 | 0.691 | 0.470 |
+| r@10 | 0.607 | 0.335 | 0.402 | 0.605 | 0.198 | 0.741 | 0.480 |
+| gr@5, l=5 | 0.733 | 0.463 | 0.384 | 0.741 | 0.111 | 0.852 | 0.587 |
+| gr@5, l=10 | 0.724 | 0.438 | 0.423 | 0.765 | 0.086 | 0.852 | 0.587 |
+| gr@5, l=20 | 0.721 | 0.402 | 0.459 | 0.840 | 0.037 | 0.852 | 0.587 |
+| r@5, kappa 0.5 | 0.680 | 0.541 | 0.117 | 0.383 | 0.198 | 0.506 | 0.491 |
+| r@5, kappa 1 | 0.680 | 0.548 | 0.075 | 0.309 | 0.062 | 0.321 | 0.488 |
+| r@5, kappa 2 | 0.594 | 0.488 | 0.132 | 0.198 | 0.012 | 0.185 | 0.459 |
+| **gr@5, kappa 0.5** | **0.846** | **0.594** | **0.164** | 0.691 | 0.198 | 0.753 | 0.584 |
+| gr@5, kappa 1 | 0.822 | 0.644 | 0.082 | 0.506 | 0.173 | 0.617 | 0.552 |
+| gr@5, kappa 2 | 0.663 | 0.491 | 0.146 | 0.296 | 0.185 | 0.457 | 0.427 |
+
+Reading:
+- Colour is the lever, not data volume: r@10 (same number of fluxes as gr@5)
+  does not raise AUROC (0.607 vs 0.614); gr@5 does (+0.12).
+- Colour alone makes everyone more confident — including confidently wrong
+  (B3 on unknowns 0.69 -> 0.85; P on SNe 0.30 -> 0.44).
+- The discrepancy term fixes P's over-confidence: false "unknown" 0.30 ->
+  0.16, SN accuracy 0.41 -> 0.59 (matching B3), AUROC 0.61 -> 0.85.
+- Too much discrepancy (kappa 2) makes modeled classes absorb everything
+  (same failure mode as the stretch idea).
+- Phase 2 robustness of the Phase 3 config (results/phase3_robustness):
+  P's AUROC 0.57-0.64 and its large confident-wrong advantage on unknowns
+  hold for budget 3/8 and 4/16 satellites. A 45 deg Sun-exclusion cone
+  changed visibility for only 17/439 events (ZTF finds transients at night,
+  i.e. away from the Sun — a selection effect, not a bug; verified per event).
+
+Rule -> **gr@5, kappa 0.5, l = 5 d**. Dry-run of the v2 analysis on validation
+(results/phase5/analysis_validation_chosen.json): H1-H5 all pass; H5 only
+barely (lower CI -0.050 vs margin -0.05). Frozen in PREREGISTRATION_V2.md.
+
 ### Revised plan for the second test look (fixed now)
 Instead of one test run per phase, Phases 4 and 5 share ONE second look:
 pick the single best config on validation among {gr@5 x lengthscale} and

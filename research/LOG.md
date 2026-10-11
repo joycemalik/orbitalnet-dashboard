@@ -59,6 +59,30 @@ Selection rule, fixed now: pick the config with the highest P AUROC; ties
 The chosen config is then frozen in PREREGISTRATION.md before the test
 split is run once. All configs' results are kept, not just the winner.
 
+### Validation tuning outcome (seed 1, 439 events each)
+| config | P AUROC | P cw modeled | P cw withheld | P h0 on modeled | B3 cw withheld |
+|---|---|---|---|---|---|
+| no stretch, l=5  | 0.593 | 0.281 | 0.195 | 0.287 | 0.759 |
+| no stretch, l=10 | 0.582 | 0.295 | 0.115 | 0.332 | 0.759 |
+| no stretch, l=20 | 0.593 | 0.310 | 0.103 | 0.369 | 0.759 |
+| stretch, l=5     | 0.562 | 0.256 | 0.092 | 0.281 | 0.414 |
+| stretch, l=10    | 0.552 | 0.267 | 0.069 | 0.330 | 0.414 |
+| stretch, l=20    | 0.570 | 0.273 | 0.023 | 0.369 | 0.414 |
+(numbers copied from results/phase3/validation_seed1*/summary.json)
+
+Pre-declared rule -> tie at 0.593 (l=5, l=20), broken by lower P
+confident-wrong on modeled -> **no stretch, GP lengthscale 5 d**.
+
+What this says, honestly: the stretch hypothesis was WRONG — it did not
+raise AUROC; it made the modeled classes flexible enough to absorb many
+withheld events (B3 confident-wrong on withheld fell 0.76 -> 0.41), which
+also blurs the h0 signal. P's ability to *rank* unmodeled above modeled
+events is weak in every config (AUROC 0.55-0.59). The robust effect is
+the confident-wrong reduction on real unmodeled events, which comes with
+a ~29% h0 false-alarm rate on ordinary SNe. Likely ceiling: 5 single-band
+points cannot separate SN subtypes or many TDE/SLSN shapes; colour
+(multi-band) is the obvious next lever, and is NOT tried before the test run.
+
 ### Losses (reported by the loader, never silent)
 - ~35% of downloaded objects have < 8 r-band detections and are dropped.
 - 30 TLE weeks Feb-Aug 2021 came back EMPTY although the fleet was in orbit

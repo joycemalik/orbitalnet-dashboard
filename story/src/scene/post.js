@@ -14,10 +14,10 @@ export function createPost(renderer, scene, camera) {
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const lens = new ShaderPass({
-    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarp: { value: 0 }, uFlash: { value: 0 }, uFade: { value: 0 } },
+    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uWarp: { value: 0 }, uFlash: { value: 0 }, uFade: { value: 0 }, uGrad: { value: 0 } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);} `,
     fragmentShader: /* glsl */`
-      uniform sampler2D tDiffuse; uniform float uTime, uWarp, uFlash, uFade; varying vec2 vUv;
+      uniform sampler2D tDiffuse; uniform float uTime, uWarp, uFlash, uFade, uGrad; varying vec2 vUv;
       float rand(vec2 c){ return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
       void main(){
         vec2 d = vUv - 0.5;
@@ -33,6 +33,8 @@ export function createPost(renderer, scene, camera) {
         float l = dot(c, vec3(0.299, 0.587, 0.114));
         c = mix(c * vec3(0.92, 1.0, 1.08), c * vec3(1.06, 1.0, 0.93), smoothstep(0.15, 0.7, l));
         c += vec3(1.0, 0.95, 0.9) * uFlash * 0.6;
+        // graduated filter: darken the side where the hologram floats, so it reads
+        c *= 1.0 - uGrad * 0.4 * smoothstep(0.62, 0.08, vUv.x);
         c *= 1.0 - uFade;
         gl_FragColor = vec4(c, 1.0);
       }`,

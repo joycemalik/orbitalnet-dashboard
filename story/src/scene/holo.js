@@ -5,14 +5,16 @@ import { HYP, FADE, SIG, COL } from '../story/charts.js';
 // as glowing tubes in 3D, observations as points, and belief as pillars of light.
 const W = 1.7, H = 0.9;
 
-function textSprite(text, { size = 40, color = '#cfe8ff', font = '500 {s}px "JetBrains Mono", monospace', align = 'left', scale = 0.0011 } = {}) {
+function textSprite(text, { size = 40, color = '#cfe8ff', font = '500 {s}px "JetBrains Mono", monospace', align = 'left', scale = 0.0014 } = {}) {
   const c = document.createElement('canvas'), g = c.getContext('2d');
   const draw = (t, col = color) => {
     const f = font.replace('{s}', size); g.font = f;
     const w = Math.ceil(g.measureText(t).width) + 8;
     const h = Math.ceil(size * 1.4);
     if (c.width !== w || c.height !== h) { c.width = w; c.height = h; tex && tex.dispose(); }
-    g.font = f; g.fillStyle = col; g.textBaseline = 'middle'; g.fillText(t, 4, c.height / 2);
+    g.font = f; g.fillStyle = col; g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(0,0,0,0.95)'; g.shadowBlur = size * 0.35;
+    g.fillText(t, 4, c.height / 2); g.shadowBlur = 0; g.fillText(t, 4, c.height / 2);
     tex.needsUpdate = true;
     spr.scale.set(c.width * scale, c.height * scale, 1);
     spr.center.set(align === 'left' ? 0 : align === 'right' ? 1 : 0.5, 0.5);
@@ -33,7 +35,7 @@ export function createHolo() {
   const seg = (pts, m) => { const l = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), m); l.renderOrder = 11; frame.add(l); return l; };
   const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
   // a glass back-plate for depth
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.2, H + 0.3), new THREE.MeshBasicMaterial({ color: 0x0a1830, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false }));
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.2, H + 0.3), new THREE.MeshBasicMaterial({ color: 0x02060d, transparent: true, opacity: 0.82, depthTest: false, depthWrite: false }));
   plate.position.set(W / 2, H / 2 - 0.05, -0.02); plate.renderOrder = 9; panel.add(plate);
   seg([V(0, 0), V(W, 0), V(0, 0), V(0, H)], lineMat);
   const corners = []; [[-0.1, -0.2], [W + 0.1, -0.2], [-0.1, H + 0.1], [W + 0.1, H + 0.1]].forEach(([x, y]) => {
@@ -108,7 +110,7 @@ export function createHolo() {
     return { bar, pct, last: '' };
   });
   const modeTag = textSprite('MODE · DISCRIMINATE', { size: 34, color: '#e8ebf2' }); modeTag.position.set(W + 0.12, H + 0.06, 0); panel.add(modeTag);
-  const h0Tube = new THREE.Mesh(new THREE.BufferGeometry(), glowMat(0xf4f6fb, 2.6)); h0Tube.renderOrder = 13; panel.add(h0Tube);
+  const h0Tube = new THREE.Mesh(new THREE.BufferGeometry(), glowMat(0xf4f6fb, 1.1)); h0Tube.renderOrder = 13; panel.add(h0Tube);
   let h0Key = '';
 
   function showDiagnosis(unknown) {

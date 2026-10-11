@@ -51,7 +51,7 @@ Reading:
   0.16, SN accuracy 0.41 -> 0.59 (matching B3), AUROC 0.61 -> 0.85.
 - Too much discrepancy (kappa 2) makes modeled classes absorb everything
   (same failure mode as the stretch idea).
-- Phase 2 robustness of the Phase 3 config (results/phase3_robustness):
+- Robustness of the Phase 3 config (results/phase3_robustness):
   P's AUROC 0.57-0.64 and its large confident-wrong advantage on unknowns
   hold for budget 3/8 and 4/16 satellites. A 45 deg Sun-exclusion cone
   changed visibility for only 17/439 events (ZTF finds transients at night,

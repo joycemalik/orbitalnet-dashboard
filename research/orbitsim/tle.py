@@ -38,3 +38,20 @@ def propagate_eci_km(satrec: Satrec, jd: float, fr: float) -> tuple[np.ndarray, 
     """Returns (position_km, velocity_km_s, sgp4_error_code). error_code == 0 means OK."""
     e, position, velocity = satrec.sgp4(jd, fr)
     return np.array(position), np.array(velocity), e
+
+
+def load_3le_latest(filepath: str) -> dict[str, Satrec]:
+    """Parses a Space-Track `format/3le` file (name lines prefixed "0 "),
+    keeping the LAST (latest-epoch, since files are EPOCH-ascending) element
+    set per satellite. Returns {} for an empty file (fleet not yet launched,
+    or no data returned for that window)."""
+    with open(filepath, "r", encoding="utf-8") as f:
+        lines = [ln.rstrip() for ln in f if ln.strip()]
+    out: dict[str, Satrec] = {}
+    for i in range(0, len(lines) - 2, 3):
+        name = lines[i][2:].strip() if lines[i].startswith("0 ") else lines[i].strip()
+        try:
+            out[name] = Satrec.twoline2rv(lines[i + 1], lines[i + 2])
+        except Exception:
+            continue
+    return out

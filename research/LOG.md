@@ -3,6 +3,55 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 3 — real-data counterfactual replay: infrastructure (2026-10-11)
+
+Status: pipeline built and tested; NO results yet. Raw data download is
+incomplete (see "Open items"), so nothing has been run at scale.
+
+### What it is
+Real ZTF Bright Transient Survey events (spectroscopic class = truth, real
+r-band light curve, real RA/Dec, real date) replayed against the Phase 2
+Starlink fleet propagated from Space-Track TLEs archived at the time. Only
+the planners' measurements are simulated (GP mean through the real points +
+limiting-magnitude instrument noise). Same 5 strategies as Phase 2, unchanged.
+
+### Decisions
+- **Hypothesis set**: modeled = SN Ia / SN II / SN Ibc; withheld (real h0) =
+  TDE, SLSN-I/II, SN Ibn. User chose "both studies": this SN study is the
+  main one; a small case study on the manuscript classes is still to do.
+- **Class models are empirical templates** (median peak-normalized curve)
+  built ONLY from events first detected before 2020-01-01, i.e. before the
+  fleet existed. Default chosen by me when the user said "start the next
+  phase" without picking between this and sncosmo; flagged in chat.
+- **Split**: template = pre-2020; post-2020 events halved by date into
+  validation (older) and test (newer). Test is locked in code until
+  PREREGISTRATION.md exists.
+- **Selection bug fixed**: first selection took the EARLIEST 300 events per
+  class, so almost all supernovae predated the fleet. Now per modeled class:
+  up to 300 pre-2020 + 300 post-2020, evenly spaced in time; all withheld.
+- **No truth extrapolation**: candidate times after an event's last real
+  detection are infeasible for every strategy.
+- **No stale orbits**: a cell is infeasible if the nearest archived TLE
+  containing that satellite is > 7 days from the observation time.
+- **h0 GP**: signal amplitude marginalized over the same amplitude grid as the
+  modeled classes (real fluxes span ~3 dex; a fixed var_f would make h0
+  evidence track brightness instead of shape). Lengthscale 10 d, fixed,
+  tunable on validation only.
+- Candidate times 0.5-60 d (16 log-spaced), budget 5, 8 satellites,
+  limiting mags 19/20/21: same structure as Phase 2, timescale widened for SNe.
+- Sun exclusion still NOT modeled (now possible since dates are real; future work).
+
+### Losses (reported by the loader, never silent)
+- ~35% of downloaded objects have < 8 r-band detections and are dropped.
+- 30 TLE weeks Feb-Aug 2021 came back EMPTY although the fleet was in orbit
+  (likely Space-Track throttling). Events there currently get no contact.
+
+### Open items
+1. Re-run `fetch_bts` (~1,100 new light curves for the post-2020 pool).
+2. Re-run `fetch_tles` for new event weeks, after deleting the empty 2021 files.
+3. Validation run, then PREREGISTRATION.md, then test run.
+4. Viewer replay tab; manuscript-class case study.
+
 ## Phase 2 — single-planner experiment with real orbits (2026-10-01)
 
 ### Two passes: own design, then realigned to the manuscript

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IEEE Aerospace 2028</title>
+<meta name="description" content="IEEE Aerospace Conference: fit, timing and a tailored systems paper on decentralised hypothesis-driven tasking with an ESP32 hardware-in-the-loop testbed.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>IEEE Aerospace</span></nav>
+  <p class="eyebrow">Venue 5 of 6 · Aerospace systems · Conference</p>
+  <h1>IEEE Aerospace Conference</h1>
+  <p class="lede">An annual conference in Big Sky, Montana, with a heavy NASA, JPL and industry presence. It rewards systems papers that show something working end to end, and it's the right stage for the decentralised auction and the ESP32 testbed.</p>
+  <div class="meta-row"><span>2027 deadlines passed</span><span>Target: 2028 edition</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-bad">2027 cycle closed</span><span class="badge b-warn">Needs H4 + testbed</span></div>
+    <p><strong>The 2027 cycle is closed.</strong> Abstracts were due 1 Jul 2026 and full papers 2 Oct 2026, for the conference on 6–13 Mar 2027. Target <strong>2028</strong>, whose abstract deadline is likely around early July 2027 if the pattern holds. That date is inferred, not published.</p>
+    <p><strong>Why it suits a later paper:</strong> this audience wants hardware and mission relevance. By mid-2027 the Phase 4 decentralised auction and the ESP32 testbed can be the headline, which is a paper no other venue on this list showcases as well.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>Aerospace systems and technology across many tracks. Relevant: autonomy, mission design and operations, space-based observatories, and avionics/computing for space.</td></tr>
+    <tr><th>Format</th><td>Abstract first, then full paper, reviewed before final submission. <span class="unverified">Page limits and template: check the 2028 call; not verified here.</span></td></tr>
+    <tr><th>2027 dates (passed)</th><td>Abstract 1 Jul 2026 · full paper 2 Oct 2026 · reviews returned 9 Nov 2026 · final paper 8 Jan 2027 · conference 6–13 Mar 2027.</td></tr>
+    <tr><th>2028 dates</th><td><span class="unverified">Not yet published. Expect a similar cycle (abstract ~July 2027).</span></td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://www.aeroconf.org/about">aeroconf.org</a> · <a href="https://www.aiaa.org/events/2027-ieee-aerospace-conference/">AIAA event listing (2027)</a></td></tr>
+  </table>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract">
+    <p class="ttl">Decentralised Hypothesis-Driven Tasking for Small-Satellite Observatories: Simulation and Hardware-in-the-Loop Evaluation</p>
+    <p>Constellations of small satellites carrying heterogeneous instruments could follow up fast astronomical transients without waiting for ground operators, but only if spacecraft can coordinate which of them takes which measurement while their inter-satellite links are intermittent and their beliefs out of date. We describe a decentralised tasking architecture in which each spacecraft maintains a posterior over competing physical explanations of an event, plus an explicit unmodeled alternative, and bids the marginal information value of its candidate measurements in an auction that tolerates stale beliefs. Spacecraft exchange per-class log-evidence and committed measurements, never raw data, and merge beliefs exactly by measurement identifier. We evaluate the architecture in a simulated low-Earth-orbit constellation propagated from real two-line elements while thinning contact schedules from full to sparse connectivity, and we replicate the communication and decision layer on ESP32 microcontrollers linked by ESP-NOW and gated by the simulated contact schedule. <span class="pending">Result sentences pending: retained fraction of centralised-oracle performance vs. contact fraction (H4), and on-device compute per decision.</span></p>
+  </div>
+  <p class="wc"></p>
+
+  <h2>Paper plan</h2>
+  <ol class="outline">
+    <li><span class="t">Introduction and mission concept</span><span class="budget">~1.5 pp</span><span class="d">Concept of operations: alert uplink, autonomous campaign, downlink. What the existing OrbitalNet CNP stack does today and what it lacks.</span></li>
+    <li><span class="t">System architecture</span><span class="budget">~2 pp</span><span class="d">Orbital layer, feasibility, belief, utility, auction, belief exchange (Fig. 2 pipeline). Message formats and sizes.</span></li>
+    <li><span class="t">Decision layer</span><span class="budget">~1.5 pp</span><span class="d">The utility, compressed. The stale-belief auction in detail, and the exact merge with the duplicate-ID test.</span></li>
+    <li><span class="t">Simulation results</span><span class="budget">~2.5 pp</span><span class="d">The communication sweep and node-loss scenarios (Phase 4): P vs. O vs. independent greedy.</span></li>
+    <li><span class="t">Hardware-in-the-loop testbed</span><span class="budget">~2.5 pp</span><span class="d">Table 4 of the manuscript, made real: wiring, firmware, measured compute and memory, message loss, sim-vs-hardware agreement. State what it does <em>not</em> show (radiation, RF link budgets, ADCS).</span></li>
+    <li><span class="t">Path to flight</span><span class="budget">~1 pp</span><span class="d">Shadow-mode operation alongside a real alert stream, a hosted-payload or rideshare demonstration, and the TRL steps needed.</span></li>
+  </ol>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Build Phase 4 (decentralised auction + belief merge, with the duplicate-ID exactness test).</li>
+    <li>Build the ESP32 testbed and measure compute, memory and message loss.</li>
+    <li>Check the 2028 call (spring 2027) and record the real dates and limits here.</li>
+    <li>Pick the track carefully. Autonomy or space-observatory tracks fit best.</li>
+  </ul>
+
+  <p class="foot"><a href="rasti.html">← RASTI</a> · <a href="index.html">All venues</a> · Next: <a href="jais.html">AIAA JAIS →</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

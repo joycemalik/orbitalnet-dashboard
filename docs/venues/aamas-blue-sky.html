@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AAMAS Blue Sky</title>
+<meta name="description" content="AAMAS 2027 Blue Sky Ideas track: fit, format, deadlines and a tailored 4-page vision paper for epistemic coordination in observatory swarms.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="venues.css">
+</head>
+<body>
+<main class="page">
+  <nav class="crumbs"><a href="../index.html">Paper</a><span>/</span><a href="index.html">Submission roadmap</a><span>/</span><span>AAMAS 2027 Blue Sky</span></nav>
+  <p class="eyebrow">Venue 1 of 6 · Multi-agent systems · Vision track</p>
+  <h1>AAMAS 2027: Blue Sky Ideas</h1>
+  <p class="lede">The International Conference on Autonomous Agents and Multiagent Systems, Hanoi, 3–7 May 2027. Its Blue Sky track exists for exactly the kind of work this project currently is: a sharp new problem with a concrete design, but no results yet.</p>
+  <div class="meta-row"><span>Paper due 12 Nov 2026 AoE</span><span>4 pages + references</span><span>Facts checked 11 Oct 2026</span></div>
+
+  <div class="verdict">
+    <div class="row"><span class="badge b-ok">Submittable now</span><span class="badge b-warn">Track record is weighed</span></div>
+    <p><strong>This is the best immediate shot.</strong> The track explicitly isn't judged by results-oriented standards. It rewards vision, novelty, grounding in recent work, and critical reflection. The open-world, fading-deadline coordination problem is an under-represented application area for agents research, which is the first thing the call asks for.</p>
+    <p><strong>Risk:</strong> track chairs also assess the authors' track record. A student-only author list is weaker here. If you can, add a faculty co-author from multi-agent systems or astronomy.</p>
+  </div>
+
+  <h2>Venue facts</h2>
+  <table class="facts">
+    <tr><th>Theme</th><td>“Visionary ideas, long-term challenges, new research opportunities, and debate.” Covers under-represented application areas for agents, links between agents and other AI areas, and unexplored theoretical foundations.</td></tr>
+    <tr><th>Format</th><td>4 pages in AAMAS 2027 format. Extra pages may contain only references.</td></tr>
+    <tr><th>Review criteria</th><td>Future relevance, vision and novelty, grounding in existing work (including the last ~3 years), potential impact and practicality, clarity and critical reflection. Chairs also assess author track record.</td></tr>
+    <tr><th>Mandatory extras</th><td>Two OpenReview responses: (1) why Blue Sky rather than the main track; (2) authors' track record (visible to chairs only). Drafts are below.</td></tr>
+    <tr><th>Deadlines (AoE)</th><td>OpenReview author registration <strong>20 Oct 2026</strong> · abstract <strong>5 Nov 2026</strong> · paper <strong>12 Nov 2026</strong>. Main-track deadlines (1 and 8 Oct) have passed.</td></tr>
+    <tr><th>Conference</th><td>3–7 May 2027, Hanoi, Vietnam.</td></tr>
+    <tr><th>Sources</th><td class="src"><a href="https://warwick.ac.uk/fac/sci/dcs/aamas2027/calls/call-for-blue-sky-ideas/">Call for Blue Sky Ideas</a> · <a href="https://warwick.ac.uk/fac/sci/dcs/aamas2027/calls/call-for-main-track/">Call for Main Track</a></td></tr>
+  </table>
+
+  <h2>Tailored abstract</h2>
+  <div class="abstract">
+    <p class="ttl">When the Evidence Fades: Open-World Epistemic Coordination for Autonomous Observatory Swarms</p>
+    <p>Multi-agent systems research has mature tools for allocating tasks whose value is known in advance: auctions, consensus and distributed constraint optimisation. We argue that a growing class of autonomous systems faces a different problem. Agents must jointly decide which measurement to take next in order to learn which explanation of a phenomenon is true. The measurements that could separate explanations lose value irreversibly, and the true explanation may lie outside every agent's model. Satellite constellations following up fading astronomical transients are a sharp instance. Kilonovae, shock-cooling supernovae, afterglows and stellar flares look alike for hours, the discriminating observation exists only briefly, and spacecraft hold stale, partial beliefs between intermittent links. We frame this as open-world, deadline-aware epistemic coordination and sketch a concrete agent design: an explicit “none of the above” hypothesis, a utility that combines discrimination, model-adequacy evidence and opportunity decay, and a marginal-gain auction over stale beliefs. We then pose five open challenges for the agents community: valuing information under irreversibility, merging beliefs without double counting, coordinating on hypotheses rather than tasks, deciding when to stop discriminating and preserve evidence, and benchmarking against ground truth that is deliberately withheld.</p>
+  </div>
+  <p class="wc"></p>
+
+  <h2>Paper plan (4 pages)</h2>
+  <ol class="outline">
+    <li><span class="t">The problem agents don't yet solve</span><span class="budget">0.6 p</span><span class="d">Open with the 02:14 UTC scenario from the paper page. Contrast <em>task allocation</em> (value known) with <em>epistemic allocation</em> (value depends on what others will learn). One paragraph on why this generalises beyond astronomy: disaster response, planetary rovers, epidemiological sampling.</span></li>
+    <li><span class="t">Why existing agent machinery falls short</span><span class="budget">0.6 p</span><span class="d">Condense Table 1 of the manuscript into three gaps: CNP and auctions (Starling/DSA) have no hypothesis state; POISE and SHM-POMDP are closed-world and single-planner; robust BED has no deadlines and no peers. Cite only verified 2023–2026 work, since the call checks recency.</span></li>
+    <li><span class="t">A concrete design sketch</span><span class="budget">1.0 p</span><span class="d">Eq. 3 (the utility) and Fig. 2 (the stale-belief auction), stated in agent terms: belief, bid, commitment message, merge-by-measurement-ID. Keep the math to two equations. Say plainly that this is a design, not an evaluated system.</span></li>
+    <li><span class="t">Five open challenges</span><span class="budget">1.2 p</span><span class="d">The core of a Blue Sky paper. One paragraph each: (i) value of information under irreversibility; (ii) exact belief merging without double counting; (iii) bidding on hypotheses, not tasks, where submodularity breaks under staleness; (iv) the discrimination-to-preservation switch as a meta-decision; (v) evaluation with withheld classes as ground truth. Each ends with a concrete research question.</span></li>
+    <li><span class="t">Path to evidence, and a call to the community</span><span class="budget">0.6 p</span><span class="d">The preregistered benchmark (H1–H4), the open simulator, the ESP32 testbed. Optionally one sentence of the Phase 1 toy signal (below), clearly labelled preliminary. Close with the invitation: a shared benchmark for epistemic coordination.</span></li>
+  </ol>
+
+  <h3>Optional preliminary-signal sentence</h3>
+  <p>Use only if labelled as a single-seed toy demonstration. In a <span data-r="phase1.n_events"></span>-event toy problem, closed-world EIG was confidently wrong on <span data-r="phase1.B3_closed_world_eig.cw_withheld" data-fmt="pct"></span> of withheld-class events. The open-world planner was confidently wrong on <span data-r="phase1.P_open_world_eig.cw_withheld" data-fmt="pct"></span> and flagged <span data-r="phase1.P_open_world_eig.acc_withheld" data-fmt="pct"></span> as unmodeled.</p>
+
+  <h2>Draft OpenReview statements</h2>
+  <h3>Why Blue Sky rather than the main track</h3>
+  <p>“This paper defines a coordination problem, epistemic allocation under irreversible information decay with an open hypothesis set, that existing agent frameworks do not address. It proposes a design and a research agenda rather than an evaluated algorithm. A full empirical evaluation is preregistered and in progress, and we believe the problem framing and open challenges are of value to the community before those results exist.”</p>
+  <h3>Track record (fill in honestly)</h3>
+  <p>List the authors' relevant prior work, the open-source OrbitalNet simulator, and any faculty co-author. Don't overstate it. Chairs see this field directly.</p>
+
+  <h2>Before you submit</h2>
+  <ul class="checklist">
+    <li>Register every author on OpenReview by 20 Oct 2026. New profiles can take days to moderate.</li>
+    <li>Download the AAMAS 2027 template and check the exact anonymity rule for Blue Sky on the submission-instructions page.</li>
+    <li>Read in full and verify every cited paper. The paper page currently marks its references as unverified leads.</li>
+    <li>Make sure the paper says “design” and “preregistered,” never “we show.”</li>
+    <li>Submit the abstract by 5 Nov 2026 and the paper by 12 Nov 2026.</li>
+  </ul>
+
+  <p class="foot"><a href="index.html">← All venues</a> · Next: <a href="icaps.html">ICAPS 2027 →</a></p>
+</main>
+<script src="results.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

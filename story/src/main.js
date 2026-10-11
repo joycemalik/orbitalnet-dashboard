@@ -386,7 +386,7 @@ function fmtDistance(d) {
   if (km > 1.496e8 * 50) return `${Math.round(km / 1.496e8).toLocaleString('en-US')} AU`;
   return `${Math.round(km).toLocaleString('en-US')} km`;
 }
-let last = performance.now(), gs = 0, prevPos = null, auctionClock = 0, lastObs = -1, lastHolo = null, wasExplore = false, snap = 0;
+let holoFrame = 0, last = performance.now(), gs = 0, prevPos = null, auctionClock = 0, lastObs = -1, lastHolo = null, wasExplore = false, snap = 0;
 const vel = V3(), w = { ...W0 };
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -419,11 +419,16 @@ function frame(now) {
   const shakeAmt = RM ? 0 : w.shake * (m.flash * 2.2 + (m.sinceGrb > 0 && m.sinceGrb < 3 ? 0.4 : 0));
   if (shakeAmt > 0) camera.position.add(V3(Math.random() - .5, Math.random() - .5, Math.random() - .5).multiplyScalar(shakeAmt * Math.min(dist, 60) * 0.02));
   camera.up.copy(P.up);
+  if (holoFrame > 0.01) P.dir.applyAxisAngle(P.up.clone().normalize(), 0.42 * holoFrame);   // pan: the planet slides right, the instrument stays
   if (portrait) P.dir.lerp(camera.position.clone().negate().normalize(), 0.7).normalize();   // keep the planet centred on tall screens
   camera.lookAt(tmp.copy(camera.position).add(P.dir));
   camera.fov = P.fov;
   camera.near = clamp((dist - 1) * 0.3, 0.0004, 1);
-  if (isSmall() && !s.w.pov) camera.setViewOffset(innerWidth, innerHeight, 0, -innerHeight * 0.08, innerWidth, innerHeight); else camera.clearViewOffset();
+  // hologram shots: reframe so the planet sits right and the instrument floats over dark space
+  holoFrame = lerp(holoFrame, s.w.holo && !isSmall() ? 1 : 0, 1 - Math.exp(-dt * 2));
+  if (isSmall() && !s.w.pov) camera.setViewOffset(innerWidth, innerHeight, 0, -innerHeight * 0.08, innerWidth, innerHeight);
+  else camera.clearViewOffset();
+  post.lens.uniforms.uGrad.value = holoFrame;
   camera.updateProjectionMatrix();
   if (!prevPos) prevPos = camera.position.clone();
   vel.copy(camera.position).sub(prevPos).divideScalar(Math.max(dt, 1e-3)); prevPos.copy(camera.position);
@@ -476,7 +481,7 @@ function frame(now) {
   const holoA = hmode ? ease(clamp(t / 0.15, 0, 1)) * ease(clamp((1 - t) / 0.08, 0, 1)) : 0;
   if (hmode === 'clocks') { if (isSmall()) holo.layout(-0.66, -0.7, -5, -0.15, 0.5); else holo.layout(0.05, -0.42, -2.6, -0.42); holo.reveal(clamp((t - 0.05) / 0.75, 0.01, 1)); }
   if (hmode === 'known' || hmode === 'unknown') {
-    if (isSmall()) holo.layout(-0.66, -0.95, -5, 0.12, 0.5); else holo.layout(-1.38, -0.4, -2.7, 0.3, 0.66);
+    if (isSmall()) holo.layout(-0.66, -0.95, -5, 0.12, 0.5); else holo.layout(-1.42, -0.36, -2.7, 0.3, 0.58);
     const run = hmode === 'known' ? RUN_KNOWN : RUN_UNKNOWN;
     const nShown = Math.min(run.obs.length, Math.floor(clamp((t - 0.12) / 0.8, 0, 1) * (run.obs.length + 1)));
     const r = holo.updateDiagnosis(run, nShown, now);

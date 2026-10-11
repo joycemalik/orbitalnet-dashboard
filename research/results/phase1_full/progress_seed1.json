@@ -1,0 +1,10 @@
+{
+  "phase": "phase1_existence_proof",
+  "mode": "full",
+  "seed": 1,
+  "events_done": 1000,
+  "n_events": 1000,
+  "status": "done",
+  "started_at": "2026-10-11T18:43:45.050602+00:00",
+  "updated_at": "2026-10-11T18:59:53.004093+00:00"
+}

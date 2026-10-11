@@ -132,3 +132,18 @@ def test_all_strategies_see_identical_inputs(monkeypatch):
             assert cell_values.setdefault(key, (h["y"], h["sigma"])) == (h["y"], h["sigma"])
     rec2 = p3.run_one_event(ev, np.random.SeedSequence(7), archive, names, template_flux_fn_resolver(templates))
     assert rec2 == rec
+
+
+def test_stretch_grid_decodes_amplitude_and_stretch():
+    from research.transients.real_events import StretchAmplitudeGrid
+    tpl = build_class_templates([_event(f"{c}{i}", c, 58000.0, tau=t)
+                                 for c, t in (("sn_ia", 8), ("sn_ii", 60), ("sn_ibc", 20)) for i in range(2)])
+    g = StretchAmplitudeGrid(np.array([1.0, 3.0]), np.array([1.0, 2.0]))
+    f = g.resolver(tpl)("sn_ia")
+    base = template_flux_fn_resolver(tpl)("sn_ia")
+    t = np.array([5.0, 20.0, 40.0])
+    # param index = amp_idx * n_stretch + stretch_idx
+    assert f(t, np.full(3, 0.0)) == pytest.approx(base(t, 1.0))          # A=1, s=1
+    assert f(t, np.full(3, 3.0)) == pytest.approx(base(t / 2.0, 3.0))    # A=3, s=2
+    # broadcasting used by the planners: (n_t, 1) x (1, n_params)
+    assert f(t[:, None], g.params[None, :]).shape == (3, 4)

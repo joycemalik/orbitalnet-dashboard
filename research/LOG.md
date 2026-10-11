@@ -41,6 +41,24 @@ limiting-magnitude instrument noise). Same 5 strategies as Phase 2, unchanged.
   limiting mags 19/20/21: same structure as Phase 2, timescale widened for SNe.
 - Sun exclusion still NOT modeled (now possible since dates are real; future work).
 
+### Validation tuning protocol (written BEFORE any tuning run was seen)
+First validation run (seed 1, no stretch, GP lengthscale 10 d; committed
+180660f): P's AUROC(P(h0): withheld vs modeled) = 0.582, and P decided h0 on
+33% of modeled SNe. Diagnosis: a single fixed median template per class is
+too rigid for real SN diversity, so the flexible h0 GP wins by default.
+
+Change: optional per-event template stretch s (f = A * template(t/s)),
+log-uniform over 7 values in [0.5, 2.0]; marginalized like amplitude.
+B2/P decay terms now use posterior-mean flux (identical to before for
+amplitude-only models; verified max diff 3.6e-15 on Phase 2 beliefs).
+
+Grid (validation split, seed 1 only):
+  stretch in {off, [0.5, 2.0]} x GP lengthscale in {5, 10, 20} days.
+Selection rule, fixed now: pick the config with the highest P AUROC; ties
+(within 0.01) broken by lower P confident-wrong rate on MODELED events.
+The chosen config is then frozen in PREREGISTRATION.md before the test
+split is run once. All configs' results are kept, not just the winner.
+
 ### Losses (reported by the loader, never silent)
 - ~35% of downloaded objects have < 8 r-band detections and are dropped.
 - 30 TLE weeks Feb-Aug 2021 came back EMPTY although the fleet was in orbit

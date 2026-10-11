@@ -3,6 +3,35 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 5 — model discrepancy: templates carry real population scatter (2026-10-12)
+
+Motivation (from the Phase 3 test): P calls ~40% of ordinary SNe "unknown".
+Each modeled class predicts its median template EXACTLY (+ instrument
+noise), so any real SN that deviates from the median is heavily penalized
+while the flexible h0 GP is not — h0 wins by default. Standard remedy in
+template fitting: a model-discrepancy term. Hypothesis: adding each class's
+real scatter lowers false "unknown" calls without losing the unknowns.
+
+### Design (written BEFORE any Phase 5 run was seen)
+- Scatter s_c(t): 1.4826*MAD across TEMPLATE-split (pre-2020) events'
+  normalized curves around the class median, per band, same normalization
+  as the templates. Values ~0.1-0.4 of peak (checked, not tuned).
+- Likelihood: y ~ N(A T_c(t), sigma_inst^2 + (kappa * A * s_c(t))^2).
+  Belief update only — planners still score candidates with instrument
+  noise (documented simplification). Discrepancy is treated as independent
+  between measurements (in reality an event deviates coherently; this
+  under-penalizes repeated deviations — stated limitation).
+- kappa = 0 reproduces Phase 3/4 bit-identically (tested).
+- Validation grid (seed 1, two-band event set, GP lengthscale 5 d):
+  bands {r, gr} x kappa {0.5, 1, 2}. kappa=0 arms are the Phase 4 runs.
+
+### Revised plan for the second test look (fixed now)
+Instead of one test run per phase, Phases 4 and 5 share ONE second look:
+pick the single best config on validation among {gr@5 x lengthscale} and
+{r, gr} x kappa (rule: max P AUROC; ties within 0.01 -> lower P
+confident-wrong on modeled), freeze it in PREREGISTRATION_V2.md with the
+same H1-H3 + the r@5/r@10 controls, run the test split once.
+
 ## Phase 3 — PREREGISTERED TEST RESULT (2026-10-12)
 
 Run exactly as frozen in PREREGISTRATION.md (commit 6ba1d6d, recorded in

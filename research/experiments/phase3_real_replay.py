@@ -44,7 +44,9 @@ from research.transients.real_events import (
     MODELED_CLASSES,
     G_TIME_OFFSET_DAYS,
     RealEvent,
+    build_class_scatter,
     build_class_templates_g,
+    discrepancy_resolver,
     two_band_flux_fn_resolver,
     StretchAmplitudeGrid,
     build_class_templates,
@@ -102,7 +104,8 @@ def mjd_to_datetime(mjd: float) -> datetime.datetime:
 
 def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver,
                   param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS,
-                  budget: int = N_OBS_BUDGET, bands: str = "r", sun_exclusion_deg: float = 0.0) -> dict | None:
+                  budget: int = N_OBS_BUDGET, bands: str = "r", sun_exclusion_deg: float = 0.0,
+                  disc_resolver=None) -> dict | None:
     """bands="r": Phase 3 (one r-band flux per pointing). bands="gr": Phase 4,
     each pointing returns simultaneous r AND g fluxes (dual-band imager); the
     g value enters the belief/GP at t + G_TIME_OFFSET_DAYS. Planners still
@@ -130,6 +133,7 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
     per_strategy = {}
     for (name, planner_fn), child in zip(STRATEGIES_P2.items(), seed_seq.spawn(len(STRATEGIES_P2))):
         belief = ClosedWorldBelief.with_uniform_prior(MODELED_CLASSES, param_grid, flux_resolver)
+        belief.discrepancy_resolver = disc_resolver  # None unless --discrepancy-scale > 0
         gp = AmplitudeMarginalGP(AMPLITUDE_GRID, lengthscale=gp_lengthscale)
         remaining = schedule.visibility.copy()
         t_obs, y_obs, s_obs, history = [], [], [], []
@@ -221,6 +225,9 @@ def main() -> None:
     ap.add_argument("--n-satellites", type=int, default=N_SATELLITES)
     ap.add_argument("--results-dir", default=str(RESULTS_DIR))
     ap.add_argument("--sun-exclusion-deg", type=float, default=0.0, help="0 = off (Phase 3 default)")
+    ap.add_argument("--discrepancy-scale", type=float, default=0.0,
+                    help="Phase 5: multiple of the template-split population scatter added to the "
+                         "modeled-class likelihood (0 = off)")
     args = ap.parse_args()
     if args.split == "test" and not (REPO_ROOT / "research" / "PREREGISTRATION.md").exists():
         raise SystemExit("Test split is locked until research/PREREGISTRATION.md is committed.")
@@ -248,12 +255,16 @@ def main() -> None:
         grid = StretchAmplitudeGrid(TEMPLATE_AMPLITUDE_GRID, np.exp(np.linspace(np.log(lo), np.log(hi), N_STRETCH)))
         param_grid, resolver = grid.params, grid.resolver(templates)
 
+    disc = None
+    if args.discrepancy_scale > 0:
+        disc = discrepancy_resolver(build_class_scatter(splits["template"], "r"), args.discrepancy_scale,
+                                    build_class_scatter(splits["template"], "g") if args.bands == "gr" else None)
     chosen = splits[args.split][: args.n_events]
     seeds = np.random.SeedSequence(args.seed).spawn(len(chosen))
     records, no_contact = [], []
     for k, (ev, ss) in enumerate(zip(chosen, seeds)):
         rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale,
-                            args.budget, args.bands, args.sun_exclusion_deg)
+                            args.budget, args.bands, args.sun_exclusion_deg, disc)
         if rec is None:
             no_contact.append(ev.oid)
         else:
@@ -264,6 +275,7 @@ def main() -> None:
     config = {
         "split": args.split, "seed": args.seed, "n_events_requested": args.n_events,
         "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": args.budget, "bands": args.bands, "require_g": args.require_g, "sun_exclusion_deg": args.sun_exclusion_deg,
+        "discrepancy_scale": args.discrepancy_scale,
         "satellites": list(sat_names), "limiting_magnitudes": LIMITING_MAGNITUDE_CHOICES,
         "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": args.gp_lengthscale,
         "stretch_range": list(args.stretch_range), "n_stretch": N_STRETCH if args.stretch_range[0] != args.stretch_range[1] else 1,

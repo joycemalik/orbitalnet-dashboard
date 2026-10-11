@@ -232,6 +232,56 @@ def two_band_flux_fn_resolver(templates_r: dict[str, np.ndarray], templates_g: d
     return resolve
 
 
+def build_class_scatter(events: list[RealEvent], band: str = "r") -> dict[str, np.ndarray]:
+    """Phase 5 model discrepancy: per class and grid time, the robust spread
+    (1.4826 * MAD) of the TEMPLATE-split events' normalized curves around the
+    class median -- the same normalization as the band's template (r: own
+    peak; g: the event's r peak). Units: fraction of amplitude. Times no event
+    covers hold the last covered value (early uncovered g times -> 0)."""
+    out: dict[str, np.ndarray] = {}
+    for cls in MODELED_CLASSES:
+        curves = []
+        for ev in events:
+            if ev.true_class != cls or (band == "g" and ev.g_flux is None):
+                continue
+            r = ev.truth_flux(TEMPLATE_GRID_DAYS)
+            if band == "r":
+                f = r / np.max(r)
+                f[TEMPLATE_GRID_DAYS > ev.t_days[-1]] = np.nan
+            else:
+                f = ev.truth_flux_g(TEMPLATE_GRID_DAYS) / np.max(r)
+                f[(TEMPLATE_GRID_DAYS > ev.g_t_days[-1]) | (TEMPLATE_GRID_DAYS > ev.t_days[-1])] = np.nan
+            curves.append(f)
+        arr = np.array(curves)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            med = np.nanmedian(arr, axis=0)
+            mad = np.nanmedian(np.abs(arr - med), axis=0) * 1.4826
+        covered = ~np.isnan(mad)
+        last = np.flatnonzero(covered)[-1]
+        mad[last + 1:] = mad[last]
+        out[cls] = np.nan_to_num(mad)
+    return out
+
+
+def discrepancy_resolver(scatter_r: dict[str, np.ndarray], scale: float,
+                         scatter_g: dict[str, np.ndarray] | None = None):
+    """cls -> g(t, amplitude) = scale * amplitude * scatter(t); routes g-band
+    times (t >= offset/2) to the g scatter, like `two_band_flux_fn_resolver`."""
+    def resolve(cls: str):
+        r = scatter_r[cls]
+        g = scatter_g[cls] if scatter_g is not None else None
+
+        def f(t, amplitude):
+            t = np.asarray(t, dtype=float)
+            vals = np.interp(t, TEMPLATE_GRID_DAYS, r)
+            if g is not None:
+                vals = np.where(t >= G_TIME_OFFSET_DAYS / 2, np.interp(t - G_TIME_OFFSET_DAYS, TEMPLATE_GRID_DAYS, g), vals)
+            return scale * amplitude * vals
+        return f
+    return resolve
+
+
 def template_flux_fn_resolver(templates: dict[str, np.ndarray]):
     """Same contract as transients.models.modeled_flux_fn_p2: cls -> f(t, A)."""
     def resolver(cls: str):
@@ -269,5 +319,5 @@ class StretchAmplitudeGrid:
         return resolve
 
 
-__all__ = ["StretchAmplitudeGrid", "build_class_templates_g", "two_band_flux_fn_resolver", "G_TIME_OFFSET_DAYS", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
+__all__ = ["StretchAmplitudeGrid", "build_class_scatter", "discrepancy_resolver", "build_class_templates_g", "two_band_flux_fn_resolver", "G_TIME_OFFSET_DAYS", "RealEvent", "load_real_events", "build_class_templates", "template_flux_fn_resolver",
            "MODELED_CLASSES", "WITHHELD_CLASSES"]

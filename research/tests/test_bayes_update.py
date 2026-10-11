@@ -74,3 +74,18 @@ def test_posterior_concentrates_on_true_class_with_low_noise():
 
     post = belief.class_posterior()
     assert post["slow"] > 0.999
+
+
+def test_discrepancy_widens_likelihood_and_off_is_identical():
+    import numpy as np
+    from research.inference.bayes import ClosedWorldBelief
+    grid = np.array([1.0, 2.0, 4.0])
+    flux = lambda cls: (lambda t, a: a * np.ones_like(np.asarray(t, dtype=float)))
+    plain = ClosedWorldBelief.with_uniform_prior(("x",), grid, flux)
+    off = ClosedWorldBelief.with_uniform_prior(("x",), grid, flux)
+    off.discrepancy_resolver = None
+    on = ClosedWorldBelief.with_uniform_prior(("x",), grid, flux)
+    on.discrepancy_resolver = lambda cls: (lambda t, a: 0.5 * a)
+    assert np.array_equal(plain.log_likelihood_grid(0.0, 3.0, 0.1), off.log_likelihood_grid(0.0, 3.0, 0.1))
+    ll_plain, ll_on = plain.log_likelihood_grid(0.0, 10.0, 0.1), on.log_likelihood_grid(0.0, 10.0, 0.1)
+    assert np.all(ll_on > ll_plain)  # a far-off point is much less surprising with model scatter

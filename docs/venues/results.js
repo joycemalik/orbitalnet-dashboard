@@ -366,6 +366,239 @@ window.RESULTS = {
           "acc_modeled": 0.42704626334519574
         }
       }
+    },
+    "test": {
+      "overall_pass": {
+        "H1": true,
+        "H2": true,
+        "H3": false,
+        "H4": true,
+        "H5": false
+      },
+      "n_events": 364,
+      "n_withheld": 88,
+      "n_modeled": 276,
+      "seeds": [
+        {
+          "H1": {
+            "estimate": -0.6022727272727273,
+            "ci95": [
+              -0.7159090909090909,
+              -0.4886363636363636
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.7982954545454546,
+            "ci95": [
+              0.7466238471673254,
+              0.8460968379446641
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.0036231884057971175,
+            "ci95": [
+              -0.05797101449275363,
+              0.06521739130434784
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "H4": {
+            "estimate": 0.19293478260869568,
+            "ci95": [
+              0.1430747694334651,
+              0.24364037796442684
+            ],
+            "pass": true
+          },
+          "H5": {
+            "estimate": -0.07971014492753614,
+            "ci95": [
+              -0.14130434782608703,
+              -0.018115942028985477
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "auroc_vs_r10": {
+            "estimate": 0.1814270421607379,
+            "ci95": [
+              0.13247179677206852,
+              0.23087584403820816
+            ]
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.011363636363636364,
+            "B1_cnp_reimplementation": 0.4772727272727273,
+            "B2_classifier_entropy": 0.7954545454545454,
+            "B3_closed_world_eig": 0.7954545454545454,
+            "P_open_world_eig": 0.19318181818181818
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.36594202898550726,
+            "B1_cnp_reimplementation": 0.5398550724637681,
+            "B2_classifier_entropy": 0.6123188405797102,
+            "B3_closed_world_eig": 0.6159420289855072,
+            "P_open_world_eig": 0.5362318840579711
+          },
+          "acc_withheld": {
+            "B0_fixed_cadence": 0.0,
+            "B1_cnp_reimplementation": 0.0,
+            "B2_classifier_entropy": 0.0,
+            "B3_closed_world_eig": 0.0,
+            "P_open_world_eig": 0.6590909090909091
+          },
+          "h0_false_alarm": 0.2391304347826087
+        },
+        {
+          "H1": {
+            "estimate": -0.6704545454545454,
+            "ci95": [
+              -0.7727272727272728,
+              -0.5568181818181819
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.8024950592885376,
+            "ci95": [
+              0.74629034914361,
+              0.8531383810935441
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.03623188405797101,
+            "ci95": [
+              -0.025362318840579712,
+              0.09782608695652176
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "H4": {
+            "estimate": 0.21409749670619238,
+            "ci95": [
+              0.16073781291172595,
+              0.26966094367588933
+            ],
+            "pass": true
+          },
+          "H5": {
+            "estimate": -0.061594202898550665,
+            "ci95": [
+              -0.12681159420289856,
+              0.0036231884057971175
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "auroc_vs_r10": {
+            "estimate": 0.19367588932806323,
+            "ci95": [
+              0.1401484272068511,
+              0.24822957839262183
+            ]
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.022727272727272728,
+            "B1_cnp_reimplementation": 0.48863636363636365,
+            "B2_classifier_entropy": 0.8522727272727273,
+            "B3_closed_world_eig": 0.7954545454545454,
+            "P_open_world_eig": 0.125
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.36231884057971014,
+            "B1_cnp_reimplementation": 0.5072463768115942,
+            "B2_classifier_entropy": 0.6123188405797102,
+            "B3_closed_world_eig": 0.5905797101449275,
+            "P_open_world_eig": 0.5289855072463768
+          },
+          "acc_withheld": {
+            "B0_fixed_cadence": 0.0,
+            "B1_cnp_reimplementation": 0.0,
+            "B2_classifier_entropy": 0.0,
+            "B3_closed_world_eig": 0.0,
+            "P_open_world_eig": 0.7272727272727273
+          },
+          "h0_false_alarm": 0.2463768115942029
+        },
+        {
+          "H1": {
+            "estimate": -0.6022727272727273,
+            "ci95": [
+              -0.7272727272727272,
+              -0.4772727272727273
+            ],
+            "pass": true
+          },
+          "H2": {
+            "estimate": 0.770998023715415,
+            "ci95": [
+              0.7143023303689064,
+              0.8244235836627141
+            ],
+            "pass": true
+          },
+          "H3": {
+            "estimate": 0.0579710144927536,
+            "ci95": [
+              -0.00724637681159418,
+              0.12318840579710144
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "H4": {
+            "estimate": 0.14628623188405798,
+            "ci95": [
+              0.0981745100461133,
+              0.1959419260540184
+            ],
+            "pass": true
+          },
+          "H5": {
+            "estimate": -0.07608695652173914,
+            "ci95": [
+              -0.14130434782608697,
+              -0.010869565217391353
+            ],
+            "margin": 0.05,
+            "pass": false
+          },
+          "auroc_vs_r10": {
+            "estimate": 0.1694252305665349,
+            "ci95": [
+              0.11777420948616601,
+              0.2223340744400526
+            ]
+          },
+          "cw_withheld": {
+            "B0_fixed_cadence": 0.011363636363636364,
+            "B1_cnp_reimplementation": 0.48863636363636365,
+            "B2_classifier_entropy": 0.75,
+            "B3_closed_world_eig": 0.7840909090909091,
+            "P_open_world_eig": 0.18181818181818182
+          },
+          "acc_modeled": {
+            "B0_fixed_cadence": 0.40942028985507245,
+            "B1_cnp_reimplementation": 0.5471014492753623,
+            "B2_classifier_entropy": 0.6376811594202898,
+            "B3_closed_world_eig": 0.6159420289855072,
+            "P_open_world_eig": 0.5398550724637681
+          },
+          "acc_withheld": {
+            "B0_fixed_cadence": 0.0,
+            "B1_cnp_reimplementation": 0.0,
+            "B2_classifier_entropy": 0.0,
+            "B3_closed_world_eig": 0.0,
+            "P_open_world_eig": 0.6363636363636364
+          },
+          "h0_false_alarm": 0.2427536231884058
+        }
+      ]
     }
   },
   "rnaas": {

@@ -3,6 +3,41 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phases 4+5 — PREREGISTERED V2 TEST RESULT (2026-10-12)
+
+Run exactly as frozen in PREREGISTRATION_V2.md (commit b5374da, recorded in
+all 9 test config.json files). SECOND look at the test events (declared).
+364 two-band test events (276 SNe, 88 real unmodeled), seeds 1-3.
+Analysis: results/phase5/analysis_test_v2.json.
+
+| | seed 1 | seed 2 | seed 3 | verdict |
+|---|---|---|---|---|
+| H1 P - B3 confident-wrong, unmodeled | -0.602 [-0.716, -0.489] | -0.670 [-0.773, -0.557] | -0.602 [-0.727, -0.477] | **PASS** |
+| H2 AUROC of P(h0) | 0.798 [0.747, 0.846] | 0.802 [0.746, 0.853] | 0.771 [0.714, 0.824] | **PASS** |
+| H3 P - B3 confident-wrong, SNe (< +0.05) | +0.004 [-0.058, 0.065] | +0.036 [-0.025, 0.098] | +0.058 [-0.007, 0.123] | **FAIL** |
+| H4 AUROC gain vs single-band Phase 3 config | +0.193 [0.143, 0.244] | +0.214 [0.161, 0.270] | +0.146 [0.098, 0.196] | **PASS** |
+| H5 P - B3 SN accuracy (> -0.05) | -0.080 [-0.141, -0.018] | -0.062 [-0.127, 0.004] | -0.076 [-0.141, -0.011] | **FAIL** |
+
+Reported (seed 1/2/3): AUROC gain vs r@10 (same flux count) +0.181/+0.194/+0.169,
+all CIs > 0. P flags 66%/73%/64% of real unmodeled events; false "unknown"
+on SNe 24%/25%/24% (Phase 3 test: ~40%). Confident-wrong on unmodeled:
+B3 0.795/0.795/0.784, B1 (CNP auction) 0.477/0.489/0.489, P 0.193/0.125/0.182.
+SN accuracy: P 0.54/0.53/0.54, B3 0.62/0.59/0.62; single-band P was 0.33-0.37.
+
+What this means:
+- Confirmed on held-out real data: colour + model discrepancy turn P(h0)
+  from a weak signal (AUROC ~0.60) into a usable one (~0.79), and the gain
+  is colour, not data volume.
+- Robust across both test looks: closed-world planners are confidently
+  wrong on ~3/4-4/5 of genuinely unmodeled real transients; P cuts that
+  ~4-6x while flagging ~2/3 of them.
+- FAILED (H3, H5): P still pays for this on ordinary SNe — ~6-8 points lower
+  accuracy than B3, and we cannot rule out more confident errors. The
+  validation numbers (P accuracy = B3's) were optimistic; the test set says
+  the trade-off is reduced, not eliminated.
+- Validation -> test drift: AUROC 0.85 -> 0.79, false-alarm 0.16 -> 0.24.
+  Expected regression to the mean after picking the best of 11 configs.
+
 ## Phase 5 — model discrepancy: templates carry real population scatter (2026-10-12)
 
 Motivation (from the Phase 3 test): P calls ~40% of ordinary SNe "unknown".

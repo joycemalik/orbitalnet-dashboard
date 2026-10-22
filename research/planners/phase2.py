@@ -201,6 +201,16 @@ def open_world_eig_planner_p2(rng: np.random.Generator, schedule: ContactSchedul
     """P: full method. U = I_class + beta*I_Z + gamma*D, all per candidate
     (time, satellite); the GP's own predictive noise depends on which
     instrument is being asked about."""
+    cells, utility = open_world_utility_batch(schedule, remaining_mask, instrument_sigma, belief, t_obs, y_obs,
+                                              sigma_obs, gp, beta, gamma)
+    best_k = int(np.argmax(utility))
+    return int(cells[best_k, 0]), int(cells[best_k, 1])
+
+
+def open_world_utility_batch(schedule: ContactSchedule, remaining_mask, instrument_sigma, belief: ClosedWorldBelief,
+                             t_obs, y_obs, sigma_obs, gp: SimpleGP, beta: float = DEFAULT_BETA,
+                             gamma: float = DEFAULT_GAMMA) -> tuple[np.ndarray, np.ndarray]:
+    """P's utility for every feasible cell: (cells (n, 2), utility (n,))."""
     cells = _feasible_cells(remaining_mask)
     n_classes, n_amp = belief.log_joint.shape
     sigma_obs_arr = np.array(sigma_obs, dtype=float) if len(sigma_obs) else None
@@ -237,8 +247,7 @@ def open_world_eig_planner_p2(rng: np.random.Generator, schedule: ContactSchedul
     decay = _decay_term_batch(belief, schedule, instrument_sigma, cells, t_cands, sigma_cands)
 
     utility = i_class + beta * i_z + gamma * decay  # cost(a) == 1 (uniform; see module docstring)
-    best_k = int(np.argmax(utility))
-    return int(cells[best_k, 0]), int(cells[best_k, 1])
+    return cells, utility
 
 
 STRATEGIES_P2 = {

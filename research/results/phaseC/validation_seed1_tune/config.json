@@ -1,0 +1,30 @@
+{
+  "events": "validation",
+  "seed": 1,
+  "n_events_requested": 100000,
+  "lambdas": [
+    0.25,
+    0.5,
+    1.0,
+    2.0
+  ],
+  "bands": "gr",
+  "causal": true,
+  "gp_lengthscale": 5.0,
+  "discrepancy_scale": 0.5,
+  "budget": 5,
+  "confident_threshold": 0.95,
+  "tag": "tune",
+  "n_loaded": 363,
+  "exclusions": {
+    "missing_download": 1,
+    "too_few_r_detections": 456,
+    "too_few_g_detections": 321
+  },
+  "no_feasible_contact": [
+    "ZTF22aanrqje"
+  ],
+  "git_commit": "c7ecec4636ad87180c9867b9ecdea125b746b776",
+  "config_hash": "ee3bf361d9aed594",
+  "runtime_s": 785.1
+}

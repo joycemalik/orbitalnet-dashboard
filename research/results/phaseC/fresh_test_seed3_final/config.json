@@ -1,0 +1,29 @@
+{
+  "events": "fresh_test",
+  "seed": 3,
+  "n_events_requested": 100000,
+  "lambdas": [
+    0.25
+  ],
+  "bands": "gr",
+  "causal": true,
+  "gp_lengthscale": 5.0,
+  "discrepancy_scale": 0.5,
+  "budget": 5,
+  "confident_threshold": 0.95,
+  "tag": "final",
+  "n_loaded": 491,
+  "exclusions": {
+    "missing_download": 0,
+    "too_few_r_detections": 176,
+    "too_few_g_detections": 103
+  },
+  "no_feasible_contact": [
+    "ZTF19abgbbzy",
+    "ZTF24abhsqly"
+  ],
+  "git_commit": "ae51c85e44a96c939390e3a02c8debc73ca85a0c",
+  "config_hash": "c7d9676ae1512d4e",
+  "runtime_s": 328.1,
+  "git_dirty": true
+}

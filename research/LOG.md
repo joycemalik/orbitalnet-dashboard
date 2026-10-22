@@ -3,6 +3,69 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Causality bug found; Phase 2c (causal simulation) and Phase 6 (causal real replay) — protocol (2026-10-22)
+
+### The bug
+No phase enforced a time arrow. Every planner chose any unused (epoch,
+satellite) cell, so it could measure at day 0.01 after measuring at day 0.96.
+Measured on 40 Phase 2 events (seed 7): B1 40/40, B2 38/40, B3 39/40,
+P 38/40 sequences went backwards in time; only B0 (earliest-first) was
+forward. Phases 1 and 3-5 used the same loop.
+
+What it means for existing results: strategies were compared fairly (all
+had the same freedom), but the comparison is RETROSPECTIVE EPOCH SELECTION
+(choose 5 of 16 epochs, adaptively, in any order), not sequential follow-up.
+Decision (user, 2026-10-22): keep Phase 1 / 3-5 numbers, relabel them as
+retrospective epoch selection everywhere they appear, and re-run causally
+as new, separately labelled experiments. They are not replaced.
+
+### Fix
+Strictly forward (user's choice): after a measurement at epoch i, epochs
+<= i are closed for that strategy (one measurement per epoch). Phase 2:
+always on. Real replay: `--causal` (off reproduces Phases 3-5 exactly;
+tested). Tests: research/tests/test_causal.py.
+
+### Phase 2c: what changed besides causality (manuscript H1-H3 now testable)
+- H1 metric was wrong: `time_to_identification` fired when ANY class passed
+  0.95 and counted steps. Now: time (days) of the first measurement at which
+  the posterior on the TRUE class >= 0.95; censored (inf) if never.
+- Ablations added (manuscript "Ablations"): P_no_decay (gamma = 0) and
+  P_no_adequacy (beta = 0, h0 kept in belief and mode switch).
+- H2 metric: information recovered about ln(amplitude) under the true class,
+  0.5 ln(1 + Var_prior(ln A) * sum_i SNR_i^2) on the noise-free true signal
+  (amplitude is the only physical parameter in these models). The grid
+  entropy version is also recorded but saturates at ln(15) — not primary.
+- H3 comparator: entropy of the closed-world posterior ("classifier-entropy
+  threshold"), recorded for every strategy.
+- Runner takes --split/--seed/--n-events, runs events in parallel (same
+  per-event SeedSequence, so results do not depend on worker count), test
+  seeds (>= 1000) locked until PREREGISTRATION_PHASE2.md exists (it used to
+  check Phase 3's file).
+- The old non-causal Phase 2 was never run at scale; nothing is superseded.
+
+### Phase 2c validation tuning protocol (written BEFORE any run is seen)
+Smoke run (seed 99, 60 events, scratch dir, default gamma 0.01) showed the
+decay term dominates the utility at gamma = 0.01 (SNR^2 up to ~2500 vs
+I_class <= ln 4), so gamma must be calibrated, as the manuscript asks.
+- Split: validation, S1_nominal, seed 1, 500 events.
+- Grid: gamma in {1e-4, 1e-3, 1e-2, 1e-1} x h0 GP lengthscale in
+  {0.3, 1.2, 5} d. beta fixed at 1 (manuscript default; not tuned).
+  gamma = 0 is not in the grid: it is the H2 ablation, not a configuration.
+- Rule: maximize P's mean log score over ALL validation events (proper
+  scoring rule; covers modeled and withheld truth, favours no single
+  hypothesis). Ties within 0.02 -> smaller gamma, then lengthscale 1.2.
+- Then at the chosen config: S2_crowding (seed 2) and S3_model_error
+  (seed 3), 500 validation events each, and a dry run of the analysis.
+  Then PREREGISTRATION_PHASE2.md, then test (seeds 1000/2000/3000, 1000 events).
+
+### Phase 6 (causal real replay) validation protocol (written BEFORE any run)
+Same two-band event set, validation split, seed 1, all with --causal:
+gr@5 x kappa {0, 0.5, 1} (l = 5 d), plus r@5 (Phase 3 config) as the H4
+control. Rule as before: max P AUROC; ties within 0.01 -> lower P
+confident-wrong on modeled. Then PREREGISTRATION_V3.md with the V2
+hypotheses H1-H5 unchanged, and a DECLARED THIRD LOOK at the test events
+(seeds 1-3; chosen config, r@5 and r@10 controls, all causal).
+
 ## Phases 4+5 — PREREGISTERED V2 TEST RESULT (2026-10-12)
 
 Run exactly as frozen in PREREGISTRATION_V2.md (commit b5374da, recorded in

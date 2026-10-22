@@ -1,0 +1,223 @@
+{
+  "overall_pass_all_seeds": {
+    "H1": true,
+    "H2": true,
+    "H3": true,
+    "H4": true,
+    "H5": true
+  },
+  "runs": [
+    {
+      "run_dir": "research/results/phase6/validation_seed1_gr5_k0.5",
+      "n_events": 362,
+      "n_withheld": 81,
+      "n_modeled": 281,
+      "H1_P_vs_B3_confident_wrong_withheld": {
+        "estimate": -0.345679012345679,
+        "ci95": [
+          -0.45679012345679015,
+          -0.2345679012345679
+        ],
+        "pass": true
+      },
+      "H2_auroc_p_h0": {
+        "estimate": 0.8505777426299371,
+        "ci95": [
+          0.7991718290057555,
+          0.8964028381881287
+        ],
+        "pass": true
+      },
+      "H3_P_vs_B3_confident_wrong_modeled": {
+        "estimate": -0.04626334519572954,
+        "ci95": [
+          -0.08185053380782918,
+          -0.010676156583629894
+        ],
+        "margin": 0.05,
+        "pass": true
+      },
+      "reported": {
+        "P_vs_B1_confident_wrong_withheld": {
+          "estimate": -0.35802469135802467,
+          "ci95": [
+            -0.4814814814814815,
+            -0.2222222222222222
+          ]
+        },
+        "confident_wrong_withheld": {
+          "B0_fixed_cadence": 0.04938271604938271,
+          "B1_cnp_reimplementation": 0.4444444444444444,
+          "B2_classifier_entropy": 0.19753086419753085,
+          "B3_closed_world_eig": 0.43209876543209874,
+          "P_open_world_eig": 0.08641975308641975
+        },
+        "confident_wrong_modeled": {
+          "B0_fixed_cadence": 0.028469750889679714,
+          "B1_cnp_reimplementation": 0.12455516014234876,
+          "B2_classifier_entropy": 0.07473309608540925,
+          "B3_closed_world_eig": 0.10320284697508897,
+          "P_open_world_eig": 0.05693950177935943
+        },
+        "accuracy_modeled": {
+          "B0_fixed_cadence": 0.38434163701067614,
+          "B1_cnp_reimplementation": 0.594306049822064,
+          "B2_classifier_entropy": 0.44483985765124556,
+          "B3_closed_world_eig": 0.5622775800711743,
+          "P_open_world_eig": 0.6370106761565836
+        },
+        "accuracy_withheld": {
+          "B0_fixed_cadence": 0.0,
+          "B1_cnp_reimplementation": 0.0,
+          "B2_classifier_entropy": 0.0,
+          "B3_closed_world_eig": 0.0,
+          "P_open_world_eig": 0.41975308641975306
+        },
+        "P_h0_false_alarm_modeled": 0.042704626334519574,
+        "mean_log_score": {
+          "B0_fixed_cadence": -4.23047553319475,
+          "B1_cnp_reimplementation": -4.481186392573343,
+          "B2_classifier_entropy": -4.389014184065009,
+          "B3_closed_world_eig": -4.462854127447418,
+          "P_open_world_eig": -1.578601041223667
+        },
+        "confusion": {
+          "B1_cnp_reimplementation": {
+            "fast_interacting": {
+              "sn_ii": 4,
+              "sn_ibc": 3,
+              "sn_ia": 2
+            },
+            "slsn": {
+              "sn_ibc": 14,
+              "sn_ii": 21,
+              "sn_ia": 7
+            },
+            "sn_ia": {
+              "sn_ibc": 16,
+              "sn_ia": 63,
+              "sn_ii": 21
+            },
+            "sn_ibc": {
+              "sn_ibc": 45,
+              "sn_ia": 15,
+              "sn_ii": 17
+            },
+            "sn_ii": {
+              "sn_ii": 59,
+              "sn_ia": 21,
+              "sn_ibc": 24
+            },
+            "tde": {
+              "sn_ia": 10,
+              "sn_ibc": 11,
+              "sn_ii": 9
+            }
+          },
+          "B3_closed_world_eig": {
+            "fast_interacting": {
+              "sn_ii": 5,
+              "sn_ibc": 2,
+              "sn_ia": 2
+            },
+            "slsn": {
+              "sn_ii": 27,
+              "sn_ibc": 9,
+              "sn_ia": 6
+            },
+            "sn_ia": {
+              "sn_ibc": 19,
+              "sn_ii": 22,
+              "sn_ia": 59
+            },
+            "sn_ibc": {
+              "sn_ibc": 43,
+              "sn_ia": 14,
+              "sn_ii": 20
+            },
+            "sn_ii": {
+              "sn_ia": 16,
+              "sn_ibc": 32,
+              "sn_ii": 56
+            },
+            "tde": {
+              "sn_ii": 14,
+              "sn_ibc": 7,
+              "sn_ia": 9
+            }
+          },
+          "P_open_world_eig": {
+            "fast_interacting": {
+              "h0": 3,
+              "sn_ii": 1,
+              "sn_ia": 4,
+              "sn_ibc": 1
+            },
+            "slsn": {
+              "sn_ii": 18,
+              "sn_ibc": 4,
+              "h0": 18,
+              "sn_ia": 2
+            },
+            "sn_ia": {
+              "sn_ibc": 19,
+              "sn_ia": 62,
+              "sn_ii": 15,
+              "h0": 4
+            },
+            "sn_ibc": {
+              "sn_ibc": 55,
+              "sn_ia": 10,
+              "sn_ii": 10,
+              "h0": 2
+            },
+            "sn_ii": {
+              "sn_ibc": 20,
+              "sn_ii": 62,
+              "sn_ia": 16,
+              "h0": 6
+            },
+            "tde": {
+              "sn_ia": 8,
+              "sn_ibc": 2,
+              "h0": 13,
+              "sn_ii": 7
+            }
+          }
+        },
+        "exclusions": {
+          "missing_download": 1,
+          "too_few_r_detections": 456,
+          "too_few_g_detections": 321
+        }
+      },
+      "seed": 1,
+      "H4_auroc_vs_r5": {
+        "estimate": 0.21431395808620002,
+        "ci95": [
+          0.1551771670840472,
+          0.27615823118492155
+        ],
+        "pass": true
+      },
+      "H5_acc_modeled_P_vs_B3": {
+        "estimate": 0.07473309608540923,
+        "ci95": [
+          0.007117437722420017,
+          0.1387900355871886
+        ],
+        "margin": 0.05,
+        "pass": true
+      },
+      "reported_auroc_vs_r10": {
+        "estimate": 0.21435789288695573,
+        "ci95": [
+          0.15517771626905674,
+          0.2763943807389833
+        ]
+      }
+    }
+  ],
+  "n_boot": 10000,
+  "boot_seed": 20261012
+}

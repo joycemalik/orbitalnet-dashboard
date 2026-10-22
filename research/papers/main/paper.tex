@@ -1,0 +1,71 @@
+% Main paper: manuscript H1-H3 in simulation + causal real-data replay.
+% Every number comes from \input{numbers} (research/figures/paper_main.py,
+% generated from research/results/ only); every figure from figures/ (same script).
+% Build: bash research/papers/main/build.sh
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{natbib}
+\setcitestyle{authoryear,round}
+
+\input{numbers}
+
+\title{Keeping ``None of the Above'' in the Loop: Open-World, Causal Follow-Up Planning for Fading Transients, in Simulation and on Real ZTF Events}
+\author{Joyce Malik\\ \small [Department], [Institution], India \quad \texttt{[email]}}
+% TODO before submission: affiliation, email, co-authors.
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{abstract}
+
+\section{Introduction}
+Wide-field surveys discover more transients than follow-up resources can observe \citep{Bellm2019,Ivezic2019}, so the choice of \emph{which measurement to take next} is a planning problem. Expected information gain (EIG) about the class label \citep{Lindley1956,Chaloner1995} is the natural objective for that choice, but it makes two assumptions that fail exactly where follow-up matters most. It assumes the event belongs to one of the modeled classes, which is false for rare and new phenomena. And it treats measurements as interchangeable in time, while the epochs that separate fast transients vanish within hours to days.
+
+We study a planner that drops both assumptions. Its posterior carries an explicit unmodeled hypothesis $h_0$, represented by a Gaussian process (GP), and its utility adds, to the class EIG, an adequacy term (the information a measurement carries about whether $h_0$ is true) and an opportunity-decay term (what is lost by waiting). We test three of its claims in a simulated low-Earth-orbit constellation with real orbital visibility, and the open-world claim again on real Zwicky Transient Facility (ZTF) events with the measurements replayed counterfactually. All hypotheses, analyses and selection rules were fixed in preregistration files committed before the test data were run. We report the failures with the same prominence as the successes.
+
+\paragraph{A correction that shaped this paper.} An earlier version of our pipeline did not enforce a time arrow: an adaptive planner could measure at day~0.01 after it had measured at day~0.96, and it did so in about \CausalBugPct\ of events. Results from that version, including an earlier research note, compare strategies fairly but describe \emph{retrospective epoch selection}, not follow-up. Every result in Sections~\ref{sec:sim}--\ref{sec:real} is \emph{causal}: each measurement is strictly later than the one before. We report the retrospective numbers only for comparison, labelled as such.
+
+\section{Method}\label{sec:method}
+\paragraph{Belief.} For $K$ modeled classes with forward models $f_k(t;\theta)$, the planner holds an exact grid posterior over $(k,\theta)$; here $\theta$ is the amplitude (and, on real data, a two-band template). Measurements are Gaussian, $y\sim\mathcal N(f_k(t;\theta),\sigma_i^2)$, with $\sigma_i$ set by the instrument's limiting magnitude. The open-world posterior adds $h_0$, scored by the marginal likelihood of a zero-mean GP with a squared-exponential kernel, with a uniform prior over $\{1,\dots,K,h_0\}$.
+
+\paragraph{Utility.} A candidate action $a$ is an (epoch, spacecraft) pair that is visible and strictly later than the last measurement. The planner P maximizes
+\begin{equation}
+U(a) = I(H_{1:K};Y_a) + \beta\, I(Z;Y_a) + \gamma\, D(a),
+\end{equation}
+where $I(H_{1:K};Y_a)$ is the closed-world class EIG, $Z=\mathbb 1[h_0]$, and both mutual informations are computed by exact one-dimensional quadrature over the predictive mixture. $D(a)$ is the posterior-weighted loss in squared signal-to-noise between measuring now and at the same spacecraft's next opportunity, a Fisher-information proxy for the per-class information decay. When $P(h_0)>0.9$ for two consecutive steps, P switches from discrimination to preservation and takes the earliest remaining epochs.
+
+\paragraph{Baselines and ablations.} B0 measures at a fixed cadence (earliest feasible epoch). B1 re-implements the constellation's original Contract-Net auction score (geometric margin and sensitivity, no belief). B2 picks where the modeled classes' point-estimate predictions disagree most (classifier-entropy sampling, no likelihood marginalization). B3 is closed-world EIG, the key comparison. Two ablations remove one term of P each: P$_{\gamma=0}$ (no decay) and P$_{\beta=0}$ (no adequacy term; $h_0$ stays in the belief). Every strategy receives identical events, orbits, instruments, noise draws and budgets for a given seed.
+
+\section{Simulation study}\label{sec:sim}
+\paragraph{Setup.} Four modeled classes (kilonova, shock-cooling, GRB afterglow, M-dwarf flare) and three withheld classes never shown to any planner (an AT2018cow-like fast blue optical transient, a tidal disruption event, and a physically implausible brightening oscillation) are drawn uniformly. Their light curves are analytic shapes chosen to match each class's qualitative timescales, \emph{not} published templates. Amplitudes are log-uniform on $[5,20]$ in units of the 20th-magnitude noise floor. Eight Starlink satellites, propagated with SGP4 from real element sets, carry instruments with limiting magnitudes 19, 20 or 21 assigned at random, and see a random sky position only when it is not occulted by the Earth. Each strategy gets five measurements over 16 log-spaced epochs from 0.01 to 20~days. Scenarios: Nominal; Crowding (half of all epoch--satellite cells unavailable); and Model error (each modeled class's timescale misspecified by 30\% in the belief, but not in the truth).
+
+\paragraph{Hypotheses (preregistered).} H1: P reaches posterior $\geq 0.95$ on the true modeled class in less median time than every baseline, with the same measurement budget (one-sided paired Wilcoxon, Holm over four baselines). H2: removing the decay term reduces the information recovered about the true class's amplitude more for fast classes (kilonova, shock cooling, flare) than for the slow class (GRB afterglow) (stratified bootstrap). H3: at a 5\% false-alarm rate on modeled events, P's $P(h_0)$ detects more withheld events than a threshold on the closed-world posterior entropy of B3 (paired bootstrap). Only the Nominal scenario decides pass or fail; the others are reported. The decay weight $\gamma$ and the GP length scale were tuned on validation seeds only, by a rule fixed beforehand (maximum mean log score of P).
+
+\input{results_sim}
+
+\section{Real-data replay}\label{sec:real}
+\paragraph{Setup.} We replay spectroscopically classified ZTF Bright Transient Survey events \citep{Fremling2020,Perley2020} detected after the fleet existed, against the same Starlink satellites propagated from element sets archived at each event's date. Modeled classes are SN~Ia, SN~II and SN~Ibc, with empirical $g$- and $r$-band templates built only from events detected before 2020; tidal disruption events, superluminous supernovae and SN~Ibn are the real unmodeled population. Truth at any epoch is a GP interpolation of the real light curve; only the planner's measurements are simulated, and no epoch after the last real detection is offered. Each pointing returns simultaneous $g$ and $r$ fluxes, and each class likelihood includes its template population scatter (model discrepancy, $\kappa$ times the scatter). The events are split by date into validation (older half) and test (newer half).
+
+\input{results_real}
+
+\input{discussion}
+
+\section*{Reproducibility}
+Code, per-event outputs, preregistration files and the script that generates every number and figure here: \url{https://github.com/joycemalik/orbitalnet-dashboard} (branch \texttt{research/open-world-planner}). % TODO: Zenodo DOI of the tagged release.
+
+\begin{thebibliography}{}
+\bibitem[Bellm et al.(2019)]{Bellm2019} Bellm, E.~C., et al. 2019, PASP, 131, 018002
+\bibitem[Chaloner \& Verdinelli(1995)]{Chaloner1995} Chaloner, K., \& Verdinelli, I. 1995, Statistical Science, 10, 273
+\bibitem[Fremling et al.(2020)]{Fremling2020} Fremling, C., et al. 2020, ApJ, 895, 32
+\bibitem[Ivezi\'c et al.(2019)]{Ivezic2019} Ivezi\'c, \v{Z}., et al. 2019, ApJ, 873, 111
+\bibitem[Lindley(1956)]{Lindley1956} Lindley, D.~V. 1956, Annals of Mathematical Statistics, 27, 986
+\bibitem[Perley et al.(2020)]{Perley2020} Perley, D.~A., et al. 2020, ApJ, 904, 35
+\end{thebibliography}
+
+\end{document}

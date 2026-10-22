@@ -1,0 +1,55 @@
+{
+ "rule": "max AUROC(s) for L; ties within 0.01 -> higher closed-world accuracy on modeled",
+ "per_strategy": {
+  "B0_fixed_cadence": {
+   "auroc_score": 0.5740960414744519,
+   "closed_acc_known": 0.38434163701067614,
+   "mean_obs": 5.0
+  },
+  "B1_cnp_reimplementation": {
+   "auroc_score": 0.752734941347041,
+   "closed_acc_known": 0.594306049822064,
+   "mean_obs": 3.1187845303867405
+  },
+  "B2_classifier_entropy": {
+   "auroc_score": 0.8147708800140592,
+   "closed_acc_known": 0.44483985765124556,
+   "mean_obs": 1.8480662983425415
+  },
+  "B3_closed_world_eig": {
+   "auroc_score": 0.8440314573173411,
+   "closed_acc_known": 0.5622775800711743,
+   "mean_obs": 2.472375690607735
+  },
+  "P_open_world_eig": {
+   "auroc_score": 0.8450858925354774,
+   "closed_acc_known": 0.6583629893238434,
+   "mean_obs": 2.3066298342541436
+  },
+  "L_lookahead_0.25": {
+   "auroc_score": 0.8630991608453056,
+   "closed_acc_known": 0.6868327402135231,
+   "mean_obs": 3.1988950276243093
+  },
+  "L_lookahead_0.5": {
+   "auroc_score": 0.8569482887395106,
+   "closed_acc_known": 0.6868327402135231,
+   "mean_obs": 3.7900552486187844
+  },
+  "L_lookahead_1": {
+   "auroc_score": 0.8725451430077764,
+   "closed_acc_known": 0.6725978647686833,
+   "mean_obs": 5.0
+  },
+  "L_lookahead_2": {
+   "auroc_score": 0.8552348315100391,
+   "closed_acc_known": 0.6512455516014235,
+   "mean_obs": 5.0
+  }
+ },
+ "tied": [
+  "L_lookahead_0.25",
+  "L_lookahead_1"
+ ],
+ "chosen": "L_lookahead_0.25"
+}

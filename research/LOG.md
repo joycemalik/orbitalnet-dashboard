@@ -45,6 +45,19 @@ events x 5 strategies, identical epochs and posteriors (0 mismatches).
   calibration): per-class FAR, unknown TPR, accuracy/confident-wrong of the
   conformal decision for every strategy.
 
+### Phase C validation outcome (seed 1, 362 events, 81 unknown)
+Sources: results/phaseC/lambda_selection_validation.json,
+crossfit_validation_seed1_tune.json, hypotheses_dryrun_validation.json.
+- Measurements used: P 2.31, L(0.25) 3.20, L(0.5) 3.79, L(1, 2) 5.00 of 5.
+- AUROC of s: B3 0.844, P 0.845, L 0.863/0.857/0.873/0.855 (lam .25/.5/1/2).
+  The prior-free score works for EVERY planner (B3 0.844 with post-hoc GP).
+- Closed-world accuracy on SNe: B3 0.562, P 0.658, L(0.25) 0.687.
+- Rule -> lam = 0.25. Dry run: HC1-HC5 pass, HC6 (AUROC L - P > 0) fails.
+- Cross-fit flag rates on known fold scatter 0.01-0.16 around alpha = 0.1
+  with ~37 calibration events per class: realized FAR is noisy at this n
+  (expected; the bound is on the mean). fresh_cal has ~60-360 per class.
+- Frozen in PREREGISTRATION_C.md.
+
 ## Causality bug found; Phase 2c (causal simulation) and Phase 6 (causal real replay) — protocol (2026-10-22)
 
 ### The bug

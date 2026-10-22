@@ -45,6 +45,7 @@ STRAT = {  # key -> (label, colour)
     "P_no_decay": (r"P, $\gamma=0$ (no decay)", C[5]),
     "P_no_adequacy": (r"P, $\beta=0$ (no adequacy)", C[6]),
 }
+ROMAN = {"H1": "One", "H2": "Two", "H3": "Three", "H4": "Four", "H5": "Five"}
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
 plt.rcParams.update({
@@ -85,6 +86,15 @@ class Macros:
         self.add(name, f"[{scale * lohi[0]:.{digits}f}, {scale * lohi[1]:.{digits}f}]")
 
 
+def span(lo: float, hi: float, fmt: str) -> str:
+    a, b = fmt.format(lo), fmt.format(hi)
+    return a if a == b else f"{a}--{b}"
+
+
+def pct_span(lo: float, hi: float) -> str:
+    return span(100 * lo, 100 * hi, "{:.0f}") + "\\%"
+
+
 def word(i: int) -> str:
     return ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven"][i]
 
@@ -101,7 +111,7 @@ def sim(m: Macros):
     m.add("SimNModeled", str(s1["H1"]["n_modeled"]))
     m.add("SimNWithheld", str(s1["H3"]["n_withheld"]))
     for h in ("H1", "H2", "H3"):
-        m.add(f"Sim{h}Verdict", r"\textbf{pass}" if a["verdict"][h] else r"\textbf{fail}")
+        m.add(f"SimH{ROMAN[h]}Verdict", r"\textbf{pass}" if a["verdict"][h] else r"\textbf{fail}")
 
     # H1
     h1 = s1["H1"]
@@ -166,7 +176,7 @@ def sim(m: Macros):
     m.f("SimAucPCrowding", runs["S2_crowding"]["H3"]["P_auroc"], 3)
     for sc, nm in (("S2_crowding", "Crowding"), ("S3_model_error", "ModelError")):
         for h in ("H1", "H2", "H3"):
-            m.add(f"Sim{h}{nm}", "pass" if runs[sc][h]["pass"] else "fail")
+            m.add(f"SimH{ROMAN[h]}{nm}", "pass" if runs[sc][h]["pass"] else "fail")
 
     fig_tti(s1)
     fig_h2(s1)
@@ -206,12 +216,12 @@ def fig_tti(s1):
         t = np.array([num(x) for x in s1["tti_days"][key]])
         n = len(t)
         fin = np.sort(t[np.isfinite(t)])
-        xs = np.r_[fin, 20.0]
+        xs = np.r_[fin, 30.0]
         ys = np.r_[np.arange(1, len(fin) + 1) / n, len(fin) / n]
         ax.step(xs, ys, where="post", color=STRAT[key][1], label=STRAT[key][0],
                 lw=2.2 if key == "P_open_world_eig" else 1.4)
     ax.set_xscale("log")
-    ax.set_xlim(0.01, 20)
+    ax.set_xlim(0.008, 30)
     ax.set_ylim(0, 1)
     ax.set_xlabel("time since alert (days)")
     ax.set_ylabel("fraction of modeled events\nidentified ($\\geq$0.95 on true class)")
@@ -259,7 +269,6 @@ def fig_roc_sim(s1):
 # --------------------------------------------------------------------- real data
 H_KEYS = {"H1": "H1_P_vs_B3_confident_wrong_withheld", "H2": "H2_auroc_p_h0",
           "H3": "H3_P_vs_B3_confident_wrong_modeled", "H4": "H4_auroc_vs_r5", "H5": "H5_acc_modeled_P_vs_B3"}
-ROMAN = {"H1": "One", "H2": "Two", "H3": "Three", "H4": "Four", "H5": "Five"}
 
 
 def real(m: Macros):
@@ -278,16 +287,16 @@ def real(m: Macros):
 
     for tag, a in (("C", v3), ("R", v2)):
         lo, hi = rng(a, lambda r: r["H2_auroc_p_h0"]["estimate"])
-        m.add(f"Real{tag}Auc", f"{lo:.2f}--{hi:.2f}")
+        m.add(f"Real{tag}Auc", span(lo, hi, "{:.2f}"))
         for strat, nm in (("B3_closed_world_eig", "Bthree"), ("P_open_world_eig", "P"), ("B1_cnp_reimplementation", "Bone")):
             lo, hi = rng(a, lambda r: r["reported"]["confident_wrong_withheld"][strat])
-            m.add(f"Real{tag}CwWh{nm}", f"{100 * lo:.0f}--{100 * hi:.0f}\\%")
+            m.add(f"Real{tag}CwWh{nm}", pct_span(lo, hi))
             lo, hi = rng(a, lambda r: r["reported"]["accuracy_modeled"][strat])
-            m.add(f"Real{tag}AccMod{nm}", f"{100 * lo:.0f}--{100 * hi:.0f}\\%")
+            m.add(f"Real{tag}AccMod{nm}", pct_span(lo, hi))
         lo, hi = rng(a, lambda r: r["reported"]["accuracy_withheld"]["P_open_world_eig"])
-        m.add(f"Real{tag}FlagP", f"{100 * lo:.0f}--{100 * hi:.0f}\\%")
+        m.add(f"Real{tag}FlagP", pct_span(lo, hi))
         lo, hi = rng(a, lambda r: r["reported"]["P_h0_false_alarm_modeled"])
-        m.add(f"Real{tag}FaP", f"{100 * lo:.0f}--{100 * hi:.0f}\\%")
+        m.add(f"Real{tag}FaP", pct_span(lo, hi))
     table_real(v3, v2)
 
     # budget actually used, causal vs retrospective (test, all seeds)

@@ -3,6 +3,41 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 2c — PREREGISTERED TEST RESULT: causal simulation, manuscript H1-H3 (2026-10-22)
+
+Run exactly as frozen in PREREGISTRATION_PHASE2.md (commit 1e3fbf4); 1000
+events per scenario; analysis results/phase2/analysis_test.json. S1 decides.
+
+| | S1 nominal (primary) | S2 crowding | S3 model error |
+|---|---|---|---|
+| H1 P faster to 0.95 on true class than B0-B3 | **FAIL**: P 0.96 d; B0 never (median), B1 12.0 d, B3 1.59 d (all Holm p < 1e-4) but B2 0.58 d | fail | fail |
+| H2 decay helps fast > slow | **PASS** +0.261 [0.153, 0.368] | pass +0.232 | fail -0.098 [-0.171, -0.024] |
+| H3 dTPR@5%FA, P(h0) vs B3 entropy | **PASS** +0.755 [0.663, 0.838]; AUROC 0.993 vs 0.666 | pass +0.732 | pass +0.174 [0.075, 0.306] |
+
+S1 reported: confident-wrong on withheld B3 0.97, B1 0.75, B2 0.69, P 0.06;
+P flags 89% of withheld, 0% false "unknown"; modeled accuracy P 0.998 =
+B3 0.998 (B2 0.88, B1 0.80, B0 0.79). Budget used: B3 2.8, P 4.2, B0 5.
+H2 per class (P minus P_no_decay, nats): kilonova +1.59, shock cooling +0.32,
+flare -0.56 (!), GRB +0.15. The fast-vs-slow effect is carried by kilonovae;
+for the fastest class (flare) the decay term LOSES information.
+
+Ablations (S1): P_no_adequacy (beta = 0) is indistinguishable from P on
+every metric (flags 0.891 vs 0.893, AUROC 0.992 vs 0.993): the adequacy
+term I(Z;Y) contributes nothing measurable here. P_no_decay flags 0.654,
+AUROC 0.936, uses 3.6 measurements: the decay term, by keeping P from
+jumping late, is what makes P collect enough data to flag h0.
+
+Model error (S3): P false "unknown" on modeled 12.6%, modeled accuracy 0.87
+(B3 0.99): the manuscript's predicted failure mode, observed.
+
+What this means:
+- The open-world posterior is the robust win (H3, every scenario).
+- H1 is refuted: classifier-entropy sampling (B2) identifies faster; P is
+  faster than closed-world EIG only because causal greedy EIG jumps late.
+- H2 holds in the nominal model but is class-dependent and reverses under
+  model error; the decay proxy is not a uniformly good urgency signal.
+- The manuscript's adequacy term is unnecessary in this setting.
+
 ## Phase 2c — validation tuning outcome and preregistration (2026-10-22)
 
 Grid (S1, validation seed 1, 500 events): results/phase2/selection_validation.json.

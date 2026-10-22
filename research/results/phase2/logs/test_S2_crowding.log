@@ -1,0 +1,8 @@
+test_S2_crowding_seed2000_final: 269.5s
+  B0_fixed_cadence           acc_mod=0.760 cw_wh=0.012 med_tti=inf info_fast=1.258 info_slow=4.176 logS=-6.027 auroc_H=0.688
+  B1_cnp_reimplementation    acc_mod=0.857 cw_wh=0.710 med_tti=12.04928645605049 info_fast=1.180 info_slow=2.079 logS=-5.971 auroc_H=0.503
+  B2_classifier_entropy      acc_mod=0.943 cw_wh=0.803 med_tti=0.9563524997900371 info_fast=2.069 info_slow=4.298 logS=-5.881 auroc_H=0.724
+  B3_closed_world_eig        acc_mod=1.000 cw_wh=0.941 med_tti=2.634846565824804 info_fast=1.255 info_slow=3.575 logS=-5.818 auroc_H=0.683
+  P_open_world_eig           acc_mod=0.995 cw_wh=0.143 med_tti=1.5874010519682 info_fast=1.839 info_slow=4.154 logS=-0.431 auroc_h0=0.975
+  P_no_decay                 acc_mod=0.998 cw_wh=0.309 med_tti=7.2592652049980995 info_fast=1.457 info_slow=4.004 logS=-0.956 auroc_h0=0.908
+  P_no_adequacy              acc_mod=0.995 cw_wh=0.135 med_tti=1.5874010519682 info_fast=1.839 info_slow=4.154 logS=-0.426 auroc_h0=0.973

@@ -1,0 +1,68 @@
+[1/364] ZTF22abiyjlx (sn_ia)
+[26/364] ZTF22abynkpz (slsn)
+[51/364] ZTF23aahnmag (sn_ibc)
+[76/364] ZTF23aasnwva (fast_interacting)
+[101/364] ZTF23abbpswf (sn_ibc)
+[126/364] ZTF23abomtjc (sn_ibc)
+[151/364] ZTF24aahaanm (sn_ii)
+[176/364] ZTF24aarygdq (sn_ii)
+[201/364] ZTF24abeebbl (sn_ii)
+[226/364] ZTF24abtbalq (sn_ii)
+[251/364] ZTF25aafdxjr (sn_ii)
+[276/364] ZTF25aaqvqvd (slsn)
+[301/364] ZTF25abmjfcf (slsn)
+[326/364] ZTF25abuvxsy (sn_ia)
+[351/364] ZTF25acfbplr (slsn)
+{
+ "B0_fixed_cadence": {
+  "n_modeled": 276,
+  "n_withheld": 88,
+  "accuracy_modeled": 0.39492753623188404,
+  "accuracy_withheld": 0.0,
+  "confident_wrong_rate_modeled": 0.06884057971014493,
+  "confident_wrong_rate_withheld": 0.022727272727272728,
+  "mean_log_score": -4.701264758084903,
+  "mean_obs_used": 4.989010989010989
+ },
+ "B1_cnp_reimplementation": {
+  "n_modeled": 276,
+  "n_withheld": 88,
+  "accuracy_modeled": 0.4420289855072464,
+  "accuracy_withheld": 0.0,
+  "confident_wrong_rate_modeled": 0.22826086956521738,
+  "confident_wrong_rate_withheld": 0.4772727272727273,
+  "mean_log_score": -5.649040586049864,
+  "mean_obs_used": 3.087912087912088
+ },
+ "B2_classifier_entropy": {
+  "n_modeled": 276,
+  "n_withheld": 88,
+  "accuracy_modeled": 0.38405797101449274,
+  "accuracy_withheld": 0.0,
+  "confident_wrong_rate_modeled": 0.12318840579710146,
+  "confident_wrong_rate_withheld": 0.125,
+  "mean_log_score": -5.084338191931104,
+  "mean_obs_used": 1.9093406593406594
+ },
+ "B3_closed_world_eig": {
+  "n_modeled": 276,
+  "n_withheld": 88,
+  "accuracy_modeled": 0.5289855072463768,
+  "accuracy_withheld": 0.0,
+  "confident_wrong_rate_modeled": 0.18840579710144928,
+  "confident_wrong_rate_withheld": 0.6363636363636364,
+  "mean_log_score": -5.557016402778594,
+  "mean_obs_used": 2.6675824175824174
+ },
+ "P_open_world_eig": {
+  "n_modeled": 276,
+  "n_withheld": 88,
+  "accuracy_modeled": 0.4311594202898551,
+  "accuracy_withheld": 0.3522727272727273,
+  "confident_wrong_rate_modeled": 0.18478260869565216,
+  "confident_wrong_rate_withheld": 0.03409090909090909,
+  "mean_log_score": -3.157258348665378,
+  "mean_obs_used": 2.25,
+  "auroc_p_h0_withheld_vs_modeled": 0.6241147891963109
+ }
+}

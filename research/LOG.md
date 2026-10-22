@@ -3,6 +3,39 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 6 — PREREGISTERED V3 TEST RESULT: causal real replay (2026-10-22)
+
+Run exactly as frozen in PREREGISTRATION_V3.md (commit 9c9a024). THIRD look
+at the two-band test events (declared). 364 events (276 SNe, 88 real
+unmodeled), seeds 1-3. Analysis: results/phase6/analysis_test_v3.json.
+
+| | seed 1 | seed 2 | seed 3 | verdict |
+|---|---|---|---|---|
+| H1 P - B3 confident-wrong, unmodeled | -0.489 [-0.602, -0.364] | -0.420 [-0.545, -0.295] | -0.364 [-0.477, -0.250] | **PASS** |
+| H2 AUROC of P(h0) | 0.811 [0.758, 0.859] | 0.812 [0.756, 0.862] | 0.788 [0.733, 0.840] | **PASS** |
+| H3 P - B3 confident-wrong, SNe (< +0.05) | -0.047 [-0.087, -0.007] | -0.036 [-0.080, 0.004] | -0.033 [-0.072, 0.011] | **PASS** |
+| H4 AUROC gain vs single band | +0.187 [0.133, 0.244] | +0.175 [0.116, 0.235] | +0.241 [0.183, 0.301] | **PASS** |
+| H5 P - B3 SN accuracy (> -0.05) | +0.011 [-0.051, 0.072] | +0.025 [-0.040, 0.091] | -0.014 [-0.076, 0.047] | **FAIL** |
+
+Reported (seed 1/2/3): confident-wrong on unmodeled B3 0.56/0.52/0.50,
+B1 0.46/0.40/0.44, B2 0.16/0.11/0.21, P 0.07/0.10/0.14. P flags
+42%/47%/39% of unmodeled events (v2 retrospective: 66/73/64%); false
+"unknown" on SNe 8%/8%/8% (v2: 24%). SN accuracy P 0.59/0.63/0.60 vs
+B3 0.58/0.60/0.62 (point estimates now equal or better; H5 fails only
+because the lower CI bound is -0.051 and -0.076 on seeds 1 and 3).
+
+What this means:
+- With a time arrow, the open-world planner's cost on ordinary SNe largely
+  disappears: H3 now passes (failed in Phase 3 and v2), false "unknown"
+  drops from ~24% to ~8%, and P's SN accuracy matches B3's. H5 still fails
+  formally: the CIs are too wide to rule out a 5-point loss.
+- The price moved to the unknowns: P flags fewer of them (~43% vs ~68%
+  retrospectively), because causally the planners use only ~2-3 of 5
+  measurements (greedy jumps late). Closed-world planners are also less
+  often confidently wrong causally (B3 ~0.53 vs ~0.79) for the same reason:
+  fewer measurements, less confidence.
+- AUROC of P(h0) is essentially unchanged (0.79-0.81 vs 0.77-0.80).
+
 ## Causality bug found; Phase 2c (causal simulation) and Phase 6 (causal real replay) — protocol (2026-10-22)
 
 ### The bug

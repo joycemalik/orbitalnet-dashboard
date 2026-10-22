@@ -1,0 +1,12 @@
+diff --git a/research/results/phaseC/logs/fetch_fresh.log b/research/results/phaseC/logs/fetch_fresh.log
+index 96b7939..d15e02b 100644
+--- a/research/results/phaseC/logs/fetch_fresh.log
++++ b/research/results/phaseC/logs/fetch_fresh.log
+@@ -7,3 +7,7 @@
+ [601/1531]
+ [701/1531]
+ [801/1531]
++[901/1531]
++[1001/1531]
++[1101/1531]
++[1201/1531]

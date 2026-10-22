@@ -45,7 +45,52 @@ events x 5 strategies, identical epochs and posteriors (0 mismatches).
   calibration): per-class FAR, unknown TPR, accuracy/confident-wrong of the
   conformal decision for every strategy.
 
-### Phase C validation outcome (seed 1, 362 events, 81 unknown)
+### Phase C — PREREGISTERED RESULT (2026-10-22)
+
+Run exactly as frozen in PREREGISTRATION_C.md (commit ae51c85). Calibration:
+fresh_cal (456 SNe); sealed known set: fresh_test (489 SNe, never loaded
+before); unknowns: Phase 3 test split (364 events, 88 unknown; declared extra
+look). Seeds 1-3. Sources: results/phaseC/hypotheses_seed{1,2,3}.json,
+analysis_seed{1,2,3}.json. alpha = 0.1. C-L = lookahead L(0.25) + conformal.
+
+| | seed 1 | seed 2 | seed 3 | verdict |
+|---|---|---|---|---|
+| HC1 false-"unknown" on sealed SNe (pooled; <= alpha) | 0.035 [0.020, 0.055] | 0.061 [0.042, 0.086] | 0.063 [0.043, 0.089] | **PASS** |
+| HC2 C-L - B3 SN accuracy (> -0.05) [old H5] | +0.082 [+0.039, +0.123] | +0.074 [+0.033, +0.115] | +0.059 [+0.012, +0.106] | **PASS** |
+| HC3 C-L - B3 confident-wrong SNe (< +0.05) [old H3] | -0.027 [-0.057, +0.002] | -0.049 [-0.078, -0.020] | -0.012 [-0.043, +0.018] | **PASS** |
+| HC4 C-L - B3 confident-wrong unknowns (< 0) | -0.239 [-0.375, -0.102] | -0.261 [-0.409, -0.114] | -0.193 [-0.341, -0.045] | **PASS** |
+| HC5 C-L flags unknowns (> alpha) | 0.420 [0.316, 0.530] | 0.545 [0.436, 0.652] | 0.432 [0.327, 0.542] | **PASS** |
+| HC6 AUROC(s) L - P (> 0) | +0.012 [-0.013, +0.038] | +0.031 [+0.006, +0.058] | +0.039 [+0.005, +0.075] | **FAIL** (seed 1) |
+
+Per-class false-"unknown" on sealed SNe, every planner with the conformal
+layer (18 planner x seed cells): 0.027-0.108; 17/18 <= 0.1 (B2 seed 3:
+0.108). On the test split's own SNe (different selection, calibrated on
+fresh): per class 0.022-0.083.
+
+What this means:
+- The two hypotheses that failed on every earlier preregistered test
+  (H3, H5) PASS on a sealed, never-loaded set of 489 real SNe: the
+  open-world system is now MORE accurate than the closed-world EIG planner
+  (+6 to +8 points), with no more confident errors, while still flagging
+  42-55% of real unknowns (B3: 0%) at a false-alarm rate certified <= 10%.
+- The false-alarm guarantee is planner-agnostic and held out of sample for
+  all six planners, including the live-stack CNP auction (B1).
+- HC6 failed: L's ranking of unknowns is not reliably better than P's.
+
+Honest decomposition (reported, from analysis_seed*.json):
+- Under causal rules raw P already beats B3 on fresh SNe (acc 0.61-0.66 vs
+  0.60; P's raw false-unknown only 7-9%). Much of H5's earlier failure was
+  the retrospective protocol, not open-world reasoning.
+- L adds accuracy by using its budget (3.1 vs ~2.3 measurements):
+  C-L acc 0.66-0.69 vs raw P 0.61-0.66.
+- Trade-off, not a free lunch: C-L is confidently wrong on 26-32% of
+  unknowns vs raw P's 7-15% (both far below B3's 50-56%). Conformal buys a
+  certified false-alarm rate and accuracy; P's Bayesian h0 prior buys fewer
+  confident errors on unknowns, with no guarantee.
+- B3 + conformal alone: SN acc 0.57-0.59, flags 41-52% of unknowns -- the
+  layer turns even a closed-world planner into a certified open-set one.
+
+## Phase C validation outcome (seed 1, 362 events, 81 unknown)
 Sources: results/phaseC/lambda_selection_validation.json,
 crossfit_validation_seed1_tune.json, hypotheses_dryrun_validation.json.
 - Measurements used: P 2.31, L(0.25) 3.20, L(0.5) 3.79, L(1, 2) 5.00 of 5.

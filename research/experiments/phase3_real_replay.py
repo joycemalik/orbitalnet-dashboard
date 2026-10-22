@@ -105,12 +105,14 @@ def mjd_to_datetime(mjd: float) -> datetime.datetime:
 def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_names, flux_resolver,
                   param_grid: np.ndarray = AMPLITUDE_GRID, gp_lengthscale: float = H0_GP_LENGTHSCALE_DAYS,
                   budget: int = N_OBS_BUDGET, bands: str = "r", sun_exclusion_deg: float = 0.0,
-                  disc_resolver=None) -> dict | None:
+                  disc_resolver=None, causal: bool = False) -> dict | None:
     """bands="r": Phase 3 (one r-band flux per pointing). bands="gr": Phase 4,
     each pointing returns simultaneous r AND g fluxes (dual-band imager); the
     g value enters the belief/GP at t + G_TIME_OFFSET_DAYS. Planners still
     score candidates on r-band predictions only (documented simplification),
-    so any gain is from the colour information in the measurements."""
+    so any gain is from the colour information in the measurements.
+    causal=True (Phase 6): measurements strictly forward in time -- after a
+    measurement at epoch i, epochs <= i are closed. Off reproduces Phases 3-5."""
     rng = np.random.default_rng(seed_seq)
     schedule, tle_age = build_contact_schedule_historical(
         archive, sat_names, mjd_to_datetime(ev.t0_mjd), CANDIDATE_TIMES_DAYS,
@@ -147,6 +149,8 @@ def run_one_event(ev: RealEvent, seed_seq: np.random.SeedSequence, archive, sat_
             fn = fixed_cadence_planner if (is_ow and switch_step is not None) else planner_fn
             i, j = fn(planner_rng, schedule, remaining, instrument_sigma, belief, t_obs, y_obs, s_obs, gp)
             remaining[i, j] = False
+            if causal:
+                remaining[: i + 1, :] = False
             t, y, s = float(CANDIDATE_TIMES_DAYS[i]), float(observed[i, j]), float(instrument_sigma[j])
             t_obs.append(t); y_obs.append(y); s_obs.append(s)
             belief.update(t, y, s)
@@ -228,9 +232,15 @@ def main() -> None:
     ap.add_argument("--discrepancy-scale", type=float, default=0.0,
                     help="Phase 5: multiple of the template-split population scatter added to the "
                          "modeled-class likelihood (0 = off)")
+    ap.add_argument("--causal", action="store_true",
+                    help="Phase 6: strictly forward-in-time measurements (off = Phases 3-5 behaviour)")
+    ap.add_argument("--preregistration", default="PREREGISTRATION.md",
+                    help="file under research/ that must exist before the test split is unlocked")
     args = ap.parse_args()
-    if args.split == "test" and not (REPO_ROOT / "research" / "PREREGISTRATION.md").exists():
-        raise SystemExit("Test split is locked until research/PREREGISTRATION.md is committed.")
+    if args.causal and args.preregistration == "PREREGISTRATION.md":
+        args.preregistration = "PREREGISTRATION_V3.md"
+    if args.split == "test" and not (REPO_ROOT / "research" / args.preregistration).exists():
+        raise SystemExit(f"Test split is locked until research/{args.preregistration} is committed.")
 
     t_start = time.time()
     # Provenance for runs launched from an uncommitted tree: snapshot the exact
@@ -264,7 +274,7 @@ def main() -> None:
     records, no_contact = [], []
     for k, (ev, ss) in enumerate(zip(chosen, seeds)):
         rec = run_one_event(ev, ss, archive, sat_names, resolver, param_grid, args.gp_lengthscale,
-                            args.budget, args.bands, args.sun_exclusion_deg, disc)
+                            args.budget, args.bands, args.sun_exclusion_deg, disc, args.causal)
         if rec is None:
             no_contact.append(ev.oid)
         else:
@@ -275,7 +285,7 @@ def main() -> None:
     config = {
         "split": args.split, "seed": args.seed, "n_events_requested": args.n_events,
         "candidate_times_days": CANDIDATE_TIMES_DAYS.tolist(), "n_obs_budget": args.budget, "bands": args.bands, "require_g": args.require_g, "sun_exclusion_deg": args.sun_exclusion_deg,
-        "discrepancy_scale": args.discrepancy_scale,
+        "discrepancy_scale": args.discrepancy_scale, "causal": args.causal,
         "satellites": list(sat_names), "limiting_magnitudes": LIMITING_MAGNITUDE_CHOICES,
         "amplitude_grid": AMPLITUDE_GRID.tolist(), "h0_gp_lengthscale_days": args.gp_lengthscale,
         "stretch_range": list(args.stretch_range), "n_stretch": N_STRETCH if args.stretch_range[0] != args.stretch_range[1] else 1,

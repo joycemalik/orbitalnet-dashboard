@@ -1,0 +1,8 @@
+validation_S2_crowding_seed2_chosen: 159.3s
+  B0_fixed_cadence           acc_mod=0.777 cw_wh=0.017 med_tti=0.07590574821095612 info_fast=1.257 info_slow=4.252 logS=-6.809 auroc_H=0.679
+  B1_cnp_reimplementation    acc_mod=0.773 cw_wh=0.696 med_tti=12.04928645605049 info_fast=1.037 info_slow=2.285 logS=-6.824 auroc_H=0.479
+  B2_classifier_entropy      acc_mod=0.931 cw_wh=0.779 med_tti=0.5761682611465065 info_fast=2.045 info_slow=4.399 logS=-6.688 auroc_H=0.735
+  B3_closed_world_eig        acc_mod=0.996 cw_wh=0.950 med_tti=0.6517366605309878 info_fast=1.282 info_slow=3.697 logS=-6.634 auroc_H=0.701
+  P_open_world_eig           acc_mod=0.992 cw_wh=0.100 med_tti=0.9563524997900371 info_fast=1.859 info_slow=4.232 logS=-0.373 auroc_h0=0.989
+  P_no_decay                 acc_mod=0.996 cw_wh=0.287 med_tti=7.2592652049980995 info_fast=1.398 info_slow=4.065 logS=-0.927 auroc_h0=0.944
+  P_no_adequacy              acc_mod=0.992 cw_wh=0.092 med_tti=0.9563524997900371 info_fast=1.859 info_slow=4.232 logS=-0.340 auroc_h0=0.988

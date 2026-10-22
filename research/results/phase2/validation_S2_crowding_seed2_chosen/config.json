@@ -1,0 +1,60 @@
+{
+  "phase": "phase2c_single_planner_causal",
+  "split": "validation",
+  "seed": 2,
+  "n_events": 500,
+  "scenario": "S2_crowding",
+  "scenario_cfg": {
+    "n_satellites": 8,
+    "limiting_magnitude_choices": [
+      19.0,
+      20.0,
+      21.0
+    ],
+    "withheld_weight": 1.0,
+    "crowding_fraction": 0.5,
+    "model_error_factor": 1.0,
+    "description": "Same as nominal, but half of each event's (time, satellite) cells are unavailable, standing in for other events competing for the same instruments."
+  },
+  "causal": true,
+  "utility_beta": 1.0,
+  "utility_gamma": 0.1,
+  "gp_lengthscale_days": 1.2,
+  "candidate_times_days": [
+    0.010000000000000004,
+    0.016598493257629455,
+    0.027550997842357025,
+    0.04573050519273264,
+    0.07590574821095612,
+    0.12599210498948737,
+    0.20912791051825466,
+    0.34712082127193833,
+    0.5761682611465065,
+    0.9563524997900371,
+    1.5874010519682,
+    2.634846565824804,
+    4.373448295773112,
+    7.2592652049980995,
+    12.04928645605049,
+    19.999999999999996
+  ],
+  "n_obs_budget": 5,
+  "amplitude_grid_size": 15,
+  "confident_threshold": 0.95,
+  "mode_switch_tau": 0.9,
+  "fleet_pool_size": 20,
+  "strategies": [
+    "B0_fixed_cadence",
+    "B1_cnp_reimplementation",
+    "B2_classifier_entropy",
+    "B3_closed_world_eig",
+    "P_open_world_eig",
+    "P_no_decay",
+    "P_no_adequacy"
+  ],
+  "tag": "chosen",
+  "git_commit": "7ebbd24eaeb9c52469e16d0398a78aa89fbf72d0",
+  "config_hash": "698c1c8adc27adbd",
+  "generated_at": "2026-10-22T08:15:01.837374+00:00",
+  "runtime_s": 159.3
+}

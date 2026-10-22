@@ -74,6 +74,7 @@ class Macros:
 
     def add(self, name: str, value: str):
         assert name.isalpha(), name
+        assert f"{{\\{name}}}" not in "".join(self.lines), f"duplicate macro {name}"
         self.lines.append(f"\\newcommand{{\\{name}}}{{{value}}}")
 
     def pct(self, name, x, digits=0):
@@ -174,6 +175,26 @@ def sim(m: Macros):
     m.f("SimAucPModelError", runs["S3_model_error"]["H3"]["P_auroc"], 3)
     m.f("SimAucBthreeModelError", runs["S3_model_error"]["H3"]["comparators"]["B3_entropy"]["auroc"], 3)
     m.f("SimAucPCrowding", runs["S2_crowding"]["H3"]["P_auroc"], 3)
+    # ablations and per-class decay effect (S1), H2 under model error
+    for key, nm in (("P_open_world_eig", "P"), ("P_no_decay", "NoDecay"), ("P_no_adequacy", "NoAdeq"),
+                    ("B3_closed_world_eig", "Bthree"), ("B2_classifier_entropy", "Btwo"),
+                    ("B1_cnp_reimplementation", "Bone"), ("B0_fixed_cadence", "Bzero")):
+        e = rep[key]
+        m.f(f"SimObsAll{nm}", e["mean_obs_used"], 1)
+        m.pct(f"SimAccMod{nm}All", e["accuracy_modeled"])
+        m.pct(f"SimCwWh{nm}All", e["confident_wrong_withheld"])
+        if key.startswith("P_"):
+            m.pct(f"SimFlag{nm}", e["accuracy_withheld"])
+            m.f(f"SimAucAbl{nm}", e["auroc_p_h0"], 3)
+    for c, nm in (("kilonova", "Kilonova"), ("shock_cooling", "Shock"), ("flare", "Flare"), ("grb_afterglow", "Grb")):
+        m.f(f"SimDelta{nm}", s1["H2"]["per_class"][c]["mean_delta"], 2)
+    s3h2 = runs["S3_model_error"]["H2"]
+    m.f("SimHtwoModelErrorEst", s3h2["estimate"], 3)
+    m.ci("SimHtwoModelErrorCI", s3h2["ci95"], 3)
+    m.f("SimHtwoCrowdingEst", runs["S2_crowding"]["H2"]["estimate"], 3)
+    m.f("SimHthreeModelErrorEst", 100 * runs["S3_model_error"]["H3"]["estimate"], 0)
+    m.ci("SimHthreeModelErrorCI", runs["S3_model_error"]["H3"]["ci95"], 0, 100)
+    m.pct("SimAccModBthreeModelError", runs["S3_model_error"]["reported"]["B3_closed_world_eig"]["accuracy_modeled"])
     for sc, nm in (("S2_crowding", "Crowding"), ("S3_model_error", "ModelError")):
         for h in ("H1", "H2", "H3"):
             m.add(f"SimH{ROMAN[h]}{nm}", "pass" if runs[sc][h]["pass"] else "fail")

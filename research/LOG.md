@@ -3,6 +3,48 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase C — conformal open-set layer + lookahead planner: protocol (2026-10-22)
+
+Parallel track (branch research/conformal-openset, separate worktree), aimed
+at the hypotheses that FAILED on every preregistered test so far: H3/H5,
+the cost of open-world behaviour on ordinary SNe.
+
+### Idea
+1. Conformal open-set decision. Any planner's final measurements D get the
+   prior-free score s = log p(D|h0) - max_c log p(D|c). Flag "unknown" iff
+   s > tau, tau = max over known classes of the split-conformal
+   (1 - alpha) quantile on CALIBRATION events of that class. Theorem
+   (research/inference/conformal.py): P(flag | known class c) <= alpha for
+   every c, for any planner and any class mix, if calibration and new
+   events of class c are exchangeable. Hence SN accuracy >= closed-world
+   accuracy - alpha, and confident-wrong on SNe can only fall.
+2. Lookahead planner L (research/planners/lookahead.py). Under causal rules
+   greedy P closes epochs and ends with ~2.3 of 5 measurements. L adds
+   lam * (value of the best b_left - 1 later epochs) to P's utility.
+   lam = 0 is P.
+3. Fresh sealed data (research/data/fetch_fresh.py). The BTS catalog has
+   ~8,600 post-2020 modeled-class SNe; the Phase 3 selection used 900. A
+   deterministic subsample of the UNUSED ones (<= 700 per class), split by
+   sha256(oid) into fresh_cal (calibration) and fresh_test (sealed until
+   PREREGISTRATION_C.md). No withheld-class events remain unused, so
+   unknown-detection claims use the existing test split (declared extra look).
+
+### Check before any tuning
+phaseC_replay reproduces Phase 6 validation (seed 1) draw for draw: 16
+events x 5 strategies, identical epochs and posteriors (0 mismatches).
+
+### Validation tuning protocol (written BEFORE the full validation run)
+- Set: validation split, seed 1, all events (same as Phase 6 validation).
+- Fixed, not tuned: v3 config (gr, kappa 0.5, l = 5 d, causal, budget 5),
+  the score definition, the max rule, alpha in {0.05, 0.1} (0.1 primary).
+- Tuned: lam in {0.25, 0.5, 1, 2}. Rule: max AUROC of s (withheld vs
+  modeled) for L; ties within 0.01 -> higher closed-world accuracy on
+  modeled. L is carried to test even if it does not beat P (P is reported
+  alongside as the lam = 0 arm).
+- Development-only diagnostics on validation (2-fold hash cross-fit of the
+  calibration): per-class FAR, unknown TPR, accuracy/confident-wrong of the
+  conformal decision for every strategy.
+
 ## Causality bug found; Phase 2c (causal simulation) and Phase 6 (causal real replay) — protocol (2026-10-22)
 
 ### The bug

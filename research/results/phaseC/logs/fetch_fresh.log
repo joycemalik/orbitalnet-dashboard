@@ -7,3 +7,11 @@
 [601/1531]
 [701/1531]
 [801/1531]
+[901/1531]
+[1001/1531]
+[1101/1531]
+[1201/1531]
+[1301/1531]
+[1401/1531]
+[1501/1531]
+selected: {'sn_ia/fresh_cal': 339, 'sn_ia/fresh_test': 361, 'sn_ibc/fresh_cal': 60, 'sn_ibc/fresh_test': 71, 'sn_ii/fresh_test': 338, 'sn_ii/fresh_cal': 362}; failed: 0

@@ -1,0 +1,26 @@
+{
+  "events": "test",
+  "seed": 3,
+  "n_events_requested": 100000,
+  "lambdas": [
+    0.25
+  ],
+  "bands": "gr",
+  "causal": true,
+  "gp_lengthscale": 5.0,
+  "discrepancy_scale": 0.5,
+  "budget": 5,
+  "confident_threshold": 0.95,
+  "tag": "final",
+  "n_loaded": 364,
+  "exclusions": {
+    "missing_download": 1,
+    "too_few_r_detections": 456,
+    "too_few_g_detections": 321
+  },
+  "no_feasible_contact": [],
+  "git_commit": "ae51c85e44a96c939390e3a02c8debc73ca85a0c",
+  "config_hash": "86f5bd9d9d726fa6",
+  "runtime_s": 210.3,
+  "git_dirty": true
+}

@@ -86,6 +86,105 @@ What this means:
   often confidently wrong causally (B3 ~0.53 vs ~0.79) for the same reason:
   fewer measurements, less confidence.
 - AUROC of P(h0) is essentially unchanged (0.79-0.81 vs 0.77-0.80).
+## Phase C — conformal open-set layer + lookahead planner: protocol (2026-10-22)
+
+Parallel track (branch research/conformal-openset, separate worktree), aimed
+at the hypotheses that FAILED on every preregistered test so far: H3/H5,
+the cost of open-world behaviour on ordinary SNe.
+
+### Idea
+1. Conformal open-set decision. Any planner's final measurements D get the
+   prior-free score s = log p(D|h0) - max_c log p(D|c). Flag "unknown" iff
+   s > tau, tau = max over known classes of the split-conformal
+   (1 - alpha) quantile on CALIBRATION events of that class. Theorem
+   (research/inference/conformal.py): P(flag | known class c) <= alpha for
+   every c, for any planner and any class mix, if calibration and new
+   events of class c are exchangeable. Hence SN accuracy >= closed-world
+   accuracy - alpha, and confident-wrong on SNe can only fall.
+2. Lookahead planner L (research/planners/lookahead.py). Under causal rules
+   greedy P closes epochs and ends with ~2.3 of 5 measurements. L adds
+   lam * (value of the best b_left - 1 later epochs) to P's utility.
+   lam = 0 is P.
+3. Fresh sealed data (research/data/fetch_fresh.py). The BTS catalog has
+   ~8,600 post-2020 modeled-class SNe; the Phase 3 selection used 900. A
+   deterministic subsample of the UNUSED ones (<= 700 per class), split by
+   sha256(oid) into fresh_cal (calibration) and fresh_test (sealed until
+   PREREGISTRATION_C.md). No withheld-class events remain unused, so
+   unknown-detection claims use the existing test split (declared extra look).
+
+### Check before any tuning
+phaseC_replay reproduces Phase 6 validation (seed 1) draw for draw: 16
+events x 5 strategies, identical epochs and posteriors (0 mismatches).
+
+### Validation tuning protocol (written BEFORE the full validation run)
+- Set: validation split, seed 1, all events (same as Phase 6 validation).
+- Fixed, not tuned: v3 config (gr, kappa 0.5, l = 5 d, causal, budget 5),
+  the score definition, the max rule, alpha in {0.05, 0.1} (0.1 primary).
+- Tuned: lam in {0.25, 0.5, 1, 2}. Rule: max AUROC of s (withheld vs
+  modeled) for L; ties within 0.01 -> higher closed-world accuracy on
+  modeled. L is carried to test even if it does not beat P (P is reported
+  alongside as the lam = 0 arm).
+- Development-only diagnostics on validation (2-fold hash cross-fit of the
+  calibration): per-class FAR, unknown TPR, accuracy/confident-wrong of the
+  conformal decision for every strategy.
+
+### Phase C — PREREGISTERED RESULT (2026-10-22)
+
+Run exactly as frozen in PREREGISTRATION_C.md (commit ae51c85). Calibration:
+fresh_cal (456 SNe); sealed known set: fresh_test (489 SNe, never loaded
+before); unknowns: Phase 3 test split (364 events, 88 unknown; declared extra
+look). Seeds 1-3. Sources: results/phaseC/hypotheses_seed{1,2,3}.json,
+analysis_seed{1,2,3}.json. alpha = 0.1. C-L = lookahead L(0.25) + conformal.
+
+| | seed 1 | seed 2 | seed 3 | verdict |
+|---|---|---|---|---|
+| HC1 false-"unknown" on sealed SNe (pooled; <= alpha) | 0.035 [0.020, 0.055] | 0.061 [0.042, 0.086] | 0.063 [0.043, 0.089] | **PASS** |
+| HC2 C-L - B3 SN accuracy (> -0.05) [old H5] | +0.082 [+0.039, +0.123] | +0.074 [+0.033, +0.115] | +0.059 [+0.012, +0.106] | **PASS** |
+| HC3 C-L - B3 confident-wrong SNe (< +0.05) [old H3] | -0.027 [-0.057, +0.002] | -0.049 [-0.078, -0.020] | -0.012 [-0.043, +0.018] | **PASS** |
+| HC4 C-L - B3 confident-wrong unknowns (< 0) | -0.239 [-0.375, -0.102] | -0.261 [-0.409, -0.114] | -0.193 [-0.341, -0.045] | **PASS** |
+| HC5 C-L flags unknowns (> alpha) | 0.420 [0.316, 0.530] | 0.545 [0.436, 0.652] | 0.432 [0.327, 0.542] | **PASS** |
+| HC6 AUROC(s) L - P (> 0) | +0.012 [-0.013, +0.038] | +0.031 [+0.006, +0.058] | +0.039 [+0.005, +0.075] | **FAIL** (seed 1) |
+
+Per-class false-"unknown" on sealed SNe, every planner with the conformal
+layer (18 planner x seed cells): 0.027-0.108; 17/18 <= 0.1 (B2 seed 3:
+0.108). On the test split's own SNe (different selection, calibrated on
+fresh): per class 0.022-0.083.
+
+What this means:
+- The two hypotheses that failed on every earlier preregistered test
+  (H3, H5) PASS on a sealed, never-loaded set of 489 real SNe: the
+  open-world system is now MORE accurate than the closed-world EIG planner
+  (+6 to +8 points), with no more confident errors, while still flagging
+  42-55% of real unknowns (B3: 0%) at a false-alarm rate certified <= 10%.
+- The false-alarm guarantee is planner-agnostic and held out of sample for
+  all six planners, including the live-stack CNP auction (B1).
+- HC6 failed: L's ranking of unknowns is not reliably better than P's.
+
+Honest decomposition (reported, from analysis_seed*.json):
+- Under causal rules raw P already beats B3 on fresh SNe (acc 0.61-0.66 vs
+  0.60; P's raw false-unknown only 7-9%). Much of H5's earlier failure was
+  the retrospective protocol, not open-world reasoning.
+- L adds accuracy by using its budget (3.1 vs ~2.3 measurements):
+  C-L acc 0.66-0.69 vs raw P 0.61-0.66.
+- Trade-off, not a free lunch: C-L is confidently wrong on 26-32% of
+  unknowns vs raw P's 7-15% (both far below B3's 50-56%). Conformal buys a
+  certified false-alarm rate and accuracy; P's Bayesian h0 prior buys fewer
+  confident errors on unknowns, with no guarantee.
+- B3 + conformal alone: SN acc 0.57-0.59, flags 41-52% of unknowns -- the
+  layer turns even a closed-world planner into a certified open-set one.
+
+## Phase C validation outcome (seed 1, 362 events, 81 unknown)
+Sources: results/phaseC/lambda_selection_validation.json,
+crossfit_validation_seed1_tune.json, hypotheses_dryrun_validation.json.
+- Measurements used: P 2.31, L(0.25) 3.20, L(0.5) 3.79, L(1, 2) 5.00 of 5.
+- AUROC of s: B3 0.844, P 0.845, L 0.863/0.857/0.873/0.855 (lam .25/.5/1/2).
+  The prior-free score works for EVERY planner (B3 0.844 with post-hoc GP).
+- Closed-world accuracy on SNe: B3 0.562, P 0.658, L(0.25) 0.687.
+- Rule -> lam = 0.25. Dry run: HC1-HC5 pass, HC6 (AUROC L - P > 0) fails.
+- Cross-fit flag rates on known fold scatter 0.01-0.16 around alpha = 0.1
+  with ~37 calibration events per class: realized FAR is noisy at this n
+  (expected; the bound is on the mean). fresh_cal has ~60-360 per class.
+- Frozen in PREREGISTRATION_C.md.
 
 ## Causality bug found; Phase 2c (causal simulation) and Phase 6 (causal real replay) — protocol (2026-10-22)
 

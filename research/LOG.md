@@ -3,6 +3,22 @@
 Running log of what was built, what passed, what surprised us, and decisions
 made on ambiguous points. Append-only, one section per phase.
 
+## Phase 2c — validation tuning outcome and preregistration (2026-10-22)
+
+Grid (S1, validation seed 1, 500 events): results/phase2/selection_validation.json.
+P mean log score by config (best first): g0.1/l1.2 -0.210, g0.1/l0.3 -0.245,
+g0.01/l1.2 -0.284, g0.01/l0.3 -0.291, g0.001/l1.2 -0.640, ... g0.1/l5 -1.234.
+Rule -> **gamma 0.1, lengthscale 1.2 d** (edge of grid; stated as limitation).
+Larger gamma -> P uses more of its budget (obs 3.3 at 1e-4 -> 4.2 at 0.1)
+and recovers more amplitude information on fast classes.
+
+Dry run, chosen config (results/phase2/analysis_validation_chosen.json):
+S1 H1 FAIL (P median 0.956 d = B2's; vs B3 9.65 d), H2 pass +0.321
+[0.165, 0.479], H3 pass dTPR +0.72 (AUROC 0.993 vs B3 entropy 0.662).
+S2: H1 fail, H2/H3 pass. S3 (model error): H2 -0.077 [-0.179, 0.023], H3
+pass (AUROC 0.870 vs 0.709). H1 criterion kept as written. Frozen in
+PREREGISTRATION_PHASE2.md.
+
 ## Phase 6 — PREREGISTERED V3 TEST RESULT: causal real replay (2026-10-22)
 
 Run exactly as frozen in PREREGISTRATION_V3.md (commit 9c9a024). THIRD look

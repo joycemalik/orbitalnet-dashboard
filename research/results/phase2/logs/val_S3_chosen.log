@@ -1,0 +1,8 @@
+validation_S3_model_error_seed3_chosen: 223.2s
+  B0_fixed_cadence           acc_mod=0.742 cw_wh=0.031 med_tti=inf info_fast=1.158 info_slow=3.915 logS=-6.419 auroc_H=0.678
+  B1_cnp_reimplementation    acc_mod=0.796 cw_wh=0.702 med_tti=12.04928645605049 info_fast=1.191 info_slow=2.002 logS=-6.500 auroc_H=0.500
+  B2_classifier_entropy      acc_mod=0.815 cw_wh=0.316 med_tti=0.5761682611465065 info_fast=1.973 info_slow=4.394 logS=-6.440 auroc_H=0.698
+  B3_closed_world_eig        acc_mod=0.971 cw_wh=0.951 med_tti=0.5761682611465065 info_fast=1.382 info_slow=3.103 logS=-6.375 auroc_H=0.709
+  P_open_world_eig           acc_mod=0.815 cw_wh=0.191 med_tti=12.04928645605049 info_fast=1.758 info_slow=4.026 logS=-1.427 auroc_h0=0.870
+  P_no_decay                 acc_mod=0.898 cw_wh=0.227 med_tti=7.2592652049980995 info_fast=1.281 info_slow=3.472 logS=-1.411 auroc_h0=0.872
+  P_no_adequacy              acc_mod=0.815 cw_wh=0.191 med_tti=7.2592652049980995 info_fast=1.758 info_slow=4.026 logS=-1.428 auroc_h0=0.860

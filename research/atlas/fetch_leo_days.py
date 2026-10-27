@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import io
 import os
+from pathlib import Path
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -29,6 +30,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", required=True, help="inclusive last day")
+    ap.add_argument("--out-dir", default=None, help="default: raw/atlas/leo_days")
     args = ap.parse_args()
 
     load_dotenv(MAIN / ".env")
@@ -36,11 +38,12 @@ def main() -> None:
     if not user or not password:
         raise SystemExit("SPACETRACK_USER / SPACETRACK_PASS missing from the repo .env")
 
-    DAYS_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(args.out_dir) if args.out_dir else DAYS_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
     day, last = dt.date.fromisoformat(args.start), dt.date.fromisoformat(args.end)
     todo = []
     while day <= last:
-        if not (DAYS_DIR / f"{day}.parquet").exists():
+        if not (out_dir / f"{day}.parquet").exists():
             todo.append(day)
         day += dt.timedelta(days=1)
     print(f"{len(todo)} days to fetch", flush=True)
@@ -51,7 +54,7 @@ def main() -> None:
         url = URL.format(a=day, b=day + dt.timedelta(days=1))
         data = st.get(url)
         df = pd.read_csv(io.BytesIO(data)) if data.strip() else pd.DataFrame(columns=FIELDS)
-        df.to_parquet(DAYS_DIR / f"{day}.parquet", index=False)
+        df.to_parquet(out_dir / f"{day}.parquet", index=False)
         print(f"[{n + 1}/{len(todo)}] {day}: {len(df):,} sets, {df.NORAD_CAT_ID.nunique():,} objects", flush=True)
 
 

@@ -73,5 +73,37 @@
  "n_element_sets": 2294139,
  "n_primary_objects": 2657,
  "n_secondary_objects": 3484,
- "n_quiet_days": 8
+ "n_quiet_days": 8,
+ "HX_thrust_masking": {
+  "shells": [
+   400,
+   450,
+   500,
+   550
+  ],
+  "peak_primary": {
+   "400": 3.220929372460522,
+   "450": 3.848212397885828,
+   "500": 4.0440091794179835,
+   "550": 4.874435703455759
+  },
+  "peak_constellation": {
+   "400": 3.462472338501466,
+   "450": 5.241230679963616,
+   "500": 5.7298810338888275,
+   "550": 11.078262611153999
+  },
+  "peak_other_payload": {
+   "400": 3.8668187947164445,
+   "450": 3.792276813299705,
+   "500": 4.374679575462585,
+   "550": 4.708683197753127
+  },
+  "other_payload_not_larger_all_shells": false,
+  "constellation_larger_in_at_least_3_shells": true,
+  "other_payload_within_0p8_1p25_of_primary_all_shells": true,
+  "status": "post_hoc_exploratory",
+  "n_constellation_objects": 1574,
+  "n_other_payload_objects": 1910
+ }
 }

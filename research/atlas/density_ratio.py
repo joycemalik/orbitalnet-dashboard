@@ -16,13 +16,18 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
-from research.atlas.common import DAYS_DIR, REF_DIR, RESULTS
+from research.atlas.common import ATLAS_RAW, DAYS_DIR, REF_DIR, RESULTS
 
 MU = 398600.4418  # km^3/s^2
 RE = 6378.137     # km
 BIN_H = 12
 SHELL_EDGES = list(range(300, 651, 50))
-BASE_START, BASE_END, KP_QUIET_MAX = "2024-04-27", "2024-05-08", 4.0
+KP_QUIET_MAX = 4.0
+CONSTELLATION_RE = "STARLINK|ONEWEB"
+EVENTS = {
+    "may2024": dict(data=DAYS_DIR, out=RESULTS, base=("2024-04-27", "2024-05-08"), onset=("2024-05-09", "2024-05-12"), post_hoc_hx=True),
+    "oct2024": dict(data=ATLAS_RAW / "leo_days_oct2024", out=RESULTS / "oct2024", base=("2024-09-28", "2024-10-05"), onset=("2024-10-09", "2024-10-13"), post_hoc_hx=False),
+}
 MIN_BASE_RATES, MIN_B_M_PER_DAY, MIN_OBJS = 6, -20.0, 30
 PRIMARY_TYPES, SECONDARY_TYPES = ("DEB", "R/B"), ("PAY",)
 
@@ -46,7 +51,7 @@ def storm_onset(kp: pd.DataFrame, lo="2024-05-09", hi="2024-05-12") -> pd.Timest
     return w.t.iloc[0]
 
 
-def quiet_days(kp: pd.DataFrame, start=BASE_START, end=BASE_END) -> list[pd.Timestamp]:
+def quiet_days(kp: pd.DataFrame, start, end) -> list[pd.Timestamp]:
     kp = kp[(kp.t >= start) & (kp.t < pd.Timestamp(end) + pd.Timedelta(days=1))]
     mx = kp.groupby(kp.t.dt.normalize()).kp.max()
     return list(mx[mx <= KP_QUIET_MAX].index)
@@ -141,27 +146,52 @@ def plot(cell: pd.DataFrame, kp: pd.DataFrame, t0: pd.Timestamp, path) -> None:
 
 
 def main() -> None:
-    argparse.ArgumentParser().parse_args()
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    gp = pd.concat([pd.read_parquet(p) for p in sorted(DAYS_DIR.glob("*.parquet"))], ignore_index=True)
-    sat = pd.read_csv(REF_DIR / "celestrak_satcat.csv", usecols=["NORAD_CAT_ID", "OBJECT_TYPE"])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--event", default="may2024", choices=list(EVENTS))
+    ev = EVENTS[ap.parse_args().event]
+    out = ev["out"]
+    out.mkdir(parents=True, exist_ok=True)
+    gp = pd.concat([pd.read_parquet(p) for p in sorted(ev["data"].glob("*.parquet"))], ignore_index=True)
+    sat = pd.read_csv(REF_DIR / "celestrak_satcat.csv", usecols=["NORAD_CAT_ID", "OBJECT_NAME", "OBJECT_TYPE"]).set_index("NORAD_CAT_ID")
     kp = load_kp()
-    t0, days = storm_onset(kp), quiet_days(kp)
+    t0, days = storm_onset(kp, *ev["onset"]), quiet_days(kp, *ev["base"])
     rates = decay_rates(gp)
     base = object_baselines(rates, days)
-    typ = sat.set_index("NORAD_CAT_ID").OBJECT_TYPE
+    typ = sat.OBJECT_TYPE
+    const = sat.OBJECT_NAME.str.contains(CONSTELLATION_RE, na=False)
     prim = set(typ[typ.isin(PRIMARY_TYPES)].index) & set(base.index)
     sec = set(typ[typ.isin(SECONDARY_TYPES)].index) & set(base.index)
+    sec_const, sec_plain = sec & set(const[const].index), sec - set(const[const].index)
     cell = shell_ratio(rates, base, prim)
     cell_sec = shell_ratio(rates, base, sec)
-    cell.to_csv(RESULTS / "shell_ratio_primary.csv", index=False)
-    cell_sec.to_csv(RESULTS / "shell_ratio_secondary.csv", index=False)
+    cell_const, cell_plain = shell_ratio(rates, base, sec_const), shell_ratio(rates, base, sec_plain)
+    for name, c in [("primary", cell), ("secondary", cell_sec), ("secondary_constellation", cell_const), ("secondary_other", cell_plain)]:
+        c.to_csv(out / f"shell_ratio_{name}.csv", index=False)
     res = evaluate(cell, cell_sec, t0, days)
     res.update({"n_element_sets": int(len(gp)), "n_primary_objects": len(prim), "n_secondary_objects": len(sec),
                 "n_quiet_days": len(days)})
-    (RESULTS / "atlas_summary.json").write_text(json.dumps(res, indent=1))
-    plot(cell, kp, t0, RESULTS / "atlas_primary.png")
+    res["HX_thrust_masking"] = hx(cell, cell_const, cell_plain, t0)
+    res["HX_thrust_masking"]["status"] = "post_hoc_exploratory" if ev["post_hoc_hx"] else "preregistered"
+    res["HX_thrust_masking"]["n_constellation_objects"], res["HX_thrust_masking"]["n_other_payload_objects"] = len(sec_const), len(sec_plain)
+    (out / "atlas_summary.json").write_text(json.dumps(res, indent=1))
+    plot(cell, kp, t0, out / "atlas_primary.png")
     print(json.dumps({k: v for k, v in res.items() if k != "shells"}, indent=1))
+
+
+def hx(cell, cell_const, cell_plain, t0) -> dict:
+    """Peak R per shell for primary / constellation payloads / other payloads."""
+    def peaks(c):
+        c = c[c.bin >= t0 - pd.Timedelta(hours=BIN_H)]
+        return c.groupby("shell").R.max().to_dict()
+    p, k, o = peaks(cell), peaks(cell_const), peaks(cell_plain)
+    shells = sorted(set(p) & set(k) & set(o))
+    other_le = [o[s] <= p[s] for s in shells]
+    const_gt = [k[s] > p[s] for s in shells]
+    return {"shells": [int(s) for s in shells], "peak_primary": {int(s): p[s] for s in shells},
+            "peak_constellation": {int(s): k[s] for s in shells}, "peak_other_payload": {int(s): o[s] for s in shells},
+            "other_payload_not_larger_all_shells": bool(other_le) and all(other_le),
+            "constellation_larger_in_at_least_3_shells": sum(const_gt) >= 3,
+            "other_payload_within_0p8_1p25_of_primary_all_shells": bool(shells) and all(0.8 <= o[s] / p[s] <= 1.25 for s in shells)}
 
 
 if __name__ == "__main__":

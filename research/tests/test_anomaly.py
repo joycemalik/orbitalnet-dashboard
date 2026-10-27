@@ -76,3 +76,11 @@ def test_geo_drift_change():
                        "RA_OF_ASC_NODE": 0.0, "BSTAR": 0.0})
     ev = detect_geo_drift_changes(build_series(gp))
     assert len(ev) == 1 and ev[0].magnitude == pytest.approx(0.5, abs=0.02)
+
+
+def test_single_bad_element_set_is_not_a_maneuver():
+    s = synthetic(burns=[(40.0, 2.0)])
+    s.loc[60, "SMA_KM"] += 5.0  # one corrupt TLE: jumps out and straight back
+    ev = detect_steps(s)
+    assert [e.kind for e in ev] == ["maneuver_raise"]
+    assert ev[0].magnitude == pytest.approx(2.0, abs=0.2)

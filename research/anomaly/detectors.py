@@ -49,12 +49,32 @@ def _step_residuals(t_days: np.ndarray, y: np.ndarray, window: int) -> np.ndarra
     return dy - trend * dt
 
 
+def despike(series: pd.DataFrame, column: str, *, z: float = 8.0, window: int = 15,
+            cancel_frac: float = 0.2) -> pd.DataFrame:
+    """Drop isolated bad element sets: a point whose step in and step out are both
+    large, opposite in sign, and nearly cancel (|in + out| < cancel_frac * min).
+    A real burn leaves the orbit changed; a bad TLE jumps out and straight back."""
+    if len(series) < 10:
+        return series
+    t = (series.EPOCH - series.EPOCH.iloc[0]).dt.total_seconds().to_numpy() / 86400.0
+    r = _step_residuals(t, series[column].to_numpy(dtype=float), window)
+    sigma = max(_mad_sigma(r), 1e-6)
+    a, b = r[:-1], r[1:]  # step into point i+1, step out of point i+1
+    big = (np.abs(a) > z * sigma) & (np.abs(b) > z * sigma)
+    cancels = (np.sign(a) != np.sign(b)) & (np.abs(a + b) < cancel_frac * np.minimum(np.abs(a), np.abs(b)))
+    drop = np.flatnonzero(big & cancels) + 1
+    out = series.drop(series.index[drop])
+    out.attrs = {**series.attrs, "despiked": series.attrs.get("despiked", 0) + len(drop)}
+    return out
+
+
 def detect_steps(series: pd.DataFrame, column: str = "SMA_KM", *, z: float = 8.0,
                  min_step: float = 0.5, window: int = 15, merge_days: float = 2.0,
                  kinds: tuple[str, str] = ("maneuver_raise", "maneuver_lower")) -> list[Event]:
     """Flag step changes in `column` whose size exceeds both `z` robust sigmas of
     the object's own residual noise and an absolute floor `min_step`.
     Consecutive flagged steps within `merge_days` merge into one burn sequence."""
+    series = despike(series, column, z=z, window=window)
     if len(series) < 10:
         return []
     t = (series.EPOCH - series.EPOCH.iloc[0]).dt.total_seconds().to_numpy() / 86400.0

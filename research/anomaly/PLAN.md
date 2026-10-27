@@ -62,7 +62,8 @@ public catalog holds and say so in the write-up.
      drag-only model.
   2. *End of station-keeping / silent death*: SMA decaying faster than the shell's median and no
      maneuvers afterwards.
-  3. *Storm drag response*: excess decay rate vs Kp/Dst, measured per altitude shell.
+  3. *Storm drag response*: **moved to the separate atlas track** (branch `research/sat-atlas`,
+     non-maneuvering debris sample), agreed 2026-10-27 so the two tracks don't publish overlapping results.
   4. *GEO relocation / proximity (tier B)*: changes in longitude-drift rate (start/stop of a
      relocation), and pairwise close approaches computed with SGP4 (pairs within N km for
      M days), which flags possible RPO.

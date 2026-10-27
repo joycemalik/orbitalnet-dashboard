@@ -51,6 +51,10 @@ No formal test suite. The closest thing is the `assert`-based self-test in `scor
 
 - All new work lives in `research/`. It must NOT import redis, streamlit, websockets, or any live-stack module.
 - Every experiment is a script in `research/experiments/` that takes `--seed` and `--n-events`, and writes JSON/CSV to `research/results/`. Nothing is hand-edited.
+  Exception (branch `research/sat-anomaly`, `research/anomaly/`): detectors run over real
+  catalog data, so they take `--start/--end/--tiers` instead (plus `--seed` wherever they sample).
+  Source data must be original (Space-Track gp_history, CelesTrak/GCAT, GFZ), never synthetic,
+  except in tests.
 - NEVER fabricate, estimate, or hardcode result numbers. Tables and figures are generated only from files in `research/results/`.
 - Strategies B0, B1, B2, B3, P, O must receive identical events, orbits, budgets and contact schedules for a given seed.
 - Tune hyperparameters on the validation seeds only. Test seeds are untouched until `research/PREREGISTRATION.md` is committed.

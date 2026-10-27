@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storm Drag Atlas</title>
+<meta name="description" content="Whole-catalogue thermospheric density response to geomagnetic storms, measured from public orbital-element history. Preregistered, with failures reported.">
+<style>
+  :root { --bg:#fafaf7; --fg:#1b1b1f; --mute:#62626b; --line:#d9d9d2; --card:#fff; --ok:#1c7a3d; --bad:#b3261e; --acc:#2d4a8a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14151a; --fg:#ececf0; --mute:#9b9ba6; --line:#2e3038; --card:#1c1e25; --ok:#5fcf86; --bad:#ff7a70; --acc:#8fb0ff; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:1.9rem; line-height:1.2; margin:.2em 0 .3em; }
+  h2 { font-size:1.2rem; margin:2em 0 .5em; }
+  a { color:var(--acc); }
+  .lede { color:var(--mute); font-size:1.05rem; }
+  .back { font-size:.9rem; }
+  figure { margin:1.2em 0; }
+  figure img { width:100%; height:auto; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  figcaption { color:var(--mute); font-size:.88rem; margin-top:.4em; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; background:var(--card); }
+  th, td { border:1px solid var(--line); padding:6px 9px; text-align:left; }
+  th { font-weight:600; }
+  .pass { color:var(--ok); font-weight:600; }
+  .fail { color:var(--bad); font-weight:600; }
+  .pending { color:var(--mute); font-style:italic; }
+  .note { border-left:3px solid var(--acc); padding:.1em 1em; background:var(--card); }
+  .scroll { overflow-x:auto; }
+  code { font-size:.9em; }
+</style>
+</head>
+<body>
+<main>
+  <div class="back"><a href="index.html">&larr; Research home</a></div>
+  <h1>Storm Drag Atlas</h1>
+  <p class="lede">Every tracked object in low Earth orbit is a free density probe. Comparing each non-manoeuvring object's decay rate with its own quiet-time rate gives the thermospheric density response, shell by shell, for the whole catalogue at once.</p>
+
+  <h2>May 2024 storm (Gannon)</h2>
+  <figure>
+    <img src="atlas/may2024.png" alt="Heatmap of median decay-rate ratio by altitude shell and time, with Kp above; a bright band appears at the storm onset, brighter at higher altitude.">
+    <figcaption>Median decay-rate ratio (about &rho;/&rho;<sub>quiet</sub>) for debris and rocket bodies, 12 h bins, 50 km shells; Kp above. Generated from <code>research/results/atlas/</code>.</figcaption>
+  </figure>
+  <p><span data-r="may2024.n_primary_objects"></span> debris and rocket-body objects (primary sample) from <span data-r="may2024.n_element_sets"></span> element sets; onset <span data-r="may2024.t0"></span> UT.</p>
+  <div class="scroll"><table id="shells-may2024"><thead><tr><th>Shell (km)</th><th>Peak ratio</th><th>Lag after onset (h)</th><th>Objects at peak</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Preregistered hypotheses</h2>
+  <p>Fixed in <code>PREREGISTRATION_ATLAS.md</code> before any catalogue data was downloaded; one analysis run, no thresholds tuned.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Hypothesis</th><th>May 2024</th><th>Oct 2024 replication</th></tr></thead>
+    <tbody>
+      <tr><td>HA1 peak within 72 h of onset (350&ndash;550 km)</td><td data-v="may2024.HA1_timing.pass"></td><td data-v="oct2024.HA1_timing.pass"></td></tr>
+      <tr><td>HA2 response rises with altitude</td><td data-v="may2024.HA2_altitude.pass"></td><td data-v="oct2024.HA2_altitude.pass"></td></tr>
+      <tr><td>HA3 peak &gt; baseline + 5 sd in &ge; 80 % of shells</td><td data-v="may2024.HA3_detectability.pass"></td><td data-v="oct2024.HA3_detectability.pass"></td></tr>
+      <tr><td>HA4 payloads do not respond more than debris</td><td data-v="may2024.HA4_payload_not_larger.pass"></td><td data-v="oct2024.HA4_payload_not_larger.pass"></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Why HA4 failed</h2>
+  <p>Payloads responded more strongly than debris and rocket bodies. A look at the May data after the fact (exploratory, not a preregistered test) points at station-keeping constellation satellites (Starlink, OneWeb): their thrust cancels part of the quiet-time drag, so the baseline rate is small and the storm ratio is inflated. The October 2024 replication preregistered this explanation (<code>PREREGISTRATION_ATLAS_R1.md</code>) before its data was fetched.</p>
+  <div class="scroll"><table id="hx">
+    <thead><tr><th></th><th>May 2024 (post hoc)</th><th>Oct 2024 (preregistered)</th></tr></thead>
+    <tbody>
+      <tr><td>Constellation peak exceeds debris peak in &ge; 3 shells</td><td data-v="may2024.HX_thrust_masking.constellation_larger_in_at_least_3_shells"></td><td data-v="oct2024.HX_thrust_masking.constellation_larger_in_at_least_3_shells"></td></tr>
+      <tr><td>Other payloads within 0.8&ndash;1.25&times; of debris peak in every shell</td><td data-v="may2024.HX_thrust_masking.other_payload_within_0p8_1p25_of_primary_all_shells"></td><td data-v="oct2024.HX_thrust_masking.other_payload_within_0p8_1p25_of_primary_all_shells"></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>October 2024 replication</h2>
+  <figure id="oct-fig" hidden>
+    <img src="atlas/oct2024.png" alt="Same heatmap for the October 2024 storm.">
+    <figcaption>Independent replication on the 10&ndash;11 October 2024 storm, same definitions.</figcaption>
+  </figure>
+  <p id="oct-pending" class="pending">Replication not run yet.</p>
+
+  <h2>Caveats</h2>
+  <div class="note">
+    <p>Mean-element semi-major-axis noise is tens of metres; time resolution is 12 h; solar-flux and other drivers are not regressed out. The ratio is a relative density proxy, not a calibrated density, and it has not been compared with an independent density model. The atlas shows a known effect for the whole catalogue from public data; it is not new physics.</p>
+  </div>
+  <p>Source data: Space-Track gp_history (not redistributed), CelesTrak SATCAT, GFZ Potsdam Kp. All numbers on this page are filled from <code>research/results/atlas/</code> by <code>research/atlas/export_site.py</code>.</p>
+</main>
+<script src="atlas/results.js"></script>
+<script>
+(function () {
+  var R = window.RESULTS_ATLAS || {};
+  function get(path) { return path.split('.').reduce(function (o, k) { return o == null ? null : o[k]; }, R); }
+  document.querySelectorAll('[data-r]').forEach(function (el) {
+    var v = get(el.getAttribute('data-r'));
+    if (v == null) { el.textContent = 'not run'; el.className = 'pending'; return; }
+    el.textContent = typeof v === 'number' ? v.toLocaleString() : v;
+  });
+  document.querySelectorAll('[data-v]').forEach(function (el) {
+    var v = get(el.getAttribute('data-v'));
+    if (v == null) { el.textContent = 'not run'; el.className = 'pending'; return; }
+    el.textContent = v ? 'pass' : 'FAIL';
+    el.className = v ? 'pass' : 'fail';
+  });
+  var s = get('may2024.shells') || {};
+  var body = document.querySelector('#shells-may2024 tbody');
+  Object.keys(s).sort(function (a, b) { return a - b; }).forEach(function (k) {
+    var v = s[k], tr = document.createElement('tr');
+    [k + '–' + (Number(k) + 50), v.peak_R.toFixed(2) + '×', v.peak_lag_h.toFixed(0), v.n_at_peak].forEach(function (t) {
+      var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+  if (R.oct2024) {
+    document.getElementById('oct-fig').hidden = false;
+    document.getElementById('oct-pending').hidden = true;
+  }
+})();
+</script>
+</body>
+</html>

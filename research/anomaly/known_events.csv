@@ -7,3 +7,8 @@ norad,object,date,kind,window,note,source
 49330,SHIJIAN-21,2022-01-22,geo_drift_change,validation,"Tows Compass/BeiDou-2 G2 to graveyard; sources say 21 or 22 Jan",https://seradata.com/shi-jian-21-docks-with-beidou-2-g2-then-takes-it-to-a-graveyard-orbit
 49330,SHIJIAN-21,2022-01-26,geo_drift_change,validation,Separates from Compass G2 and returns toward GEO,https://keeptrack.space/deep-dive/sj-21-compass-g2-tow
 25544,ISS,2022-06-25,maneuver_raise,validation,"First full Cygnus (NG-17) reboost, ~5 min burn, 17:42 UTC",https://en.wikipedia.org/wiki/Cygnus_NG-17
+55841,LUCH-5X (OLYMP-K 2),2024-07-01,geo_drift_change,test,"Drift stops on arrival at 0.54 W next to THOR 7 (optical obs.)",https://sattrackcam.blogspot.com/2024/07/the-russian-sigint-satellite-luch-olymp.html
+55841,LUCH-5X (OLYMP-K 2),2024-09-16,geo_drift_change,test,"Relocation burn ~22 UTC toward 0.92 W, between THOR 6 and Intelsat 1002",https://sattrackcam.blogspot.com/2024/09/the-russian-sigint-satellite-luch-olymp.html
+55841,LUCH-5X (OLYMP-K 2),2024-09-18,geo_drift_change,test,Relocation to 0.92 W completed,https://sattrackcam.blogspot.com/2024/09/the-russian-sigint-satellite-luch-olymp.html
+55841,LUCH-5X (OLYMP-K 2),2025-02-07,geo_drift_change,test,"Starts eastward drift, its largest move since launch (>62 deg)",https://sattrackcam.blogspot.com/2025/03/the-russian-eavesdropping-satellite.html
+55841,LUCH-5X (OLYMP-K 2),2025-03-07,geo_drift_change,test,Settles near 62 E beside Intelsat 39,https://sattrackcam.blogspot.com/2025/03/the-russian-eavesdropping-satellite.html

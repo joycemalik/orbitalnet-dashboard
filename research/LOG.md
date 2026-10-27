@@ -783,3 +783,13 @@ data, not by score):
 Current best region (z=15, min 0.5 km): recall 7/7, 70 non-storm false alarms
 (0.061 per object-year). Not frozen yet: n=7 positives is too small, so the
 known-event list should grow before preregistration.
+
+### Known-event sourcing: a source claim the data does not support
+Seradata ("what exactly is Shijian-17 up to") reports a manoeuvre that
+"reapplied an inclination of circa four degrees" around 2022-01-25. The
+Space-Track elements for SJ-17 (41838) show inclination rising smoothly from
+1.54° to 1.83° over Dec 2021 – Mar 2022 (~0.0025°/day, natural luni-solar
+drift), with no step. The event is **excluded** from known_events.csv. A
+known-event list must agree with the primary data. Luch-5X (55841) relocations
+reported by SatTrackCam Leiden (optical observations) are added with window=test:
+they are held out, to be checked only after thresholds are frozen.

@@ -743,3 +743,14 @@ predicts, from real code on a real (if small) sample — not asserted a priori.
   continuous miscalibration story; Phase 2's AUROC-of-P(h0) metric is a more
   complete picture and should be treated as the primary evidence over this
   single-threshold number.
+
+## 2026-10-27 — New track: satellite anomaly hunt (branch research/sat-anomaly)
+
+Started a discovery-oriented track: detect unreported orbital anomalies
+(maneuvers, silent failures, storm drag response, GEO relocation/RPO, station
+reboosts, fragmentations) from public Space-Track TLE history across five
+target tiers (crewed stations, GEO inspectors, mega-constellations, large
+derelicts, science flagships). Plan: `research/anomaly/PLAN.md`. Detectors
+must recover documented events on the 2021–2023 validation window before a
+preregistration is committed and the held-out 2024-07 → 2026-10 window is run.
+No results yet.

@@ -6,3 +6,4 @@ norad,object,date,kind,window,note,source
 25544,ISS,2022-12-21,maneuver_raise,validation,Debris avoidance,https://spacepolicyonline.com/?p=58874
 49330,SHIJIAN-21,2022-01-22,geo_drift_change,validation,"Tows Compass/BeiDou-2 G2 to graveyard; sources say 21 or 22 Jan",https://seradata.com/shi-jian-21-docks-with-beidou-2-g2-then-takes-it-to-a-graveyard-orbit
 49330,SHIJIAN-21,2022-01-26,geo_drift_change,validation,Separates from Compass G2 and returns toward GEO,https://keeptrack.space/deep-dive/sj-21-compass-g2-tow
+25544,ISS,2022-06-25,maneuver_raise,validation,"First full Cygnus (NG-17) reboost, ~5 min burn, 17:42 UTC",https://en.wikipedia.org/wiki/Cygnus_NG-17

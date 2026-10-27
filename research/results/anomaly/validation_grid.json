@@ -7,9 +7,9 @@
   "final_decay_days": 180.0,
   "kp_storm": 6.0
  },
- "n_known": 7,
- "n_negative_objects": 412,
- "negative_object_years": 1148.7337440109513,
+ "n_known": 8,
+ "n_negative_objects": 414,
+ "negative_object_years": 1154.7214236824093,
  "grid": [
   {
    "z": 8.0,
@@ -22,8 +22,8 @@
     "maneuver_lower": 425,
     "plane_change": 7
    },
-   "storm_lowerings": 398,
-   "false_alarms_per_object_year": 0.7042537091104094,
+   "storm_lowerings": 399,
+   "false_alarms_per_object_year": 0.7006018797331196,
    "events": [
     {
      "norad": 25544,
@@ -65,6 +65,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -80,8 +86,8 @@
     "maneuver_lower": 425,
     "plane_change": 0
    },
-   "storm_lowerings": 398,
-   "false_alarms_per_object_year": 0.6981600429005542,
+   "storm_lowerings": 399,
+   "false_alarms_per_object_year": 0.694539811552487,
    "events": [
     {
      "norad": 25544,
@@ -123,6 +129,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -138,8 +150,8 @@
     "maneuver_lower": 425,
     "plane_change": 0
    },
-   "storm_lowerings": 398,
-   "false_alarms_per_object_year": 0.6981600429005542,
+   "storm_lowerings": 399,
+   "false_alarms_per_object_year": 0.694539811552487,
    "events": [
     {
      "norad": 25544,
@@ -181,6 +193,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -197,7 +215,7 @@
     "plane_change": 7
    },
    "storm_lowerings": 222,
-   "false_alarms_per_object_year": 0.29858964428290535,
+   "false_alarms_per_object_year": 0.29704134085100126,
    "events": [
     {
      "norad": 25544,
@@ -239,6 +257,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -255,7 +279,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 222,
-   "false_alarms_per_object_year": 0.2924959780730501,
+   "false_alarms_per_object_year": 0.2909792726703686,
    "events": [
     {
      "norad": 25544,
@@ -297,6 +321,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -313,7 +343,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 222,
-   "false_alarms_per_object_year": 0.2924959780730501,
+   "false_alarms_per_object_year": 0.2909792726703686,
    "events": [
     {
      "norad": 25544,
@@ -355,6 +385,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -371,7 +407,7 @@
     "plane_change": 7
    },
    "storm_lowerings": 144,
-   "false_alarms_per_object_year": 0.1558237502234404,
+   "false_alarms_per_object_year": 0.1550157434761785,
    "events": [
     {
      "norad": 25544,
@@ -413,6 +449,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -429,7 +471,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 144,
-   "false_alarms_per_object_year": 0.14973008401358517,
+   "false_alarms_per_object_year": 0.14895367529554582,
    "events": [
     {
      "norad": 25544,
@@ -471,6 +513,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -487,7 +535,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 144,
-   "false_alarms_per_object_year": 0.14973008401358517,
+   "false_alarms_per_object_year": 0.14895367529554582,
    "events": [
     {
      "norad": 25544,
@@ -529,6 +577,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -545,7 +599,7 @@
     "plane_change": 7
    },
    "storm_lowerings": 66,
-   "false_alarms_per_object_year": 0.08182923196091284,
+   "false_alarms_per_object_year": 0.08140491556849598,
    "events": [
     {
      "norad": 25544,
@@ -587,6 +641,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -603,7 +663,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 66,
-   "false_alarms_per_object_year": 0.07573556575105762,
+   "false_alarms_per_object_year": 0.0753428473878633,
    "events": [
     {
      "norad": 25544,
@@ -645,6 +705,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -661,7 +727,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 66,
-   "false_alarms_per_object_year": 0.07573556575105762,
+   "false_alarms_per_object_year": 0.0753428473878633,
    "events": [
     {
      "norad": 25544,
@@ -703,6 +769,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -719,7 +791,7 @@
     "plane_change": 4
    },
    "storm_lowerings": 331,
-   "false_alarms_per_object_year": 0.42655663468986477,
+   "false_alarms_per_object_year": 0.42434477264428755,
    "events": [
     {
      "norad": 25544,
@@ -761,6 +833,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -777,7 +855,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 331,
-   "false_alarms_per_object_year": 0.4230745397128046,
+   "false_alarms_per_object_year": 0.42088073368392603,
    "events": [
     {
      "norad": 25544,
@@ -819,6 +897,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -835,7 +919,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 331,
-   "false_alarms_per_object_year": 0.4230745397128046,
+   "false_alarms_per_object_year": 0.42088073368392603,
    "events": [
     {
      "norad": 25544,
@@ -877,6 +961,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -893,7 +983,7 @@
     "plane_change": 4
    },
    "storm_lowerings": 192,
-   "false_alarms_per_object_year": 0.18716260501698148,
+   "false_alarms_per_object_year": 0.1861920941194323,
    "events": [
     {
      "norad": 25544,
@@ -935,6 +1025,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -951,7 +1047,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 192,
-   "false_alarms_per_object_year": 0.18368051003992136,
+   "false_alarms_per_object_year": 0.18272805515907076,
    "events": [
     {
      "norad": 25544,
@@ -993,6 +1089,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1009,7 +1111,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 192,
-   "false_alarms_per_object_year": 0.18368051003992136,
+   "false_alarms_per_object_year": 0.18272805515907076,
    "events": [
     {
      "norad": 25544,
@@ -1051,6 +1153,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1067,7 +1175,7 @@
     "plane_change": 4
    },
    "storm_lowerings": 120,
-   "false_alarms_per_object_year": 0.10533337305606864,
+   "false_alarms_per_object_year": 0.1047871785509363,
    "events": [
     {
      "norad": 25544,
@@ -1109,6 +1217,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1125,7 +1239,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 120,
-   "false_alarms_per_object_year": 0.10185127807900853,
+   "false_alarms_per_object_year": 0.10132313959057478,
    "events": [
     {
      "norad": 25544,
@@ -1167,6 +1281,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1183,7 +1303,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 120,
-   "false_alarms_per_object_year": 0.10185127807900853,
+   "false_alarms_per_object_year": 0.10132313959057478,
    "events": [
     {
      "norad": 25544,
@@ -1225,6 +1345,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1241,7 +1367,7 @@
     "plane_change": 4
    },
    "storm_lowerings": 58,
-   "false_alarms_per_object_year": 0.06441875707561223,
+   "false_alarms_per_object_year": 0.06408472076668832,
    "events": [
     {
      "norad": 25544,
@@ -1283,6 +1409,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1299,7 +1431,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 58,
-   "false_alarms_per_object_year": 0.060936662098552107,
+   "false_alarms_per_object_year": 0.06062068180632679,
    "events": [
     {
      "norad": 25544,
@@ -1341,6 +1473,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]
@@ -1357,7 +1495,7 @@
     "plane_change": 0
    },
    "storm_lowerings": 58,
-   "false_alarms_per_object_year": 0.060936662098552107,
+   "false_alarms_per_object_year": 0.06062068180632679,
    "events": [
     {
      "norad": 25544,
@@ -1399,6 +1537,12 @@
      "norad": 49330,
      "date": "2022-01-26",
      "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-25",
+     "kind": "maneuver_raise",
      "detected": true
     }
    ]

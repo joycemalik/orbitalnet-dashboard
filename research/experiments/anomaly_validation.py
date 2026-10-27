@@ -4,7 +4,8 @@ false-alarm rate on objects that cannot maneuver, over a threshold grid.
 - Recall: research/anomaly/known_events.csv rows in the chosen window; an event
   counts as detected if a detection of a compatible kind starts within
   --tol-days of its date on the same object.
-- False alarms: tier D (Envisat, dead rocket bodies) cannot thrust, so every
+- False alarms: tier D (Envisat, dead rocket bodies) and the sourced
+  no-propulsion objects in known_inert.csv (Hubble, Swift) cannot thrust, so every
   maneuver/plane-change detection on them is false. Reported per object-year.
   (A few tier D objects might still be active stages early in life; the first
   --settle-days after launch are excluded, as are the last --final-decay-days
@@ -38,6 +39,7 @@ from research.anomaly.spaceweather import daily_max_kp, storm_days, tag_storm
 from research.anomaly.targets import RESULTS_DIR, load_satcat
 
 KNOWN = Path(__file__).resolve().parents[1] / "anomaly" / "known_events.csv"
+INERT = Path(__file__).resolve().parents[1] / "anomaly" / "known_inert.csv"  # sourced: no propulsion
 COMPATIBLE = {"maneuver_raise": {"maneuver_raise"}, "maneuver_lower": {"maneuver_lower"},
               "geo_drift_change": {"geo_drift_change"}}
 
@@ -69,7 +71,9 @@ def main() -> None:
     known = known[(known.window == "validation") & (known.date >= args.start) & (known.date < args.end)]
     pos = pd.concat([load_tier(t, args.start, args.end) for t in ("A_stations", "B_geo_inspectors")])
     pos = pos[pos.NORAD_CAT_ID.isin(known.norad)]
-    neg = load_tier("D_derelicts", args.start, args.end)
+    inert = pd.read_csv(INERT).norad
+    sci = load_tier("E_science", args.start, args.end)
+    neg = pd.concat([load_tier("D_derelicts", args.start, args.end), sci[sci.NORAD_CAT_ID.isin(inert)]])
     cat = load_satcat().set_index("NORAD_CAT_ID")
     ids = neg.NORAD_CAT_ID.astype(str)
     launch = pd.to_datetime(ids.map(cat.LAUNCH_DATE), utc=True)

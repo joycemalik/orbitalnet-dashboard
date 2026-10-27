@@ -117,3 +117,15 @@ def test_daily_kp_and_storm_tagging():
     tagged = tag_storm([Event(1, "maneuver_lower", ts, ts, -1.0, 10.0),
                         Event(1, "maneuver_lower", calm, calm, -1.0, 10.0)], storms)
     assert [e.storm for e in tagged] == [True, False]
+
+
+def test_fragmentation_burst_from_catalog_order():
+    from research.anomaly.fragmentation import bursts, catalog_dates
+    rows = [("SAT A", "2000-001A", 100, "PAY", "2000-01-01")]
+    rows += [(f"FILLER {i}", f"2022-{i:03d}A", 200 + i, "PAY", "2022-05-01") for i in range(3)]
+    rows += [("SAT A DEB", f"2000-001{c}", 300 + i, "DEB", "2000-01-01") for i, c in enumerate("BCDEFG")]
+    sc = pd.DataFrame(rows, columns=["OBJECT_NAME", "OBJECT_ID", "NORAD_CAT_ID", "OBJECT_TYPE", "LAUNCH_DATE"])
+    sc["NORAD_CAT_ID"] = sc.NORAD_CAT_ID.astype(str)
+    sc["DECAY_DATE"] = None
+    b = bursts(catalog_dates(sc), "2021-01-01", "2024-01-01")
+    assert len(b) == 1 and b.pieces[0] == 6 and b.first_cataloged[0] == "2022-05-01"

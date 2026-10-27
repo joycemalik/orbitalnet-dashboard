@@ -793,3 +793,16 @@ drift), with no step. The event is **excluded** from known_events.csv. A
 known-event list must agree with the primary data. Luch-5X (55841) relocations
 reported by SatTrackCam Leiden (optical observations) are added with window=test:
 they are held out, to be checked only after thresholds are frozen.
+
+### Fragmentation from catalog order (validation window 2021-01 → 2024-07)
+`research/anomaly/fragmentation.py`: NORAD numbers are assigned in cataloging
+order, so cummax(LAUNCH_DATE) over NORAD number gives a lower bound on each
+number's catalog date. Bursts (≥5 pieces, ≤60 d apart) of DEB entries of one
+launch, cataloged ≥30 d after launch, are candidates. Output:
+`research/results/anomaly/fragmentation_bursts_2021-01-01_2024-07-01.csv`
+(49 bursts). It recovers the well-known breakups of the window (NOAA-17,
+Cosmos 1408 ASAT, CZ-6A/Yunhai-3, AEHF-4 Centaur, Cosmos 2499, H-2A stages),
+which is a first sanity check, not a scored validation. It also returns things
+that are not breakups (batch re-cataloging of old objects, Cosmos 1818 NaK
+coolant, crewed-mission debris), and these need a vetting rule. The held-out
+window has not been run.

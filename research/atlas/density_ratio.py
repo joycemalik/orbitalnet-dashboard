@@ -117,7 +117,7 @@ def evaluate(cell: pd.DataFrame, cell_sec: pd.DataFrame, t0: pd.Timestamp, days:
     rho = spearmanr(list(hi), list(hi.values())).statistic if len(hi) >= 3 else None
     out["HA2_altitude"] = {"pass": bool(rho is not None and rho > 0), "spearman_rho": None if rho is None else float(rho), "n_shells": len(hi)}
     ok = [v["peak_R"] > v["base_mean"] + 5 * v["base_sd"] for v in in_range.values() if v["base_sd"]]
-    out["HA3_detectability"] = {"pass": bool(ok) and np.mean(ok) >= 0.8, "fraction": float(np.mean(ok)) if ok else None, "n_shells": len(ok)}
+    out["HA3_detectability"] = {"pass": bool(ok) and bool(np.mean(ok) >= 0.8), "fraction": float(np.mean(ok)) if ok else None, "n_shells": len(ok)}
     chk = [v["secondary_peak_R"] <= v["peak_R"] for v in s.values() if v["secondary_peak_R"] is not None]
     out["HA4_payload_not_larger"] = {"pass": bool(chk) and all(chk), "n_shells": len(chk)}
     return out

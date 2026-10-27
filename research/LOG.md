@@ -754,3 +754,11 @@ derelicts, science flagships). Plan: `research/anomaly/PLAN.md`. Detectors
 must recover documented events on the 2021–2023 validation window before a
 preregistration is committed and the held-out 2024-07 → 2026-10 window is run.
 No results yet.
+
+## Storm drag atlas, May 2024 (branch research/sat-atlas)
+Preregistration `research/atlas/PREREGISTRATION_ATLAS.md` (commit 0884ecd) preceded the data fetch.
+One analysis run, no thresholds changed (a JSON numpy-bool serialisation crash was fixed and
+the script rerun). Results in `research/results/atlas/`: HA1 timing PASS, HA2 altitude
+dependence PASS (5 shells), HA3 detectability PASS (4/4 shells), HA4 payload-not-larger FAIL
+(payload sample peaked higher than debris/rocket bodies in 4 of 5 shells; reported as failed,
+not tuned away; payloads may contain thrusting or low-mass objects, cause not yet investigated).

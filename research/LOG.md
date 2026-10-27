@@ -762,3 +762,11 @@ the script rerun). Results in `research/results/atlas/`: HA1 timing PASS, HA2 al
 dependence PASS (5 shells), HA3 detectability PASS (4/4 shells), HA4 payload-not-larger FAIL
 (payload sample peaked higher than debris/rocket bodies in 4 of 5 shells; reported as failed,
 not tuned away; payloads may contain thrusting or low-mass objects, cause not yet investigated).
+
+## Storm drag atlas, October 2024 replication (preregistered R1, commit 02e9d77)
+One run, definitions unchanged. R-HA2 PASS (rho = 1.0, 5 shells), R-HA3 PASS (4/4 shells),
+R-HA4 FAIL (repeated check), R-HX1 PASS (constellation payload peak above debris peak in all
+4 shells), R-HX2 PASS (other payloads within 0.8-1.25x of debris, fitted tolerance), R-HA1
+FAIL as preregistered: shells 450-550 km peak in the 12 h bin containing the onset, whose
+start is 3 h before it (negative lag), so 0 <= lag <= 72 h is not met. Not adjusted.
+Peak ratios are smaller than in May (primary 1.8-2.7x vs 3.2-4.9x).

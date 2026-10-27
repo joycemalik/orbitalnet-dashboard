@@ -72,6 +72,11 @@
     <figcaption>Independent replication on the 10&ndash;11 October 2024 storm, same definitions.</figcaption>
   </figure>
   <p id="oct-pending" class="pending">Replication not run yet.</p>
+  <div id="oct-detail" hidden>
+    <p><span data-r="oct2024.n_primary_objects"></span> debris and rocket-body objects; onset <span data-r="oct2024.t0"></span> UT.</p>
+    <div class="scroll"><table id="shells-oct2024"><thead><tr><th>Shell (km)</th><th>Peak ratio</th><th>Lag after onset (h)</th><th>Objects at peak</th></tr></thead><tbody></tbody></table></div>
+    <p class="note">HA1 is judged exactly as preregistered (peak lag between 0 and 72 h). Shells with a negative lag peaked in the 12 h bin that contains the onset but starts before it; the criterion was not adjusted after seeing this.</p>
+  </div>
 
   <h2>Caveats</h2>
   <div class="note">
@@ -95,18 +100,23 @@
     el.textContent = v ? 'pass' : 'FAIL';
     el.className = v ? 'pass' : 'fail';
   });
-  var s = get('may2024.shells') || {};
-  var body = document.querySelector('#shells-may2024 tbody');
-  Object.keys(s).sort(function (a, b) { return a - b; }).forEach(function (k) {
-    var v = s[k], tr = document.createElement('tr');
-    [k + '–' + (Number(k) + 50), v.peak_R.toFixed(2) + '×', v.peak_lag_h.toFixed(0), v.n_at_peak].forEach(function (t) {
-      var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+  function fillShells(ev) {
+    var s = get(ev + '.shells') || {};
+    var body = document.querySelector('#shells-' + ev + ' tbody');
+    Object.keys(s).sort(function (a, b) { return a - b; }).forEach(function (k) {
+      var v = s[k], tr = document.createElement('tr');
+      [k + '–' + (Number(k) + 50), v.peak_R.toFixed(2) + '×', v.peak_lag_h.toFixed(0), v.n_at_peak].forEach(function (t) {
+        var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+      });
+      body.appendChild(tr);
     });
-    body.appendChild(tr);
-  });
+  }
+  fillShells('may2024');
+  fillShells('oct2024');
   if (R.oct2024) {
     document.getElementById('oct-fig').hidden = false;
     document.getElementById('oct-pending').hidden = true;
+    document.getElementById('oct-detail').hidden = false;
   }
 })();
 </script>

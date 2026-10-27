@@ -1,0 +1,1407 @@
+{
+ "args": {
+  "start": "2021-01-01",
+  "end": "2024-01-01",
+  "tol_days": 2.0,
+  "settle_days": 30.0,
+  "final_decay_days": 180.0,
+  "kp_storm": 6.0
+ },
+ "n_known": 7,
+ "n_negative_objects": 412,
+ "negative_object_years": 1148.7337440109513,
+ "grid": [
+  {
+   "z": 8.0,
+   "min_km": 0.1,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 809,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 377,
+    "maneuver_lower": 425,
+    "plane_change": 7
+   },
+   "storm_lowerings": 398,
+   "false_alarms_per_object_year": 0.7042537091104094,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.1,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 802,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 377,
+    "maneuver_lower": 425,
+    "plane_change": 0
+   },
+   "storm_lowerings": 398,
+   "false_alarms_per_object_year": 0.6981600429005542,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.1,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 802,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 377,
+    "maneuver_lower": 425,
+    "plane_change": 0
+   },
+   "storm_lowerings": 398,
+   "false_alarms_per_object_year": 0.6981600429005542,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.2,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 343,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 148,
+    "maneuver_lower": 188,
+    "plane_change": 7
+   },
+   "storm_lowerings": 222,
+   "false_alarms_per_object_year": 0.29858964428290535,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.2,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 336,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 148,
+    "maneuver_lower": 188,
+    "plane_change": 0
+   },
+   "storm_lowerings": 222,
+   "false_alarms_per_object_year": 0.2924959780730501,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.2,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 336,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 148,
+    "maneuver_lower": 188,
+    "plane_change": 0
+   },
+   "storm_lowerings": 222,
+   "false_alarms_per_object_year": 0.2924959780730501,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.3,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 179,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 77,
+    "maneuver_lower": 95,
+    "plane_change": 7
+   },
+   "storm_lowerings": 144,
+   "false_alarms_per_object_year": 0.1558237502234404,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.3,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 172,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 77,
+    "maneuver_lower": 95,
+    "plane_change": 0
+   },
+   "storm_lowerings": 144,
+   "false_alarms_per_object_year": 0.14973008401358517,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.3,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 172,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 77,
+    "maneuver_lower": 95,
+    "plane_change": 0
+   },
+   "storm_lowerings": 144,
+   "false_alarms_per_object_year": 0.14973008401358517,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.5,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 94,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 34,
+    "maneuver_lower": 53,
+    "plane_change": 7
+   },
+   "storm_lowerings": 66,
+   "false_alarms_per_object_year": 0.08182923196091284,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.5,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 87,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 34,
+    "maneuver_lower": 53,
+    "plane_change": 0
+   },
+   "storm_lowerings": 66,
+   "false_alarms_per_object_year": 0.07573556575105762,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 8.0,
+   "min_km": 0.5,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 87,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 34,
+    "maneuver_lower": 53,
+    "plane_change": 0
+   },
+   "storm_lowerings": 66,
+   "false_alarms_per_object_year": 0.07573556575105762,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.1,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 490,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 224,
+    "maneuver_lower": 262,
+    "plane_change": 4
+   },
+   "storm_lowerings": 331,
+   "false_alarms_per_object_year": 0.42655663468986477,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.1,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 486,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 224,
+    "maneuver_lower": 262,
+    "plane_change": 0
+   },
+   "storm_lowerings": 331,
+   "false_alarms_per_object_year": 0.4230745397128046,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.1,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 486,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 224,
+    "maneuver_lower": 262,
+    "plane_change": 0
+   },
+   "storm_lowerings": 331,
+   "false_alarms_per_object_year": 0.4230745397128046,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.2,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 215,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 93,
+    "maneuver_lower": 118,
+    "plane_change": 4
+   },
+   "storm_lowerings": 192,
+   "false_alarms_per_object_year": 0.18716260501698148,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.2,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 211,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 93,
+    "maneuver_lower": 118,
+    "plane_change": 0
+   },
+   "storm_lowerings": 192,
+   "false_alarms_per_object_year": 0.18368051003992136,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.2,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 211,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 93,
+    "maneuver_lower": 118,
+    "plane_change": 0
+   },
+   "storm_lowerings": 192,
+   "false_alarms_per_object_year": 0.18368051003992136,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.3,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 121,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 51,
+    "maneuver_lower": 66,
+    "plane_change": 4
+   },
+   "storm_lowerings": 120,
+   "false_alarms_per_object_year": 0.10533337305606864,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.3,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 117,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 51,
+    "maneuver_lower": 66,
+    "plane_change": 0
+   },
+   "storm_lowerings": 120,
+   "false_alarms_per_object_year": 0.10185127807900853,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.3,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 117,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 51,
+    "maneuver_lower": 66,
+    "plane_change": 0
+   },
+   "storm_lowerings": 120,
+   "false_alarms_per_object_year": 0.10185127807900853,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.5,
+   "min_deg": 0.02,
+   "recall": 1.0,
+   "false_alarms": 74,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 24,
+    "maneuver_lower": 46,
+    "plane_change": 4
+   },
+   "storm_lowerings": 58,
+   "false_alarms_per_object_year": 0.06441875707561223,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.5,
+   "min_deg": 0.05,
+   "recall": 1.0,
+   "false_alarms": 70,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 24,
+    "maneuver_lower": 46,
+    "plane_change": 0
+   },
+   "storm_lowerings": 58,
+   "false_alarms_per_object_year": 0.060936662098552107,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  },
+  {
+   "z": 15.0,
+   "min_km": 0.5,
+   "min_deg": 0.1,
+   "recall": 1.0,
+   "false_alarms": 70,
+   "false_alarms_by_kind": {
+    "maneuver_raise": 24,
+    "maneuver_lower": 46,
+    "plane_change": 0
+   },
+   "storm_lowerings": 58,
+   "false_alarms_per_object_year": 0.060936662098552107,
+   "events": [
+    {
+     "norad": 25544,
+     "date": "2021-11-10",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2021-12-03",
+     "kind": "maneuver_lower",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-06-16",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-10-24",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 25544,
+     "date": "2022-12-21",
+     "kind": "maneuver_raise",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-22",
+     "kind": "geo_drift_change",
+     "detected": true
+    },
+    {
+     "norad": 49330,
+     "date": "2022-01-26",
+     "kind": "geo_drift_change",
+     "detected": true
+    }
+   ]
+  }
+ ]
+}

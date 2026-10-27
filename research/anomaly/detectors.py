@@ -23,6 +23,7 @@ class Event:
     epoch_end: pd.Timestamp
     magnitude: float  # km for SMA steps, deg for inclination, deg/day for drift
     score: float  # robust z-score of the step against the object's own noise
+    storm: bool = False  # set by spaceweather.tag_storm: overlaps a geomagnetic storm day
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -70,10 +71,15 @@ def despike(series: pd.DataFrame, column: str, *, z: float = 8.0, window: int = 
 
 def detect_steps(series: pd.DataFrame, column: str = "SMA_KM", *, z: float = 8.0,
                  min_step: float = 0.5, window: int = 15, merge_days: float = 2.0,
-                 kinds: tuple[str, str] = ("maneuver_raise", "maneuver_lower")) -> list[Event]:
-    """Flag step changes in `column` whose size exceeds both `z` robust sigmas of
-    the object's own residual noise and an absolute floor `min_step`.
-    Consecutive flagged steps within `merge_days` merge into one burn sequence."""
+                 max_gap_days: float = 3.0, kinds: tuple[str, str] = ("maneuver_raise", "maneuver_lower")) -> list[Event]:
+    """Flag step changes in `column` larger than `z` robust sigmas of the object's
+    own residual noise. Consecutive flagged steps within `merge_days` merge into
+    one burn sequence, and a sequence is kept only if its total reaches the
+    absolute floor `min_step` (element-set fits lag a burn, so one maneuver is
+    often spread over two or three sets).
+    Across a tracking gap the sigma threshold grows by gap / `max_gap_days`:
+    the trend error accumulates with the gap, but gaps are NOT skipped, because
+    Space-Track often stops publishing right after a burn (e.g. ISS, 16-19 Jun 2022)."""
     series = despike(series, column, z=z, window=window)
     if len(series) < 10:
         return []
@@ -84,16 +90,18 @@ def detect_steps(series: pd.DataFrame, column: str = "SMA_KM", *, z: float = 8.0
     if not np.isfinite(sigma):
         return []
     sigma = max(sigma, 1e-6)
-    hits = np.flatnonzero((np.abs(r) > z * sigma) & (np.abs(r) > min_step))
+    gap_scale = np.maximum(1.0, np.diff(t) / max_gap_days)
+    hits = np.flatnonzero(np.abs(r) > z * sigma * gap_scale)
     events: list[Event] = []
     norad = int(series.NORAD_CAT_ID.iloc[0])
     group: list[int] = []
     for i in list(hits) + [None]:
         if group and (i is None or t[i] - t[group[-1] + 1] > merge_days or np.sign(r[i]) != np.sign(r[group[0]])):
             total = float(r[group].sum())
-            events.append(Event(norad, kinds[0] if total > 0 else kinds[1],
-                                series.EPOCH.iloc[group[0]], series.EPOCH.iloc[group[-1] + 1],
-                                total, float(np.max(np.abs(r[group])) / sigma)))
+            if abs(total) >= min_step:
+                events.append(Event(norad, kinds[0] if total > 0 else kinds[1],
+                                    series.EPOCH.iloc[group[0]], series.EPOCH.iloc[group[-1] + 1],
+                                    total, float(np.max(np.abs(r[group] / gap_scale[group])) / sigma)))
             group = []
         if i is not None:
             group.append(i)

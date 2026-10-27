@@ -1,0 +1,8 @@
+norad,object,date,kind,window,note,source
+25544,ISS,2021-11-10,maneuver_raise,validation,Debris avoidance (Fengyun-1C fragment),https://www.space.com/international-space-station-avoid-satellite
+25544,ISS,2021-12-03,maneuver_lower,validation,"Debris avoidance, Progress MS-18 burn 161 s, ~0.3 m/s retrograde (Pegasus fragment 39915)",https://www.nasa.gov/blogs/spacestation/2021/12/03/station-separates-from-debris-after-orbital-maneuver/
+25544,ISS,2022-06-16,maneuver_raise,validation,Debris avoidance (Cosmos 1408 fragment),https://spacepolicyonline.com/?p=58874
+25544,ISS,2022-10-24,maneuver_raise,validation,"Debris avoidance, 305 s burn (Cosmos 1408 fragment)",https://krdo.com/news/national-world/cnn-world/2022/10/25/international-space-station-swerves-to-avoid-russian-space-debris-nasa-says/
+25544,ISS,2022-12-21,maneuver_raise,validation,Debris avoidance,https://spacepolicyonline.com/?p=58874
+49330,SHIJIAN-21,2022-01-22,geo_drift_change,validation,"Tows Compass/BeiDou-2 G2 to graveyard; sources say 21 or 22 Jan",https://seradata.com/shi-jian-21-docks-with-beidou-2-g2-then-takes-it-to-a-graveyard-orbit
+49330,SHIJIAN-21,2022-01-26,geo_drift_change,validation,Separates from Compass G2 and returns toward GEO,https://keeptrack.space/deep-dive/sj-21-compass-g2-tow

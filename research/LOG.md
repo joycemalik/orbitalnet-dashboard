@@ -754,3 +754,32 @@ derelicts, science flagships). Plan: `research/anomaly/PLAN.md`. Detectors
 must recover documented events on the 2021–2023 validation window before a
 preregistration is committed and the held-out 2024-07 → 2026-10 window is run.
 No results yet.
+
+## 2026-10-27 — Anomaly track, Phase 3 (in progress): detector validation, 2021–2023
+
+Data: Space-Track gp_history for tiers A/B/D/E (1.63M element sets). Recall is
+measured on 7 sourced events (`research/anomaly/known_events.csv`: 5 ISS
+debris-avoidance maneuvers, the SJ-21 tow of Compass-G2 and its separation).
+False alarms are measured on tier D objects, which cannot thrust (412 objects,
+1148.7 object-years after excluding the first 30 days after launch and the
+final 180 days before decay). Grid: `research/results/anomaly/validation_grid.json`.
+
+What failed and was changed, in order (each change is justified by physics or
+data, not by score):
+1. A single bad TLE appeared as a ± pair of fake maneuvers → despike.
+2. Steps across tracking gaps looked like burns (median flagged gap was 5.8 d).
+   A hard gap cut cost recall: **Space-Track published no ISS elements
+   16–19 Jun 2022, around the sourced debris-avoidance burn**, and SJ-21 lost
+   tracking for 3.2 d mid-tow. Publication gaps coincide with maneuvers. →
+   the threshold now scales with the gap; gaps are not skipped.
+3. The Dec 3 2021 ISS lowering is spread over two element sets
+   (−0.164 then −0.307 km), because the fits lag the burn → the size floor
+   applies to the merged burn total.
+4. The lowering false alarms on derelicts cluster on the G3/G4 storm days of
+   Mar 23, Apr 23 and Nov 4–5 2023, and the top offenders were SL-16 debris
+   in final decay → storm tagging (GFZ Kp ≥ 6, ±1 d) plus the final-decay
+   exclusion. Storm lowerings are reported separately and belong to the atlas track.
+
+Current best region (z=15, min 0.5 km): recall 7/7, 70 non-storm false alarms
+(0.061 per object-year). Not frozen yet: n=7 positives is too small, so the
+known-event list should grow before preregistration.

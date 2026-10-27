@@ -84,3 +84,36 @@ def test_single_bad_element_set_is_not_a_maneuver():
     ev = detect_steps(s)
     assert [e.kind for e in ev] == ["maneuver_raise"]
     assert ev[0].magnitude == pytest.approx(2.0, abs=0.2)
+
+
+def test_step_across_tracking_gap_is_not_a_maneuver():
+    s = synthetic(n=200, decay_km_day=0.3)
+    s = s.drop(s.index[90:120])  # 10-day gap; 3 km of drag accumulates across it
+    assert detect_steps(s, min_step=0.5) == []
+
+
+def test_burn_spread_over_two_sets_counts_by_total():
+    s = synthetic(noise_km=0.005, burns=[(40.0, 0.25), (40.34, 0.3)])  # fit lag: 0.55 km over two consecutive sets
+    ev = detect_steps(s, min_step=0.5)
+    assert len(ev) == 1 and ev[0].magnitude == pytest.approx(0.55, abs=0.1)
+
+
+def test_burn_inside_publication_gap_is_kept():
+    s = synthetic(n=200, burns=[(32.0, 1.5)])
+    s = s.drop(s.index[93:103])  # ~3.7-day publication gap around the burn
+    ev = detect_steps(s, min_step=0.5)
+    assert len(ev) == 1 and ev[0].kind == "maneuver_raise"
+
+
+def test_daily_kp_and_storm_tagging():
+    from research.anomaly.spaceweather import daily_max_kp, storm_days, tag_storm
+    from research.anomaly.detectors import Event
+    kp = daily_max_kp()
+    # Gannon storm, 10-11 May 2024, reached Kp 9-.
+    assert kp[pd.Timestamp("2024-05-10", tz="UTC")] >= 8.6
+    storms = storm_days(kp)
+    ts = pd.Timestamp("2024-05-11 06:00", tz="UTC")
+    calm = pd.Timestamp("2024-05-20 06:00", tz="UTC")
+    tagged = tag_storm([Event(1, "maneuver_lower", ts, ts, -1.0, 10.0),
+                        Event(1, "maneuver_lower", calm, calm, -1.0, 10.0)], storms)
+    assert [e.storm for e in tagged] == [True, False]

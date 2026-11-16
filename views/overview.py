@@ -19,7 +19,7 @@ def snapshot():
                 "executing": sum(m.get("status") == "EXECUTING" for m in missions),
                 "auction": sum(m.get("status") == "OPEN_AUCTION" for m in missions),
                 "logs": r.hlen("AUCTION_LOGS"),
-                "speed": (r.get("TIME_MULTIPLIER") or b"1").decode()}
+                "speed": str(r.get("TIME_MULTIPLIER") or "1")}
     except Exception:
         return {"online": False, "sats": 0, "executing": 0, "auction": 0, "logs": 0, "speed": "—"}
 

@@ -140,7 +140,8 @@ def _register_plotly() -> None:
 
 def apply_theme() -> None:
     _register_plotly()
-    st.markdown(_CSS, unsafe_allow_html=True)
+    # Markdown ends an HTML block at a blank line, so the CSS must not contain any.
+    st.markdown("\n".join(ln for ln in _CSS.splitlines() if ln.strip()), unsafe_allow_html=True)
 
 
 def _e(s) -> str:

@@ -1,22 +1,46 @@
+"""OrbitalNet OS — single-entry console. Routes every view (live ops + research) through one app on :8501."""
+
+import datetime
+
 import streamlit as st
 
-st.set_page_config(page_title="OrbitalNet OS", layout="wide", initial_sidebar_state="expanded")
-st.title("🛰️ OrbitalNet Operating System")
-st.markdown("### Welcome to the Command Interface")
-st.info("👈 Please select a route from the sidebar on the left to navigate the system.")
+from ui.theme import apply_theme, sidebar_brand
 
-st.markdown("""
-**Available Operational Views:**
-- **Visualization** - High-fidelity WebGL orbital asset visualization with hardware color coding.
-- **Ground Station** - Mission dispatch, Target Acquisition, Rolling Enclave control, Chaos Engineering.
-- **Under the Hood** - Live Bidding Arena, Auction Ledger, Node Deep Scan, Fleet Statistics.
-""")
+st.set_page_config(page_title="OrbitalNet OS", page_icon="🛰️", layout="wide", initial_sidebar_state="expanded")
+apply_theme()
 
-st.markdown("""
-**Research layer (runs on http://localhost:8502):**
-- 🔭 **Event Lab** — inject your own space event; the constellation plans observations and tests it against known physics *and* the null hypothesis h0 ("none of the known models").
-- 📊 **Scorecard** — preregistered hypothesis results on real ZTF transients and the real Starlink fleet.
-- 🛰️ **Anomaly Tracker** — maneuver and fragmentation detection from Space-Track history (work in progress).
-""")
-st.link_button("Open research dashboard ↗", "http://localhost:8502")
-st.caption("Fully local stack: Python engines ↔ Redis (Memurai) ↔ Streamlit + Three.js. No cloud services required.")
+
+@st.cache_data(ttl=3, show_spinner=False)
+def bus_status():
+    try:
+        from config import get_redis_client
+        r = get_redis_client()
+        r.ping()
+        sats = sum(1 for _ in r.scan_iter("STARLINK-*", count=2000))
+        return True, sats, r.hlen("MISSIONS_LEDGER")
+    except Exception:
+        return False, 0, 0
+
+
+online, n_sats, n_missions = bus_status()
+sidebar_brand([("UTC", datetime.datetime.utcnow().strftime("%H:%M:%S")),
+               ("ASSETS", f"{n_sats:,}"), ("MISSIONS", str(n_missions))], online)
+
+R = "research/app/pages/"
+nav = st.navigation({
+    "Command": [
+        st.Page("views/overview.py", title="Overview", icon=":material/space_dashboard:", default=True),
+    ],
+    "Operations": [
+        st.Page("pages/1_visualization.py", title="Orbital View", icon=":material/public:", url_path="orbital-view"),
+        st.Page("pages/2_ground_station.py", title="Mission Dispatch", icon=":material/satellite_alt:", url_path="dispatch"),
+        st.Page("pages/3_under_the_hood.py", title="Auction Internals", icon=":material/memory:", url_path="internals"),
+    ],
+    "Discovery": [
+        st.Page(R + "1_🔭_Event_Lab.py", title="Event Lab", icon=":material/science:", url_path="event-lab"),
+        st.Page(R + "2_📊_Scorecard.py", title="Evidence", icon=":material/fact_check:", url_path="evidence"),
+        st.Page("research/app/viewer.py", title="Experiment Archive", icon=":material/inventory_2:", url_path="archive"),
+        st.Page(R + "3_🛰️_Anomaly_Tracker.py", title="Anomaly Watch", icon=":material/radar:", url_path="anomaly"),
+    ],
+})
+nav.run()

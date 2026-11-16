@@ -7,15 +7,14 @@ import time
 import uuid
 from scenario_engine import ScenarioManager
 from config import get_redis_client
+from ui.theme import hero, label
 
-st.set_page_config(layout="wide", page_title="Ground Station | OrbitalNet")
 r = get_redis_client()
 director = ScenarioManager()
 
-st.title("📡 Tactical Ground Station")
+hero("Operations · Mission Dispatch", "Task the swarm", "Pick a target and sensor. Plane leaders open a contract-net auction, the best-scored satellites win and lock on — watch it happen on the Orbital View.", status="Uplink live")
 
-st.markdown("---")
-st.subheader("⏱️ Chronos Override (Time Control)")
+label("01", "Chronos override · time warp")
 # 1x = Real Time | 60x = 1 Minute per Second | 3600x = 1 Hour per Second
 time_multiplier = st.slider("Simulation Speed Multiplier", min_value=1, max_value=7200, value=60)
 
@@ -26,8 +25,7 @@ r.set("TIME_MULTIPLIER", time_multiplier)
 # SECTION 1: Quick-Target Acquisition → dispatches into the CNP ledger
 # ═══════════════════════════════════════════════════════════════════════════
 
-st.markdown("---")
-st.markdown("### 🎯 Target Acquisition (Rolling Enclave)")
+label("02", "Target acquisition · rolling enclave")
 st.caption("Select a target and sensor type. The Consensus Engine runs a live CNP auction, forms an enclave, and green lasers snap to the target.")
 
 tgt_col1, tgt_col2 = st.columns([1, 1])
@@ -129,7 +127,7 @@ st.markdown("---")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.markdown("### \U0001f6f0\ufe0f Mission Deployment")
+    label("03", "Scenario deployment")
 
     # Load the complex scenarios from the Campaign Manager
     scenario_choice = st.selectbox("Select Mission Profile", list(director.SCENARIOS.keys()))
@@ -147,7 +145,7 @@ with col1:
         st.success(f"RFP `{mission_id}` Broadcasted. Swarm routing to coordinates.")
 
     st.markdown("---")
-    st.markdown("### Chaos Engineering")
+    label("04", "Chaos engineering")
     if st.button("🚨 Simulate Node Jamming (Force Hot-Swap)", type="primary"):
         director.inject_chaos()
         st.error("EMP INJECTED: Awaiting swarm self-healing response...")
@@ -155,13 +153,13 @@ with col1:
     st.markdown("---")
 
     # Constellation Health (preserved from original)
-    st.markdown("### Constellation Health")
+    label("05", "Constellation health")
     keys = r.keys('STARLINK-*')
     total_nodes = len(keys) if keys else 0
     st.metric("Total Active Nodes", total_nodes)
 
 with col2:
-    st.markdown("### Active Enclave Telemetry")
+    label("06", "Active enclave telemetry")
     try:
         all_missions_raw = r.hgetall("MISSIONS_LEDGER")
     except Exception:
@@ -205,7 +203,7 @@ with col2:
     st.markdown("---")
 
     # Contract Ledger
-    st.markdown("### Contract Ledger")
+    label("07", "Contract ledger")
     st.markdown("A live-scrolling table showing every open bid, who won it, and the execution status.")
 
     data = {
@@ -219,7 +217,7 @@ with col2:
     st.dataframe(df, width='stretch')
 
 st.markdown("---")
-st.markdown("### 🎯 Mission Control (Manual Override)")
+label("08", "Manual override")
 
 with st.form("mission_dispatch"):
     col1, col2 = st.columns(2)

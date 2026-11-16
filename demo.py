@@ -4,9 +4,8 @@ Starts:
   * physics_engine.py   -> satellite state into Redis (Memurai)
   * streamer.py         -> websocket :8765 for the 3D globe
   * consensus_engine.py -> leader election + CNP auctions
-  * Streamlit app.py              on http://localhost:8501  (live mission control)
-  * Streamlit research viewer     on http://localhost:8502  (Event Lab, scorecard, anomaly tracker)
-then opens both in the browser. Ctrl+C (or closing the window) stops everything.
+  * Streamlit console app.py on http://localhost:8501 (Operations + Discovery, one navigation)
+then opens it in the browser. Ctrl+C (or closing the window) stops everything.
 """
 
 from __future__ import annotations
@@ -54,7 +53,7 @@ def main() -> int:
         return 1
     print("✅ Memurai online")
 
-    for p in (8501, 8502, 8765):
+    for p in (8501, 8765):
         if port_open(p):
             print(f"⚠️  Port {p} is already in use — an old demo may still be running. Close it first.")
 
@@ -65,7 +64,6 @@ def main() -> int:
         ("WebSocket streamer", [PY, "streamer.py"], 1),
         ("Consensus engine", [PY, "consensus_engine.py"], 1),
         ("Mission control (8501)", st + ["app.py", "--server.port", "8501"] + headless, 0),
-        ("Research dashboard (8502)", st + ["research/app/viewer.py", "--server.port", "8502"] + headless, 0),
     ]
     procs = []
     try:
@@ -74,13 +72,11 @@ def main() -> int:
             procs.append((name, subprocess.Popen(cmd, cwd=ROOT)))
             time.sleep(wait)
         deadline = time.time() + 60
-        while time.time() < deadline and not (port_open(8501) and port_open(8502)):
+        while time.time() < deadline and not port_open(8501):
             time.sleep(1)
         webbrowser.open("http://localhost:8501")
-        webbrowser.open("http://localhost:8502")
         print("\n✅ All systems online.\n"
-              "   Mission control : http://localhost:8501\n"
-              "   Research + Event Lab : http://localhost:8502\n"
+              "   Console : http://localhost:8501  (Operations + Discovery in one app)\n"
               "   Press Ctrl+C here to shut everything down.\n")
         while True:
             for name, p in procs:

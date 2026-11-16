@@ -25,9 +25,19 @@ from research.app.plotting import (
     worked_example_figure,
 )
 
-st.set_page_config(page_title="Open-World Planner Research Viewer", layout="wide")
+try:
+    import sys as _sys
+    from pathlib import Path as _P
+    _sys.path.insert(0, str(_P(__file__).resolve().parents[2]))
+    from ui.theme import apply_theme as _apply, hero as _hero
+    _apply()
+except Exception:  # standalone without the console theme
+    _hero = None
 
-st.title("Open-World Sequential Measurement Planner — Results Viewer")
+if _hero:
+    _hero("Discovery · Experiment Archive", "Experiment archive", "Phase 1 existence proof, worked examples and Phase 2 strategy tables, straight from research/results/.")
+else:
+    st.title("Open-World Sequential Measurement Planner — Results Viewer")
 st.caption("Reads only from research/results/. Never computes a result number. "
            "👈 Try the 🔭 Event Lab in the sidebar to inject your own space event.")
 

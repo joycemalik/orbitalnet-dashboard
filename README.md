@@ -172,7 +172,6 @@ Licensed under the [MIT License](LICENSE).
 
 1. Make sure Memurai (Redis for Windows) is running.
 2. Double-click **`DEMO.bat`** (or run `python demo.py`).
-3. Two browser tabs open:
-   - http://localhost:8501 — live mission control (3D globe, ground station, auction internals)
-   - http://localhost:8502 — research dashboard: **🔭 Event Lab**, 📊 Scorecard, 🛰️ Anomaly Tracker
+3. One browser tab opens:
+   - http://localhost:8501 — one console: **Operations** (Orbital View, Mission Dispatch, Auction Internals) and **Discovery** (Event Lab, Evidence, Experiment Archive, Anomaly Watch)
 4. Press Ctrl+C in the demo window to stop everything.

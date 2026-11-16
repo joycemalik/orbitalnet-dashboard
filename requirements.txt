@@ -3,3 +3,6 @@ boto3
 pandas
 sgp4
 redis
+websockets
+plotly
+pandas

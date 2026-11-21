@@ -12,3 +12,14 @@ research/data/raw/*
 
 # Local-only backups and duplicates (kept on disk, not versioned)
 archive/
+
+# LaTeX build artefacts
+*.aux
+*.fls
+*.fdb_latexmk
+*.blg
+*.synctex.gz
+research/papers/**/*.log
+research/papers/**/*.out
+docs/**/build/*.log
+materials/**/build/*.log

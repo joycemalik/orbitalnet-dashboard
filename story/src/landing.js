@@ -10,6 +10,7 @@ import { createEarth } from './scene/earth.js';
 import { createSatellites } from './scene/satellites.js';
 import { createPost } from './scene/post.js';
 import { flight } from './orbits-overlay.js';
+import './cursor.js';
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = s => document.querySelector(s);

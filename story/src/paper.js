@@ -1,3 +1,4 @@
+import './cursor.js';
 // The JAA paper page. Every number comes from /jaa/numbers.json, which
 // scripts/jaa_assets.py builds from research/papers/jaa/generated/*.tex.
 

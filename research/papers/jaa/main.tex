@@ -1,0 +1,169 @@
+% JAA asks for IAU-format references (author initials, year, journal, volume, page), which
+% mnras.bst produces. sn-jnl hard-codes its own style while loading, so we skip that one call.
+\let\KernelBibStyle\bibliographystyle
+\def\bibliographystyle#1{}
+\documentclass[pdflatex,sn-basic]{sn-jnl}
+\let\bibliographystyle\KernelBibStyle
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{textcomp}
+
+\raggedbottom
+
+% Every result number below is a macro generated from committed result files
+% (research/figures/paper_main.py and research/figures/phase4_numbers.py).
+\input{generated/numbers}
+\input{generated/numbers_phase4}
+
+\begin{document}
+
+\title[None of the Above, Across a Fleet]{Knowing What You Do Not Know: Open-World Follow-Up Planning for Fading Transients, from One Spacecraft to a Fleet}
+
+\author*[1]{\fnm{Joyce} \sur{Malik}}\email{joycemalik14@gmail.com (ORCID: \href{https://orcid.org/0009-0001-8293-8064}{0009-0001-8293-8064})}
+\author[1]{\fnm{Anup} \sur{H}}
+\author[1]{\fnm{Moghitha} \sur{B}}
+\author[1]{\fnm{Swathi} \sur{Satish}}
+
+\affil*[1]{\orgdiv{Department of Computer Science and Engineering}, \orgname{Dr.\ Ambedkar Institute of Technology}, \orgaddress{\street{Outer Ring Road, Mallathahalli}, \city{Bengaluru}, \postcode{560056}, \state{Karnataka}, \country{India}}}
+
+\abstract{Sky surveys find more short-lived explosions than any telescope can follow, so future spacecraft will have to decide what to measure next. Today's planners choose the measurement that best separates the object types they already know. But when something new appears, they have no way to say so, and every extra measurement makes them more sure of a wrong answer. We give the planner one more option, ``none of the above'', and let it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. On \RealNEvents\ real transients from the Zwicky Transient Facility, it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree. We then give the word ``unknown'' a false-alarm guarantee that holds at every step, and spread the planner over satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one. All hypotheses were registered before testing, and we report the failures too.}
+
+\keywords{transient follow-up, open-set recognition, Bayesian experimental design, anytime-valid inference, distributed spacecraft autonomy, preregistration}
+
+\maketitle
+
+\section{Introduction}\label{sec:intro}
+
+Wide-field surveys now find far more transients than any follow-up programme can observe \citep{Bellm2019,Ivezic2019}. Many of these events fade within hours, so the measurements that would separate one explanation from another are only available for a short time. Choosing the next measurement is therefore a planning problem. The standard way to plan it is to pick the measurement with the highest expected information gain (EIG) about the event's class \citep{Lindley1956,Chaloner1995}.
+
+EIG is good at telling known classes apart. It cannot tell us when an event belongs to none of them. A posterior over $K$ known classes always sums to one, so when a genuinely new object comes in, every new measurement pushes the planner further towards whichever known class fits least badly. The planner becomes more confident exactly when it should become less confident. The problem sits in the hypothesis space itself, so tuning will not fix it. A threshold on closed-world uncertainty fails for the same reason, since a confident wrong answer has low entropy.
+
+We start from this observation and ask four questions. For each one, the hypotheses were committed before the test data were run.
+\begin{enumerate}
+\item Does adding an explicit unmodelled hypothesis $h_0$ to the planner stop it from confidently misclassifying unknown events, and what does that cost on known ones? We test this in simulation (Sect.~\ref{sec:sim}) and on real ZTF events (Sect.~\ref{sec:real}).
+\item Can the ``unknown'' decision come with a guaranteed false-alarm rate? We try a conformal threshold (Sect.~\ref{sec:conf}) and anytime-valid e-values (Sect.~\ref{sec:fleet}).
+\item How does respecting the order of time change these conclusions? (Sect.~\ref{sec:disc})
+\item When the planner runs on a fleet whose spacecraft can only talk while in line of sight, how much does communication help, and does coordinating plans add anything beyond sharing data? (Sect.~\ref{sec:fleet})
+\end{enumerate}
+
+Our main findings and contributions are:
+\begin{itemize}
+\item In simulation and on real events, the open-world posterior is the part that matters. An extra utility term aimed at testing $h_0$ adds nothing.
+\item We give two ways to attach a guarantee to ``unknown''. The first is a split-conformal threshold. The second, new here, is a universal-inference e-process. It is valid at every step, needs no calibration data, and can be combined across spacecraft by simple averaging.
+\item We measure how a causal time order changes the conclusions of follow-up studies.
+\item We build a decentralised fleet that shares observations as conflict-free replicated data types (CRDTs), and we measure what communication and coordination are worth under real link geometry.
+\end{itemize}
+
+\section{Related work and the gap}\label{sec:related}
+
+\paragraph{Anomaly and out-of-taxonomy detection.} Broker-level systems rank alerts by how unusual they look. They use deep embeddings with isolation forests \citep{Villar2021}, real-time similarity search \citep{Aleo2024}, autoencoders on the ZTF stream \citep{Iskandarli2026}, active anomaly detection in Fink \citep{Pruzhinskaya2026} and classifier-based multi-class anomaly scores \citep{Gupta2024}. FLARE runs out-of-taxonomy detection in production \citep{Sasli2026FLARE} and reports that blind detection recovers few out-of-taxonomy objects at a 1\% false-alarm rate. ASTRANet adds conformal calibration to spectroscopic classification \citep{Sasli2026ASTRANet}. All of these work on data that already exist, so none of them decides which measurement to take next to make the unknown recognisable.
+
+\paragraph{Information-driven follow-up.} Information-theoretic and active-learning methods choose which objects deserve a spectrum \citep{Astudillo2020,Kennamer2020,Moller2025}, and multi-telescope schedulers optimise tiling and cadence \citep{Coughlin2019,Almualla2021}. They work in a closed world, and at the level of targets rather than the individual measurements of one event.
+
+\paragraph{Experimental design under misspecification.} Bayesian design has been made robust to outliers and to a wrong noise model \citep{Barlas2025,Catanach2023}, and it has been extended to learn model discrepancy \citep{Yang2025}. Amortised policies make it non-myopic \citep{Foster2021,Hedman2025}. None of these includes an explicit ``none of the above'' hypothesis or a deadline. Conformal methods for unseen classes exist in general form \citep{Xie2025}, but not for sequential decisions.
+
+\paragraph{Distributed spacecraft.} Consensus auctions \citep{Choi2009,Perone2026}, dynamic distributed constraint optimisation \citep{Zilberstein2026} and flight demonstrations \citep{Adams2024} allocate fixed requests over limited links. Our setting is harder in one specific way. The value of a measurement depends on a belief about what the event is, and that belief is itself spread across spacecraft and often out of date. Decentralised information gathering in robotics \citep{Atanasov2015} is the closest in spirit, but it is closed-world.
+
+\paragraph{The gap.} To our knowledge, no earlier study puts an explicit unmodelled hypothesis inside a sequential, causal, multi-spacecraft measurement planner, and then tests it against preregistered hypotheses on real unknown transients with a certified false-alarm rate. This is the gap we fill, and we keep our claim limited to it.
+
+\section{Method}\label{sec:method}
+
+\paragraph{Belief.} For $K$ modelled classes with forward models $f_k(t;A)$, the planner keeps an exact grid posterior over the class $k$ and the amplitude $A$. Measurements are Gaussian, $y\sim\mathcal N(f_k(t;A),\sigma_i^2)$, where $\sigma_i$ comes from the instrument's limiting magnitude. The open-world posterior adds one more hypothesis, $h_0$, scored by the marginal likelihood of a zero-mean Gaussian process (GP), with a uniform prior over $\{1,\dots,K,h_0\}$. $h_0$ is not a new physical class. It simply says that none of the modelled classes explains the data.
+
+\paragraph{Utility and causality.} A candidate action is an (epoch, spacecraft) pair that is visible and strictly later than the last measurement, so the planner can only ever measure forward in time. The planner P maximises
+\begin{equation}
+U(a) = I(H_{1:K};Y_a) + \beta\, I(Z;Y_a) + \gamma\, D(a),
+\label{eq:utility}
+\end{equation}
+where $I(H_{1:K};Y_a)$ is the closed-world class EIG, $Z=\mathbb 1[h_0]$, and $D(a)$ is a Fisher-information proxy for what we lose by waiting until the same spacecraft's next opportunity. We compare against a fixed cadence (B0), the constellation's original auction score with no belief (B1), classifier-entropy sampling (B2) and closed-world EIG (B3). The ablations remove $\gamma$ or $\beta$.
+
+\paragraph{Two guarantees for ``unknown''.} The conformal rule flags ``unknown'' when $s=\log p(D\mid h_0)-\max_c\log p(D\mid c)$ goes above a split-conformal threshold calibrated per known class \citep{Vovk2005,Angelopoulos2023}. Its guarantee holds at the end of the measurement budget, and it needs exchangeable calibration events. The e-process rule needs neither. Once we fix the GP as the alternative, universal inference \citep{Wasserman2020} gives
+\begin{equation}
+E_t=\frac{p_{\rm GP}(D_t)}{\sup_{c,A}L(c,A;D_t)},\qquad P\Big(\sup_t E_t\ge 1/\alpha\Big)\le\alpha
+\label{eq:eprocess}
+\end{equation}
+under any modelled class, by Ville's inequality \citep{Ramdas2023}. This holds even though every measurement was chosen adaptively from earlier data. Every $f_k$ is linear in $A$, so the supremum is exact. There is a price for needing no calibration, though: the guarantee holds only if the templates and the noise model are right.
+
+\paragraph{From one planner to a fleet.} Each spacecraft keeps a grow-only set of observation records (a G-Set CRDT, \citealp{Shapiro2011}). Merging two sets is just their union, so a record that arrives twice or out of order is never counted twice, and the belief is a deterministic function of the set. Two spacecraft can exchange records only when they are within range $R$ and their line of sight clears the Earth plus 80\,km. We check this from real orbital elements every two minutes, and information spreads by store-and-forward. At each epoch, the spacecraft in each connected component run a sequential greedy auction on P's utility. They add ``believer'' pseudo-observations at the predictive mean, so a second bid on the same event sees diminishing returns \citep{Ginsbourger2010}. A spacecraft spends a measurement only if its utility is above a reserve price. On board, a spacecraft can combine ``unknown'' evidence by averaging the last e-values it has heard, and the average is still an e-value under any dependence \citep{VovkWang2021}.
+
+\section{Study 1: simulation}\label{sec:sim}
+\paragraph{Setup.} We draw events uniformly from four modelled classes (kilonova, shock cooling, GRB afterglow and M-dwarf flare) and three withheld classes that no planner ever sees. The withheld ones are an AT2018cow-like fast blue optical transient, a tidal disruption event and a physically implausible brightening oscillation. The light curves are analytic shapes with each class's rough timescale, so they are not published templates. Eight Starlink satellites, propagated with SGP4 from real element sets, carry instruments with limiting magnitude 19, 20 or 21, and each one sees a target only when the Earth does not block it. Every strategy gets five measurements over 16 log-spaced epochs from 0.01 to 20\,d. We test three hypotheses. H1 says that P identifies modelled events faster than every baseline. H2 says that removing the decay term costs fast classes more amplitude information than slow ones. H3 says that $P(h_0)$ detects withheld events better than a closed-world entropy threshold at 5\% false alarm. We tuned $\gamma$ and the GP length scale on validation seeds only.
+
+\input{results_sim}
+
+\section{Study 2: real ZTF replay}\label{sec:real}
+\paragraph{Setup.} We replay spectroscopically classified ZTF Bright Transient Survey events \citep{Fremling2020,Perley2020} against the same satellites, propagated from element sets archived at each event's date. SN~Ia, II and Ibc are the modelled classes, with empirical $g$ and $r$ templates built only from events detected before 2020. Tidal disruption events, superluminous supernovae and SN~Ibn are the real unknowns. The truth at any epoch is a GP interpolation of the real light curve, so only the planner's measurements are simulated, and never beyond the last real detection.
+
+\input{results_real}
+
+\input{results_conformal}
+
+\paragraph{A guarantee with no calibration, on real events.} The conformal rule needs calibration events, so we also tested the e-process of Eq.~\eqref{eq:eprocess} on the same real data, with no tuning at all. We replayed every planner draw for draw, so each one took exactly the measurements reported above, and then raised ``unknown'' the first time $E_t$ reached $1/\alpha=10$. Real light curves never match a template exactly, so the null hypothesis is only roughly true here, and that is what we wanted to test. On the \EFreshN\ sealed supernovae, P's false-``unknown'' rate was \EFreshFa\ over three noise seeds, with an upper bound of \EFreshFaUpper\ against the promised 10\% (HR1 \EHROneVerdict). On the \EWithheldN\ real unknowns it flagged \EDet, with a lower bound of \EDetLower\ (HR2 \EHRTwoVerdict). This is less than the \RealCFlagP\ that $P(h_0)$ flagged on the same events, but it comes with a guarantee that holds at every step. The e-process also works on any planner. On the closed-world planner's measurements it flagged \EDetBthree\ of the unknowns, and on the lookahead planner's \EDetL, because those planners take more measurements per event. Their false-``unknown'' rate stayed low as well (\EFreshFaBthree\ for the closed-world planner). So a planner that ignores $h_0$ can still be given a safe ``unknown'' label afterwards, just by adding this test on top.
+
+\section{Study 4: a fleet that cannot always talk}\label{sec:fleet}
+
+\paragraph{Setup.} Each episode has four transients alerted together, drawn as in Study~1, and eight real-orbit satellites. Each satellite can take one measurement per epoch and three in total. We compare four strategies. O has ideal links and runs one fleet-wide auction. A$_R$ runs an auction inside each linked group, for link ranges $R\in\{1,2,3,5\}\times10^3$\,km. K$_R$ shares knowledge the same way, but each spacecraft plans alone. G has no links at all. P's utility is frozen from Study~1. We chose reserve prices on validation episodes with a rule declared beforehand (O: \FleetReserveO, G: \FleetReserveG, A: \FleetReserveA, K: \FleetReserveK), and A and K landed at the edge of the grid. The preregistered test used \FleetNEpisodes\ episodes (\FleetNEvents\ events, \FleetNModeled\ of them modelled). Links are scarce, so a satellite pair is linked only \FleetLinkUpOne\ of the time at 1000\,km and \FleetLinkUpFive\ at 5000\,km.
+
+\paragraph{Results.} Ideal communication raised accuracy on modelled events by \FleetHFourOneEst\ points over isolated spacecraft (\FleetHFourOneCI; H4.1 \FleetHFourOneVerdict). Realistic links did not measurably help. A$_{5000}$ minus G was \FleetHFourTwoEst\ points (\FleetHFourTwoCI; H4.2 \FleetHFourTwoVerdict), so ideal links beat realistic ones by \FleetHFourThreeEst\ points (\FleetHFourThreeCI; H4.3 \FleetHFourThreeVerdict). Coordinating plans added nothing on top of sharing knowledge. A$_{5000}$ minus K$_{5000}$ was \FleetHFourFourEst\ points (\FleetHFourFourCI), inside the preregistered $\pm5$ (H4.4 \FleetHFourFourVerdict). The e-process made at most \FleetHEOneMaxK\ false ``unknown'' call in \FleetHEOneN\ modelled events, for every strategy (HE1 \FleetHEOneVerdict). When spacecraft averaged the last e-values they had heard, they raised \FleetHETwoK\ false alarms in \FleetHETwoN\ (event, spacecraft) pairs (HE2 \FleetHETwoVerdict). The e-process paid for this safety in power, so under O it detected \FleetEDetO\ of the unknowns, where $P(h_0)$ flagged \FleetFlagO.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Fleet test results (nominal, preregistered reserves). Acc.\ mod.: accuracy on modelled events (\%); CW unk.: confidently wrong on unknowns (\%); Flag unk.: unknowns labelled $h_0$ (\%); $\bar n_{\rm obs}$: measurements per event; Stale: share of already-taken records a spacecraft does not yet know (\%).}
+\label{tab:fleet}
+\input{generated/table_fleet}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{generated/figures/fig5_fleet.pdf}
+\caption{Accuracy against inter-satellite link range. Horizontal lines: ideal links (O, green) and none (G, red). Solid: preregistered reserves. Dashed: all strategies at one reserve (exploratory, added after the test).}
+\label{fig:fleet}
+\end{figure}
+
+\paragraph{Why H4.2 failed.} Our selection rule maximised log score, and it picked a higher reserve for A than for G, so A took \FleetObsA\ measurements per event against \FleetObsG. A was better calibrated (log score \FleetLsA\ against \FleetLsG, and confidently wrong on \FleetCwUA\ of unknowns against \FleetCwUG), but it was not more accurate. We were not satisfied with a result that mixed two effects, so we added an exploratory run with every strategy at the same reserve. Realistic links then gave \FleetExAminusGEst\ points (\FleetExAminusGCI) and ideal links gave \FleetExOminusGEst\ (\FleetExOminusGCI), while coordination still added nothing (\FleetExAminusKEst, \FleetExAminusKCI). The same oracle reached \FleetAccO\ with its own reserve and \FleetExAccO\ with the common one. So the choice of when to spend a measurement moved accuracy about as much as perfect communication did.
+
+\paragraph{A second preregistered test.} An exploratory look is not evidence, so we wrote five new hypotheses and tested them on a fresh seed (\FleetBNEvents\ events). All three runs share identical events, so every comparison is paired. With equal spending, realistic links now helped, and A$_{5000}$ minus G was \FleetBOneEst\ points (\FleetBOneCI; B1 \FleetBOneVerdict). Coordination again added nothing (\FleetBTwoEst, \FleetBTwoCI; B2 \FleetBTwoVerdict). The spending rule alone moved the oracle by \FleetBThreeEst\ points (\FleetBThreeCI; B3 \FleetBThreeVerdict).
+
+\paragraph{Where the satellites sit.} We also tested a fleet of eight satellites drawn from one orbital plane. It is far better connected, with links up \FleetDenseLinkUpOne--\FleetDenseLinkUpFive\ of the time against \FleetLinkUpOne--\FleetLinkUpFive\ for the spread fleet. Even with ideal links, it was \FleetBFourEst\ points less accurate (\FleetBAccODense\ against \FleetBAccOSparse, \FleetBFourCI; B4 \FleetBFourVerdict). Satellites that share a plane lose and regain sight of a target together, so the fleet measures each event at fewer distinct epochs (\FleetBFiveEst\ epochs per event, \FleetBFiveCI; B5 \FleetBFiveVerdict). For a follow-up fleet, the spread of the satellites over the sky matters more than how well they can talk.
+
+\paragraph{Under model error.} When every template's timescale is off by 30\%, the e-process's false-``unknown'' rate rises to \FleetMEFalseUnknownO\ for O and \FleetMEFalseUnknownG\ for G. The hypothesis the e-process tests, that the data come from the templates, is now false, so these alarms are the guarantee working as stated. The fleet with the most data noticed this most often, which is what a working test should do.
+
+\section{Discussion}\label{sec:disc}
+
+\paragraph{The belief does the work.} The one finding that holds in every study is that keeping $h_0$ in the posterior stops confident misclassification of the unknown. The utility term built to test $h_0$ ($\beta$) made no measurable difference. In simulation, a closed-world entropy threshold on P's own measurements reached an AUROC of only \SimAucPown, against \SimAucP\ for $P(h_0)$ on the same measurements. So what makes the unknown recognisable is a hypothesis space that can name it, plus colour on real data. This goes against the intuition that a planner must hunt for anomalies. It first needs to be able to say ``none of these''.
+
+\paragraph{Two kinds of guarantee.} The Bayesian $h_0$ made the fewest confident errors on real unknowns, but it promises nothing about false alarms. The conformal threshold gets a certified false-alarm rate from exchangeable calibration events, and that rate holds at the end of the budget. The e-process gets validity at every step and on any planner from the model itself, and we can average it across spacecraft whose data overlap. It pays in power, and in principle it is only as good as the templates, but on real supernovae that never match a template exactly it still stayed at \EFreshFa\ false alarms. So the choice depends on which error costs more, and on whether we trust the calibration set or the physics more.
+
+\paragraph{The time arrow.} An earlier version of our pipeline let planners measure earlier epochs after later ones. This did not bias the comparison between strategies, but it changed the conclusions. Once measurements were causal, adaptive planners used about half of their budget, posteriors became less confident, and the supernova-cost hypothesis of Study~2 went from fail to pass. That is why we think benchmarks for follow-up planning should check the time order of every chosen sequence.
+
+\paragraph{What a fleet needs.} Three things moved accuracy, and their order surprised us. Where the satellites are mattered most, since a spread fleet beat a single plane by \FleetBFourEst\ points. When they spend a measurement came next (\FleetBThreeEst). Whether they share what they have seen came last (\FleetBOneEst\ for realistic links and \FleetHFourOneEst\ for ideal ones). Coordinating plans added nothing in either test once knowledge was shared. So for small science fleets, we would invest in orbital diversity and in getting observations to each other, before negotiating who observes. CRDT sharing kept this safe, and no record was ever counted twice, whatever path it took.
+
+\paragraph{What did not work.} The planner was not the fastest identifier. A cheap disagreement heuristic identified the events it could identify sooner, so H1 failed. The decay term helped kilonovae, but it reversed for flares and under model error. Realistic crosslinks failed their first preregistered test (H4.2). The selected spending rules differed between strategies, so we tested again with equal spending, and then they passed (B1). The real-data replay could not show supernova accuracy within five points of the closed-world planner (H5) until the conformal and lookahead study.
+
+\paragraph{Limitations.} Simulated light curves are analytic shapes, and amplitude is their only parameter. The decay term is a squared signal-to-noise proxy. There is no slew, exposure or link-budget model, and fleet links are purely geometric. On real data, we resample measurements from interpolated light curves and assume two-band imaging, and the test events were examined more than once, which we declared in advance. In the fleet study, two reserve prices sit at the edge of the validation grid, the satellites use old element sets, and the equal-reserve run in Study~4 is an extra look at the first test seed.
+
+\section{Conclusion}\label{sec:concl}
+For autonomous follow-up of fading transients, give the planner a way to say ``none of the above''. In simulation and on real ZTF events, this is the part of the method that keeps stopping confident misclassification of the unknown, and once measurements are causal it costs little on ordinary events. If a guaranteed false-alarm rate matters, a conformal threshold gives one at the end of the budget, and an e-process gives one at every step and across spacecraft without calibration data. A one-step utility does not manage urgency well, so we would not rely on it for that, and every follow-up study should check the time arrow. For a fleet, spread the satellites out, decide carefully when to spend, and share what you have seen before negotiating what to see next.
+
+\backmatter
+
+\bmhead{Acknowledgements}
+This work was carried out under the guidance of Dr.~Smitha Shekar B and Dr.~Harish G, Department of Computer Science and Engineering, Dr.\ Ambedkar Institute of Technology, Bengaluru.
+
+\section*{Declarations}
+
+\begin{itemize}
+\item Funding: Not applicable. This research received no external funding.
+\item Competing interests: None.
+\item Data availability: ZTF Bright Transient Survey light curves are public. Every per-event result, preregistration file and the scripts that generate every number, table and figure in this paper are in the code repository below.
+\item Code availability: \url{https://github.com/joycemalik/orbitalnet-dashboard}, branch \texttt{research/open-world-planner}.
+\item Author contributions: All authors (J.M., A.H., M.B. and S.S.) contributed to the conception and design of the framework and to the writing of the manuscript. All authors read and approved the final manuscript.
+\end{itemize}
+
+\bibliographystyle{mnras}
+\bibliography{refs}
+
+\end{document}

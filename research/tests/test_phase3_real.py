@@ -80,7 +80,7 @@ def test_radec_unit_vector():
 
 
 def test_3le_keeps_latest_and_handles_empty(tmp_path):
-    lines = (REPO_ROOT / "satellites.txt").read_text(encoding="utf-8").splitlines()[:3]
+    lines = (REPO_ROOT / "mission_control" / "data" / "satellites.txt").read_text(encoding="utf-8").splitlines()[:3]
     f = tmp_path / "w.tle"
     f.write_text(f"0 {lines[0].strip()}\n{lines[1]}\n{lines[2]}\n", encoding="utf-8")
     assert list(load_3le_latest(str(f))) == [lines[0].strip()]
@@ -90,7 +90,7 @@ def test_3le_keeps_latest_and_handles_empty(tmp_path):
 
 
 def _archive_from_repo_tles(n=4):
-    fleet = load_tle_subset(str(REPO_ROOT / "satellites.txt"), max_satellites=n)
+    fleet = load_tle_subset(str(REPO_ROOT / "mission_control" / "data" / "satellites.txt"), max_satellites=n)
     sat = next(iter(fleet.values()))
     epoch = datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(
         days=sat.jdsatepoch + sat.jdsatepochF - 2451544.5)

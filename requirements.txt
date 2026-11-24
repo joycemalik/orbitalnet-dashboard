@@ -1,8 +1,7 @@
+# Mission control (live constellation stack + unified Streamlit console)
 streamlit
-boto3
 pandas
+plotly
 sgp4
 redis
 websockets
-plotly
-pandas

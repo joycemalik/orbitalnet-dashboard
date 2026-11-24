@@ -13,7 +13,7 @@ apply_theme()
 @st.cache_data(ttl=3, show_spinner=False)
 def bus_status():
     try:
-        from config import get_redis_client
+        from mission_control.config import get_redis_client
         r = get_redis_client()
         r.ping()
         sats = sum(1 for _ in r.scan_iter("STARLINK-*", count=2000))
@@ -29,12 +29,12 @@ sidebar_brand([("UTC", datetime.datetime.utcnow().strftime("%H:%M:%S")),
 R = "research/app/pages/"
 nav = st.navigation({
     "Command": [
-        st.Page("views/overview.py", title="Overview", icon=":material/space_dashboard:", default=True),
+        st.Page("ui/overview.py", title="Overview", icon=":material/space_dashboard:", default=True),
     ],
     "Operations": [
-        st.Page("pages/1_visualization.py", title="Orbital View", icon=":material/public:", url_path="orbital-view"),
-        st.Page("pages/2_ground_station.py", title="Mission Dispatch", icon=":material/satellite_alt:", url_path="dispatch"),
-        st.Page("pages/3_under_the_hood.py", title="Auction Internals", icon=":material/memory:", url_path="internals"),
+        st.Page("mission_control/pages/1_visualization.py", title="Orbital View", icon=":material/public:", url_path="orbital-view"),
+        st.Page("mission_control/pages/2_ground_station.py", title="Mission Dispatch", icon=":material/satellite_alt:", url_path="dispatch"),
+        st.Page("mission_control/pages/3_under_the_hood.py", title="Auction Internals", icon=":material/memory:", url_path="internals"),
     ],
     "Discovery": [
         st.Page(R + "1_🔭_Event_Lab.py", title="Event Lab", icon=":material/science:", url_path="event-lab"),

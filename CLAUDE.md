@@ -6,50 +6,55 @@ Guidance for Claude Code when working in this repository.
 
 **OrbitalNet OS** (also called USOS) simulates a constellation of satellites (loaded from real-world TLE data) that autonomously bid on ground-station tasking missions via a Contract Net Protocol (CNP) auction, with a live 3D WebGL globe visualization.
 
-Two architectures coexist in this repo:
+Repo layout (unified on `main`, Nov 2026):
 
-- **Active/primary (local-first)** — Streamlit UI + Redis/Memurai + Python microservices + a Three.js globe. This is what recent commits target and what `boot_os.py` runs. Treat this as the current system.
-- **Legacy (AWS-native)** — `lambda_function.py`, `cloud_dashboard.py`, and `TECHNICAL_SPEC.md` describe an older Lambda + SNS + DynamoDB design. It's still present and is what the devcontainer boots, but it is not where active development happens. Don't assume `TECHNICAL_SPEC.md` describes the current (Redis-based) system.
+- `app.py` — the single Streamlit console (:8501). Routes mission-control pages (`mission_control/pages/`) and research pages (`research/app/`) via `st.navigation`. It stays at the repo root because `st.Page` paths resolve from the main script's folder.
+- `ui/` — shared theme (`ui/theme.py`, imported by both sides) and the overview page (`ui/overview.py`).
+- `mission_control/` — the active, local-first live stack (a package; see `mission_control/README.md`).
+- `research/` — studies, preregistrations, results, papers (see `research/README.md`).
+- `docs/` — the GitHub Pages site (deployed from `main:/docs`). Only website files go here. `story/` is the Vercel site.
+- `materials/` — handouts, deck, college report and their builder scripts (not served).
+- `legacy/aws/` — the old Lambda + SNS + DynamoDB design (`lambda_function.py`, `cloud_dashboard.py`, `TECHNICAL_SPEC.md`, its own `config.py`). The devcontainer still boots it. Don't assume `TECHNICAL_SPEC.md` describes the current system.
 
 ## How to run
 
 1. Ensure Memurai (Redis for Windows) is running on `127.0.0.1:6379`.
-2. `pip install -r requirements.txt`, then also `pip install websockets plotly` — both are imported by the code (`streamer.py`, `pages/3_under_the_hood.py`) but missing from `requirements.txt`.
-3. `python boot_os.py` — boots, in order: physics engine (`physics_engine.py`) → websocket streamer (`streamer.py`, port 8765) → consensus engine (`consensus_engine.py`) → `streamlit run app.py` (port 8501). Ctrl+C shuts everything down gracefully.
-4. Sidebar pages: Visualization (`pages/1_visualization.py`), Ground Station (`pages/2_ground_station.py`), Under the Hood (`pages/3_under_the_hood.py`).
+2. `pip install -r requirements.txt -r requirements-research.txt` (research versions are pinned; Python 3.13).
+3. `python -m mission_control.demo` (or double-click `DEMO.bat`) — boots physics engine → streamer (ws :8765) → consensus engine → `streamlit run app.py` (:8501), all from the repo root. `python -m mission_control.boot_os` does the same with plain output. Ctrl+C stops everything.
+4. Research viewer: `python -m research.launch` (or `launch_research.bat`), port 8502.
 
-Legacy path: the devcontainer auto-runs `streamlit run cloud_dashboard.py`, which talks directly to AWS (DynamoDB/SNS) instead of the local Redis stack — a separate entry point and stack from `boot_os.py`.
+Always run modules from the repo root with `-m`. Mission-control code uses package imports (`from mission_control.config import get_redis_client`).
 
 ## Architecture / key files
 
-- `app.py` — Streamlit landing page.
-- `pages/1_visualization.py`, `2_ground_station.py`, `3_under_the_hood.py` — Streamlit's numeric-prefixed multipage convention; the prefix controls sidebar order.
-- `physics_engine.py` — propagates orbits from `satellites.txt` (TLE data) via `sgp4`, generates telemetry, writes satellite state into Redis.
-- `consensus_engine.py` — elects plane leaders, runs CNP auctions for missions in `MISSIONS_LEDGER`, forms/rolls enclaves, logs forensics to `AUCTION_LOGS`.
-- `streamer.py` — websocket server (`ws://localhost:8765`) broadcasting Redis state to the front-end globe.
-- `scoring_engine.py`, `hal_simulator.py`, `scenario_engine.py`, `config.py` — supporting libraries (scoring math, mock hardware telemetry, scenario definitions, shared constants + Redis client factory).
-- `index.html` — Three.js globe, connects to `ws://localhost:8765`.
+- `mission_control/physics_engine.py` — propagates orbits from `mission_control/data/satellites.txt` (TLEs) via `sgp4`, generates telemetry, writes satellite state into Redis.
+- `mission_control/consensus_engine.py` — elects plane leaders, runs CNP auctions for missions in `MISSIONS_LEDGER`, forms/rolls enclaves, logs forensics to `AUCTION_LOGS`.
+- `mission_control/streamer.py` — websocket server (`ws://localhost:8765`) broadcasting Redis state to the globe.
+- `mission_control/scoring_engine.py`, `hal_simulator.py`, `scenario_engine.py`, `config.py` — scoring maths, mock hardware telemetry, scenario definitions, shared constants + Redis client factory.
+- `mission_control/globe/index.html` — Three.js globe, connects to `ws://localhost:8765`.
+- `mission_control/pages/1_visualization.py`, `2_ground_station.py`, `3_under_the_hood.py` — Operations pages.
 
-**Redis is the integration bus.** Components don't call each other directly — they communicate only through Redis keys (`STARLINK-<id>`, `MISSIONS_LEDGER`, `AUCTION_LOGS`, `TIME_MULTIPLIER`/`CHRONOS_MULTIPLIER`, `TRIGGER_CHAOS`, `CURRENT_MISSION`, `CURRENT_SUN_LON`, `SCORING_WEIGHTS`). This lets each process crash/restart independently. Preserve this decoupling — don't introduce direct imports/calls between the engines and the Streamlit pages.
+**Redis is the integration bus.** Components don't call each other directly. They communicate only through Redis keys (`STARLINK-<id>`, `MISSIONS_LEDGER`, `AUCTION_LOGS`, `TIME_MULTIPLIER`/`CHRONOS_MULTIPLIER`, `TRIGGER_CHAOS`, `CURRENT_MISSION`, `CURRENT_SUN_LON`, `SCORING_WEIGHTS`). This lets each process crash/restart independently. Preserve this decoupling: don't introduce direct imports/calls between the engines and the Streamlit pages.
 
 ## Known pitfalls
 
-- **Streamlit rerun ordering**: in `pages/3_under_the_hood.py`, the auto-refresh `time.sleep(4); st.rerun()` call must stay at the very bottom of the script, after all `st.tabs(...)` blocks render. Calling `st.rerun()` earlier silently breaks rendering of later tabs — this exact bug was fixed in a recent commit. If you touch this file, keep the refresh logic at the bottom.
-- **Encoding fragility on Windows**: PowerShell's `Set-Content` has repeatedly corrupted UTF-8 emoji characters in `pages/3_under_the_hood.py` (mojibake), requiring several follow-up fix commits. When editing files containing emoji on Windows, prefer the Edit tool (or `Out-File -Encoding utf8`) over `Set-Content`.
-- `pages/1_visualization.py` re-reads `index.html` from disk on every page load and injects a cache-busting timestamp comment to defeat Streamlit's iframe caching — don't remove this without replacing the cache-busting mechanism.
-- `requirements.txt` is incomplete (missing `websockets`, `plotly`) — update it if you add new dependencies, and don't assume it's authoritative for what's actually imported.
+- **Streamlit rerun ordering**: in `mission_control/pages/3_under_the_hood.py`, the auto-refresh `time.sleep(4); st.rerun()` call must stay at the very bottom of the script, after all `st.tabs(...)` blocks render. Calling `st.rerun()` earlier silently breaks rendering of later tabs. If you touch this file, keep the refresh logic at the bottom.
+- **Encoding fragility on Windows**: PowerShell's `Set-Content` has repeatedly corrupted UTF-8 emoji characters in `mission_control/pages/3_under_the_hood.py` and the emoji-named `research/app/pages/*`. Prefer the Edit tool (or Python with `encoding="utf-8"`) over `Set-Content`.
+- `mission_control/pages/1_visualization.py` re-reads `globe/index.html` from disk on every page load and injects a cache-busting timestamp comment to defeat Streamlit's iframe caching. Don't remove this without replacing the cache-busting mechanism.
+- `docs/` is public (GitHub Pages) and the repo is public. Don't put private documents there.
+- Paper numbers: `research/figures/paper_main.py` and `phase4_numbers.py` write to `research/papers/main/generated/`; run `python research/papers/sync_generated.py` to copy them into `research/papers/jaa/generated/`.
 
 ## Testing
 
-No formal test suite. The closest thing is the `assert`-based self-test in `scoring_engine.py`, run via `python scoring_engine.py`.
+`pytest research/` (97 tests). Mission control has the `assert`-based self-test `python -m mission_control.scoring_engine`.
 
 ## Security
 
 `.env` holds AWS credentials and is gitignored. Never commit it, and don't echo its contents into chat or commits.
 
-## Research branch rules (research/open-world-planner)
+## Research rules (research/)
 
-- All new work lives in `research/`. It must NOT import redis, streamlit, websockets, or any live-stack module.
+- All new work lives in `research/`. It must NOT import redis, streamlit, websockets, or any live-stack module. Exception: the read-only viewer pages in `research/app/` use streamlit and the shared `ui.theme`; experiment and analysis code must stay free of them.
 - Every experiment is a script in `research/experiments/` that takes `--seed` and `--n-events`, and writes JSON/CSV to `research/results/`. Nothing is hand-edited.
   Exception (branch `research/sat-anomaly`, `research/anomaly/`): detectors run over real
   catalog data, so they take `--start/--end/--tiers` instead (plus `--seed` wherever they sample).

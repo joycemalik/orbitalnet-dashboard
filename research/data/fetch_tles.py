@@ -35,7 +35,7 @@ LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
 QUERY_URL = ("https://www.space-track.org/basicspacedata/query/class/gp_history/"
              "NORAD_CAT_ID/{ids}/EPOCH/{start}--{end}/orderby/EPOCH%20asc/format/3le")
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TLE_PATH = REPO_ROOT / "satellites.txt"
+TLE_PATH = REPO_ROOT / "mission_control" / "data" / "satellites.txt"
 FLEET_POOL_SIZE = 20  # same value as experiments/phase2_single_planner.py
 MIN_INTERVAL_S = 15.0  # safe margin under Space-Track's 300 requests/hour and 30/min limit
 

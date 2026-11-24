@@ -1,177 +1,87 @@
-# OrbitalNet OS (USOS) & Open-World Autonomous Space Observatory Research
+# OrbitalNet OS
 
-[![GitHub Pages](https://img.shields.io/badge/Research_Paper-Live_Page-8a1430?style=for-the-badge&logo=github)](https://orbitalnet.joycemalik.com/)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Three.js](https://img.shields.io/badge/Three.js-WebGL_3D_Globe-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org)
+[![Website](https://img.shields.io/badge/Website-orbitalnet.joycemalik.com-8a1430?style=for-the-badge)](https://orbitalnet.joycemalik.com/)
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-console-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 
-An autonomous constellation management framework and open-world Bayesian decision system for distributed space observatories. 
+OrbitalNet is two things that grew together. The first is **mission control**: a live simulator where
+10,000+ real satellites (propagated from real TLEs) bid for ground-station tasks in an auction and
+show up on a 3D globe. The second is **the research** that came out of it: how a fleet of spacecraft
+should decide what to measure next when a new transient appears, including the case where the
+object is something nobody has a model for.
 
-This repository contains both the **OrbitalNet OS** real-time simulation platform and the formal research implementation for **open-world hypothesis-discriminating observation campaigns**.
+Both live in this repo, and both open in one console.
 
----
-
-## 🌟 Research Paper & Web Publication
-
-- **Website (film, paper, roadmap, notebook):** [https://orbitalnet.joycemalik.com/](https://orbitalnet.joycemalik.com/)
-- **The film:** [https://orbitalnet.joycemalik.com/film/](https://orbitalnet.joycemalik.com/film/)
-- **Paper page:** [https://orbitalnet.joycemalik.com/](https://orbitalnet.joycemalik.com/)
-- **Manuscript PDF:** [`Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories.pdf`](./Hypothesis-Discriminating%20Observation%20Campaigns%20for%20Distributed%20Space%20Observatories.pdf)
-
-### Paper Summary: *"Differential Diagnosis for the Sky"*
-When rapid fading astronomical transients (e.g., kilonovae, GRB afterglows, M-dwarf flares, TDEs) appear, distributed satellite constellations must decide which targets to observe under strict power, orbital visibility, and inter-satellite communication constraints. Standard closed-world Bayesian planners force unexpected phenomena into known taxonomy classes. 
-
-This research introduces an **Open-World Expected Information Gain (EIG)** planner featuring an explicitly modeled null hypothesis ($h_0$) using Gaussian Process residual modeling and active mode switching.
-
----
-
-## 🚀 System Architecture
-
-OrbitalNet OS features a microservices architecture integrated via Redis as a real-time state bus.
+## Quick start
+You need Python 3.13 and, for the live simulator, [Memurai](https://www.memurai.com/) (Redis for Windows) running on `127.0.0.1:6379`.
 
 ```
-                    +-----------------------------+
-                    |  Real-World TLE Dataset     |
-                    +--------------+--------------+
-                                   |
-                                   v
-                    +-----------------------------+
-                    |  physics_engine.py          | (SGP4 Orbit Propagation & Telemetry)
-                    +--------------+--------------+
-                                   | Writes satellite positions & state
-                                   v
-                    +-----------------------------+
-                    |      Redis / Memurai        | (Decoupled Integration Bus)
-                    +--------------+--------------+
-                      /            |            \
-                     /             |             \
-  +-----------------+   +----------+----------+   +------------------------+
-  | streamer.py     |   | consensus_engine.py |   | Streamlit Dashboard    |
-  | (WebSocket Server)  | (CNP Bidding & Leader)  | (app.py & Multipage UI)|
-  +--------+--------+   +---------------------+   +------------------------+
-           |
-           v
-  +-----------------+
-  | index.html      | (Live 3D WebGL Globe Visualization)
-  +-----------------+
+pip install -r requirements.txt -r requirements-research.txt
 ```
 
----
+| What you want | How |
+|---|---|
+| Mission control + research pages, one console | double-click **`DEMO.bat`** (or `python -m mission_control.demo`), then open http://localhost:8501 |
+| Research viewer with a live experiment run | double-click **`launch_research.bat`** (or `python -m research.launch`), port 8502 |
+| Run the research tests | `pytest research/` |
 
-## 💡 Key System Components
+The console has two sections. **Operations** has the Orbital View, Mission Dispatch and Auction Internals,
+all fed live from the simulator. **Discovery** has the Event Lab, Evidence, Experiment Archive and
+Anomaly Watch, which read the committed research results, so they work even when the simulator is off.
 
-### 1. Primary Local-First Platform (`boot_os.py`)
-- **`physics_engine.py`**: Reads live/historical TLE orbit data (`satellites.txt`), propagates satellite positions using `sgp4`, generates thermal/power state telemetry, and writes positions into Redis.
-- **`consensus_engine.py`**: Conducts decentralized Contract Net Protocol (CNP) auctions across orbital planes to assign mission taskings dynamically to candidate satellites.
-- **`streamer.py`**: Broadcasts real-time satellite orbital vectors and auction states over WebSockets (`ws://localhost:8765`) to the Three.js front-end.
-- **`index.html`**: Interactive Three.js WebGL globe visualizing real-time satellite trajectories and ground station visibility cones.
-- **`app.py` & `pages/`**: Multi-page Streamlit analytical dashboard (`1_visualization.py`, `2_ground_station.py`, `3_under_the_hood.py`).
-
-### 2. Research & Open-World Planning Engine (`research/`)
-- **Open-World EIG formulation**: Evaluates Expected Information Gain across candidate model classes while maintaining a nonparametric $h_0$ residual model.
-- **Baselines & Strategies**: Evaluates fixed-cadence dispatcher ($B_0$), SNR heuristic ($B_1$), classifier entropy ($B_2$), closed-world EIG ($B_3$), and open-world EIG ($P$).
-- **Reproducibility pipeline**: Pure Python experiments with seed control, synthetic scenario generators, and pre-registered validation protocols.
-
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Python 3.10+
-- [Memurai](https://www.memurai.com/) (Redis for Windows) or standard Redis server running on `127.0.0.1:6379`.
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/joycemalik/orbitalnet-dashboard.git
-   cd orbitalnet-dashboard
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## 🏃 Execution
-
-### Running the Live OrbitalNet Simulation
-Launch all microservices and the Streamlit dashboard in sequence using `boot_os.py`:
-
-```bash
-python boot_os.py
+## What is where
+```
+app.py                 the console (Streamlit, :8501): routes mission control + research pages
+ui/                    shared theme and the overview page
+mission_control/       the live constellation simulator (see mission_control/README.md)
+research/              studies, preregistrations, results, papers (see research/README.md)
+docs/                  the public website (GitHub Pages)
+story/                 the film / notebook site (Vercel)
+materials/             handouts, deck, college report, figure builders
+legacy/aws/            the original AWS Lambda + SNS + DynamoDB version, kept for reference
 ```
 
-This boots:
-1. `physics_engine.py` (Orbit propagation & state generation)
-2. `streamer.py` (WebSocket server on `ws://localhost:8765`)
-3. `consensus_engine.py` (CNP auction engine)
-4. Streamlit UI (Opens automatically at `http://localhost:8501`)
-
-*Press `Ctrl+C` in the terminal to gracefully shutdown all services.*
-
-### Running Research Experiments
-To execute or inspect the open-world planner experiments:
-
-```bash
-# Run pytest research test suite
-pytest research/
-
-# Run single experiment scenario
-python -m research.experiments.phase2_single_planner --seed 42 --n-events 100
-```
-
----
-
-## 📂 Repository Structure
+## How mission control works
+Each part is its own process, and they talk only through Redis, so any one of them can crash or
+restart without taking the others down.
 
 ```
-├── app.py                      # Main Streamlit entrance
-├── boot_os.py                  # Process orchestrator & launcher
-├── config.py                   # System-wide parameters & Redis client factory
-├── physics_engine.py           # SGP4 orbit propagator & state generator
-├── consensus_engine.py         # Contract Net Protocol auction engine
-├── streamer.py                 # WebSocket telemetry broadcaster
-├── index.html                  # Live Three.js WebGL globe
-├── scoring_engine.py           # Multi-attribute auction utility scoring
-├── hal_simulator.py            # Hardware Abstraction Layer mock telemetry
-├── scenario_engine.py          # Scenario execution triggers
-├── docs/                       # Web publication & hosted research paper page
-│   └── index.html              # Hosted GitHub Pages manuscript site
-├── research/                   # Open-world hypothesis-discrimination research codebase
-│   ├── experiments/            # Controlled experiment benchmarks
-│   ├── planners/               # Bayesian & Open-World EIG decision algorithms
-│   ├── transients/             # Astrophysical lightcurve models
-│   └── PREREGISTRATION.md      # Experimental pre-registration protocol
-├── CLAUDE.md                   # System developer guide & architecture notes
-├── requirements.txt            # Python dependencies
-└── Hypothesis-Discriminating...pdf # Manuscript document
+satellites.txt (TLEs) → physics_engine ─┐
+                                        ├─ Redis ─→ streamer (ws :8765) → 3D globe
+              consensus_engine ─────────┤
+   (leader election, CNP auctions)      └─→ console pages (:8501)
 ```
+The physics engine propagates every satellite with SGP4 and writes its state. The consensus engine
+elects a leader per orbital plane and runs Contract Net auctions for missions in the ledger. The
+streamer pushes the state to the browser globe. Details and the Redis key list are in
+[`mission_control/README.md`](mission_control/README.md).
 
----
+## What the research found
+The question is simple to state. When a new transient appears, which measurement should the
+fleet take next, and how does it notice that the object fits none of its models? We gave the planner
+an explicit "none of the above" hypothesis, so it can say "unknown" instead of growing more
+confident in a wrong class. Every study had its hypotheses committed before the test data were run.
 
-## 📜 Citation & License
+| Study | What it showed | Verdict |
+|---|---|---|
+| Simulation, 8 real-orbit satellites | the open-world planner recognised 96% of never-seen classes at 5% false alarm, against 21% for the usual approach | 2 of 3 hypotheses pass |
+| Real ZTF transients | confidently wrong on 7–14% of real unknowns, against 50–56% | 4 of 5 pass |
+| Conformal "unknown" rule | a certified false-alarm rate on sealed real supernovae (3–6%, bound 10%) | 5 of 6 pass |
+| Fleet with inter-satellite links | perfect links add about 10 points of accuracy, but realistic links did not help with the tuned settings | 5 of 6 pass |
+| Fleet follow-up (4b) | links do help at equal spending, and where satellites sit matters more than the links | 5 of 5 pass |
+| Anytime-valid e-process on real data | 3.3–4.3% false "unknown" on sealed supernovae, 26–31% of real unknowns caught, no calibration data | 2 of 2 pass |
+| Storm drag atlas (catalogue data) | geomagnetic storms measurably lower debris orbits, replicated in Oct 2024 | 3 of 4, then 4 of 6 |
 
-If you build upon or reference this work in academic research, please cite:
+The failures are reported with the same weight as the passes. Every number in the papers comes from
+`research/results/`, so nothing is typed by hand. The full index (preregistration → script → results →
+verdict) is in [`research/README.md`](research/README.md), and the reasoning is in [`research/LOG.md`](research/LOG.md).
 
-```bibtex
-@article{malik2026hypothesis,
-  title={Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories},
-  author={Malik, Joyce and Contributors},
-  journal={OrbitalNet OS Research Publications},
-  year={2026},
-  url={https://orbitalnet.joycemalik.com/}
-}
-```
+## Papers
+- **JAA submission:** `research/papers/jaa/` ("Knowing What You Do Not Know: Open-World Follow-Up Planning for Fading Transients, from One Spacecraft to a Fleet")
+- **Research note:** `research/papers/rnaas/`
+- **Original proposal:** `research/papers/Hypothesis-Discriminating Observation Campaigns for Distributed Space Observatories.pdf`
+- **Website:** [orbitalnet.joycemalik.com](https://orbitalnet.joycemalik.com/)
 
-Licensed under the [MIT License](LICENSE).
-
-## ▶️ Run the demo (one click)
-
-1. Make sure Memurai (Redis for Windows) is running.
-2. Double-click **`DEMO.bat`** (or run `python demo.py`).
-3. One browser tab opens:
-   - http://localhost:8501 — one console: **Operations** (Orbital View, Mission Dispatch, Auction Internals) and **Discovery** (Event Lab, Evidence, Experiment Archive, Anomaly Watch)
-4. Press Ctrl+C in the demo window to stop everything.
+## Authors and licence
+Joyce Malik, Anup H, Moghitha B and Swathi Sathish, Department of Computer Science and Engineering,
+Dr. Ambedkar Institute of Technology, Bengaluru. Released under the [MIT License](LICENSE).

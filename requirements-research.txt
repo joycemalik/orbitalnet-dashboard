@@ -1,5 +1,9 @@
-numpy
-scipy
-matplotlib
+# Research package (research/). Pinned versions reproduce the committed results exactly
+# (merge_shards and the Phase 4 runs check numpy/python versions). Python 3.13.
+numpy==2.2.6
+scipy==1.16.0
+sgp4==2.25
+matplotlib==3.10.5
+pytest==8.4.0
+# research viewer pages (research/app) run inside the Streamlit console
 streamlit
-pytest

@@ -62,7 +62,7 @@ from research.transients.noise import assign_instruments, noise_sigma_from_limit
 from research.util import atomic_write_json, config_hash, git_commit_hash
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-TLE_PATH = REPO_ROOT / "satellites.txt"
+TLE_PATH = REPO_ROOT / "mission_control" / "data" / "satellites.txt"
 RESULTS_DIR = REPO_ROOT / "research" / "results" / "phase2"
 PREREGISTRATION_PATH = REPO_ROOT / "research" / "PREREGISTRATION_PHASE2.md"
 FLEET_POOL_SIZE = 20  # covers the largest scenario's n_satellites with margin

@@ -1,0 +1,5 @@
+# Legacy AWS stack only (not needed for mission control or research)
+boto3
+streamlit
+pandas
+redis

@@ -98,7 +98,7 @@ _FLEETS: dict = {}
 
 def get_fleet(kind: str) -> dict:
     if kind not in _FLEETS:
-        _FLEETS[kind] = _fleet_subset(N_SATELLITES) if kind == "sparse" else dense_fleet(str(REPO_ROOT / "satellites.txt"), N_SATELLITES)
+        _FLEETS[kind] = _fleet_subset(N_SATELLITES) if kind == "sparse" else dense_fleet(str(REPO_ROOT / "mission_control" / "data" / "satellites.txt"), N_SATELLITES)
     return _FLEETS[kind]
 
 

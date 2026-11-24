@@ -1,0 +1,71 @@
+import subprocess
+import time
+import sys
+import redis
+import threading
+import os
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
+
+# Ensure UTF-8 output for emojis in Windows terminal
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Fallback for older python versions
+        import codecs
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+
+def check_memurai():
+    print("🧠 Checking native Memurai (Redis) connection...")
+    r = redis.Redis(host='127.0.0.1', port=6379)
+    try:
+        if r.ping():
+            print("✅ Memurai is online and ready!")
+            r.close()
+            return True
+    except redis.ConnectionError:
+        print("❌ Memurai is dead. Start it in Windows Services.")
+        sys.exit(1) # Kill the boot if the DB isn't there
+
+def boot_system():
+    print("🚀 Booting OrbitalNet OS Unified Platform...")
+    
+    # 1. Check Memurai
+    check_memurai()
+        
+    processes = []
+    try:
+        # 4. Launch the OS components
+        print("Starting Physics Engine...")
+        physics = subprocess.Popen([sys.executable, "-m", "mission_control.physics_engine"], cwd=ROOT)
+        processes.append(physics)
+        time.sleep(2)
+        
+        print("Starting WebSocket Streamer...")
+        streamer = subprocess.Popen([sys.executable, "-m", "mission_control.streamer"], cwd=ROOT)
+        processes.append(streamer)
+        time.sleep(1)
+
+        print("Starting Consensus Engine...")
+        consensus = subprocess.Popen([sys.executable, "-m", "mission_control.consensus_engine"], cwd=ROOT)
+        processes.append(consensus)
+        time.sleep(1)
+        
+        print("Starting Command Center...")
+        dashboard = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "app.py"], cwd=ROOT) 
+        processes.append(dashboard)
+
+        print("\n✅ OrbitalNet OS is fully online.\n")
+
+        for p in processes:
+            p.wait()
+
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down OrbitalNet OS...")
+        for p in processes:
+            p.terminate()
+        print("All systems offline.")
+
+if __name__ == "__main__":
+    boot_system()

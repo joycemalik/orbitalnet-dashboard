@@ -142,10 +142,46 @@ def paired_bootstrap(run: dict, a: str, b: str, metric, population: str, seed: i
     return {"estimate": float(est), "ci95": [float(lo), float(hi)]}
 
 
+def cp_upper(k: int, n: int, conf: float = 0.95) -> float:
+    """One-sided Clopper-Pearson upper bound."""
+    from scipy.stats import beta
+    return 1.0 if k >= n else float(beta.ppf(conf, k + 1, n - k))
+
+
+def evaluate_hypotheses(run: dict) -> dict:
+    """PREREGISTRATION_H4.md, exactly as written."""
+    acc = lambda r: float(r["correct"])
+    thr = np.log(1 / ALPHA)
+    out = {}
+    for hid, a, b in (("H4.1", "O", "G"), ("H4.2", "A_5000", "G"), ("H4.3", "O", "A_5000")):
+        d = paired_bootstrap(run, a, b, acc, "modeled")
+        out[hid] = {"comparison": f"accuracy({a}) - accuracy({b})", **d, "pass": d["ci95"][0] > 0}
+    d = paired_bootstrap(run, "A_5000", "K_5000", acc, "modeled")
+    out["H4.4"] = {"comparison": "accuracy(A_5000) - accuracy(K_5000) within +-0.05", **d,
+                   "pass": d["ci95"][0] > -0.05 and d["ci95"][1] < 0.05}
+    he1 = {}
+    for s in run["episodes"][0]["strategies"]:
+        mod = [r for _, m, r in event_rows(run, s) if m["modeled"]]
+        k = sum(r["max_log_e_ground"] >= thr for r in mod)
+        he1[s] = {"false_unknown": k / len(mod), "k": int(k), "n": len(mod), "cp_upper95": cp_upper(int(k), len(mod))}
+    out["HE1"] = {"per_strategy": he1, "pass": all(v["cp_upper95"] <= ALPHA for v in he1.values())}
+    mod = [r for _, m, r in event_rows(run, "A_5000") if m["modeled"]]
+    flags = [x >= thr for r in mod for x in r["max_log_e_mean"]]
+    k, n = int(sum(flags)), len(flags)
+    out["HE2"] = {"false_alarm": k / n, "k": k, "n": n, "cp_upper95": cp_upper(k, n), "pass": cp_upper(k, n) <= ALPHA}
+    return out
+
+
 def main() -> None:
     cmd = sys.argv[1]
     if cmd == "select":
         print(json.dumps(select_reserves(), indent=2))
+    elif cmd == "hypotheses":
+        run = load_run(Path(sys.argv[2]))
+        res = {"hypotheses": evaluate_hypotheses(run), "summary": summarize(run), "meta": run["meta"]}
+        atomic_write_json(sys.argv[3], res)
+        for h, v in res["hypotheses"].items():
+            print(h, "PASS" if v["pass"] else "FAIL", {k: v[k] for k in v if k in ("estimate", "ci95", "false_alarm", "cp_upper95")})
     elif cmd == "summary":
         run = load_run(Path(sys.argv[2]))
         out = summarize(run)

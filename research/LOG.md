@@ -775,3 +775,25 @@ predicts, from real code on a real (if small) sample — not asserted a priori.
   that maximises the mean open-world log score of the true outcome (true class
   for modeled events, h0 for withheld; floored at 1e-6), averaged over that
   family's members. Ties -> smaller reserve. Equal tuning effort per family.
+
+### Phase 4 test result (2026-11-24; PREREGISTRATION_H4.md committed and pushed at e30ed47 first)
+Nominal, seed 4000, 250 episodes (1000 events, 592 modeled). Verdicts exactly as preregistered:
+- H4.1 PASS: accuracy O - G = +0.105 [0.063, 0.145].
+- H4.2 FAIL: accuracy A_5000 - G = -0.015 [-0.054, 0.023].
+- H4.3 PASS: accuracy O - A_5000 = +0.120 [0.082, 0.158].
+- H4.4 PASS: accuracy A_5000 - K_5000 = +0.005 [-0.018, 0.028], inside +-0.05.
+- HE1 PASS: ground e-process false "unknown" at most 1/592 (O), CP upper <= 0.008 for every strategy.
+- HE2 PASS: mean-fused per-spacecraft false alarm 0/4736 for A_5000.
+Model-error run (seed 4100, reported only): HE1 fails for O (83/573 = 14.5%) and G (27/573);
+the e-process tests "data come from the modeled templates", which is false by construction when
+the templates are misspecified, so these alarms detect the misspecification itself. Strategies with
+more data (O) detect it most often.
+
+What H4.2's failure hides (stated as found, not explained away): the declared rule chose reserve 10
+for A/K but 3 for G, so A used 3.7 measurements per event vs 5.4 for G; A had the better log score
+(-0.88 vs -0.99) and fewer confident errors on unknowns, but not higher accuracy.
+
+EXPLORATORY (post hoc, not preregistered, an extra look at test seed 4000): all strategies at reserve 3.
+A_5000 - G = +0.024 [-0.010, 0.056]; O - G = +0.051 [0.010, 0.091]; O - A_5000 = +0.027 [-0.007, 0.062];
+A_5000 - K_5000 = -0.005 [-0.030, 0.019]. O at reserve 1 vs 3: 0.868 vs 0.814 accuracy - the
+spending rule moves accuracy as much as ideal communication does.

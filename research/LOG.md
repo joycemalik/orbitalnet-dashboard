@@ -797,3 +797,14 @@ EXPLORATORY (post hoc, not preregistered, an extra look at test seed 4000): all 
 A_5000 - G = +0.024 [-0.010, 0.056]; O - G = +0.051 [0.010, 0.091]; O - A_5000 = +0.027 [-0.007, 0.062];
 A_5000 - K_5000 = -0.005 [-0.030, 0.019]. O at reserve 1 vs 3: 0.868 vs 0.814 accuracy - the
 spending rule moves accuracy as much as ideal communication does.
+
+### Phase 4b test result (seed 4200, 500 episodes, PREREGISTRATION_H4B.md pushed first at ad819c3)
+- B1 PASS: sparse, equal reserve: A_5000 - G = +0.053 [0.029, 0.076] (confirms the exploratory look).
+- B2 PASS: A_5000 - K_5000 = -0.013 [-0.030, 0.005], inside +-0.05.
+- B3 PASS: O at reserve 1 minus O at reserve 3 = +0.079 [0.059, 0.098].
+- B4 PASS: O sparse minus O dense = +0.094 [0.069, 0.120], although dense links are up 9-38% of
+  pair-time vs 1-12%.
+- B5 PASS: distinct epochs per event, O sparse minus O dense = +0.27 [0.23, 0.31].
+- Reported: dense A_5000 - G = +0.018 [-0.008, 0.044].
+Reading: the earlier H4.2 failure was the reserve difference; with equal spending, realistic links
+help. Where satellites sit on the sky matters more than how well they can talk.

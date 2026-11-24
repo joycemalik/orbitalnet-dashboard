@@ -1,39 +1,42 @@
-% JAA asks for IAU-format references (author initials, year, journal, volume, page), which
-% mnras.bst produces. sn-jnl hard-codes its own style while loading, so we skip that one call.
-\let\KernelBibStyle\bibliographystyle
-\def\bibliographystyle#1{}
-\documentclass[pdflatex,sn-basic]{sn-jnl}
-\let\bibliographystyle\KernelBibStyle
-
+% Journal of Astrophysics and Astronomy: official double-column class (jaa.cls) and reference style (apj.bst),
+% both from the journal's author kit (JAA.zip).
+\documentclass{jaa}
+\usepackage{natbib}
+\bibliographystyle{apj}
 \usepackage{graphicx}
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{textcomp}
-
-\raggedbottom
+\usepackage{url}
 
 % Every result number below is a macro generated from committed result files
 % (research/figures/paper_main.py and research/figures/phase4_numbers.py).
 \input{generated/numbers}
 \input{generated/numbers_phase4}
 
-\begin{document}
+\begin{document}\sloppy
 
-\title[None of the Above, Across a Fleet]{Knowing What You Do Not Know: Open-World Follow-Up Planning for Fading Transients, from One Spacecraft to a Fleet}
+\title{Knowing What You Do Not Know: Open-World Follow-Up\\ Planning for Fading Transients, from One Spacecraft to a Fleet}
 
-\author*[1]{\fnm{Joyce} \sur{Malik}}\email{joycemalik14@gmail.com (ORCID: \href{https://orcid.org/0009-0001-8293-8064}{0009-0001-8293-8064})}
-\author[1]{\fnm{Anup} \sur{H}}
-\author[1]{\fnm{Moghitha} \sur{B}}
-\author[1]{\fnm{Swathi} \sur{Satish}}
+\author{Joyce Malik\textsuperscript{1,*}, Anup H\textsuperscript{1}, Moghitha B\textsuperscript{1} and Swathi Sathish\textsuperscript{1}}
+\affilOne{\textsuperscript{1}Department of Computer Science and Engineering, Dr.\ Ambedkar Institute of Technology, Outer Ring Road, Mallathahalli, Bengaluru 560056, Karnataka, India.}
 
-\affil*[1]{\orgdiv{Department of Computer Science and Engineering}, \orgname{Dr.\ Ambedkar Institute of Technology}, \orgaddress{\street{Outer Ring Road, Mallathahalli}, \city{Bengaluru}, \postcode{560056}, \state{Karnataka}, \country{India}}}
-
-\abstract{Sky surveys find more short-lived explosions than any telescope can follow, so future spacecraft will have to decide what to measure next. Today's planners choose the measurement that best separates the object types they already know. But when something new appears, they have no way to say so, and every extra measurement makes them more sure of a wrong answer. We give the planner one more option, ``none of the above'', and let it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. On \RealNEvents\ real transients from the Zwicky Transient Facility, it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree. We then give the word ``unknown'' a false-alarm guarantee that holds at every step, and spread the planner over satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one. All hypotheses were registered before testing, and we report the failures too.}
-
-\keywords{transient follow-up, open-set recognition, Bayesian experimental design, anytime-valid inference, distributed spacecraft autonomy, preregistration}
+\twocolumn[{
 
 \maketitle
+
+\corres{joycemalik14@gmail.com (ORCID 0009-0001-8293-8064). Co-authors: alexanubius6808@gmail.com (A.H.), moghithab4@gmail.com (M.B.), sathishswathi04@gmail.com (S.S.)}
+
+\msinfo{}{}
+
+\begin{abstract}
+Sky surveys find more short-lived explosions than any telescope can follow, so future spacecraft will have to decide what to measure next. Today's planners choose the measurement that best separates the object types they already know. But when something new appears, they have no way to say so, and every extra measurement makes them more sure of a wrong answer. We give the planner one more option, ``none of the above'', and let it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. On \RealNEvents\ real transients from the Zwicky Transient Facility, it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree. We then give the word ``unknown'' a false-alarm guarantee that holds at every step, and spread the planner over satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one. All hypotheses were registered before testing, and we report the failures too.
+\end{abstract}
+
+\keywords{transient follow-up---open-set recognition---Bayesian experimental design---anytime-valid inference---distributed spacecraft autonomy---preregistration.}
+
+}]
 
 \section{Introduction}\label{sec:intro}
 
@@ -109,16 +112,16 @@ under any modelled class, by Ville's inequality \citep{Ramdas2023}. This holds e
 
 \paragraph{Results.} Ideal communication raised accuracy on modelled events by \FleetHFourOneEst\ points over isolated spacecraft (\FleetHFourOneCI; H4.1 \FleetHFourOneVerdict). Realistic links did not measurably help. A$_{5000}$ minus G was \FleetHFourTwoEst\ points (\FleetHFourTwoCI; H4.2 \FleetHFourTwoVerdict), so ideal links beat realistic ones by \FleetHFourThreeEst\ points (\FleetHFourThreeCI; H4.3 \FleetHFourThreeVerdict). Coordinating plans added nothing on top of sharing knowledge. A$_{5000}$ minus K$_{5000}$ was \FleetHFourFourEst\ points (\FleetHFourFourCI), inside the preregistered $\pm5$ (H4.4 \FleetHFourFourVerdict). The e-process made at most \FleetHEOneMaxK\ false ``unknown'' call in \FleetHEOneN\ modelled events, for every strategy (HE1 \FleetHEOneVerdict). When spacecraft averaged the last e-values they had heard, they raised \FleetHETwoK\ false alarms in \FleetHETwoN\ (event, spacecraft) pairs (HE2 \FleetHETwoVerdict). The e-process paid for this safety in power, so under O it detected \FleetEDetO\ of the unknowns, where $P(h_0)$ flagged \FleetFlagO.
 
-\begin{table}[t]
-\centering\footnotesize
+\begin{table*}[t]
+\centering\tabularfont
 \caption{Fleet test results (nominal, preregistered reserves). Acc.\ mod.: accuracy on modelled events (\%); CW unk.: confidently wrong on unknowns (\%); Flag unk.: unknowns labelled $h_0$ (\%); $\bar n_{\rm obs}$: measurements per event; Stale: share of already-taken records a spacecraft does not yet know (\%).}
 \label{tab:fleet}
 \input{generated/table_fleet}
-\end{table}
+\end{table*}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.62\textwidth]{generated/figures/fig5_fleet.pdf}
+\includegraphics[width=\columnwidth]{generated/figures/fig5_fleet.pdf}
 \caption{Accuracy against inter-satellite link range. Horizontal lines: ideal links (O, green) and none (G, red). Solid: preregistered reserves. Dashed: all strategies at one reserve (exploratory, added after the test).}
 \label{fig:fleet}
 \end{figure}
@@ -148,9 +151,7 @@ under any modelled class, by Ville's inequality \citep{Ramdas2023}. This holds e
 \section{Conclusion}\label{sec:concl}
 For autonomous follow-up of fading transients, give the planner a way to say ``none of the above''. In simulation and on real ZTF events, this is the part of the method that keeps stopping confident misclassification of the unknown, and once measurements are causal it costs little on ordinary events. If a guaranteed false-alarm rate matters, a conformal threshold gives one at the end of the budget, and an e-process gives one at every step and across spacecraft without calibration data. A one-step utility does not manage urgency well, so we would not rely on it for that, and every follow-up study should check the time arrow. For a fleet, spread the satellites out, decide carefully when to spend, and share what you have seen before negotiating what to see next.
 
-\backmatter
-
-\bmhead{Acknowledgements}
+\section*{Acknowledgements}
 This work was carried out under the guidance of Dr.~Smitha Shekar B and Dr.~Harish G, Department of Computer Science and Engineering, Dr.\ Ambedkar Institute of Technology, Bengaluru.
 
 \section*{Declarations}
@@ -163,7 +164,6 @@ This work was carried out under the guidance of Dr.~Smitha Shekar B and Dr.~Hari
 \item Author contributions: All authors (J.M., A.H., M.B. and S.S.) contributed to the conception and design of the framework and to the writing of the manuscript. All authors read and approved the final manuscript.
 \end{itemize}
 
-\bibliographystyle{mnras}
 \bibliography{refs}
 
 \end{document}

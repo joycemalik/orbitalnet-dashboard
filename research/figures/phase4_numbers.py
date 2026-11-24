@@ -156,24 +156,23 @@ def main() -> None:
     (OUT / "table_fleet.tex").write_text("\n".join(t) + "\n")
 
     ranges = [1000, 2000, 3000, 5000]
-    fig, ax = plt.subplots(figsize=(3.4, 2.4), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.3, 2.5), dpi=200)
     for src, style, lab in ((S, "-", "selected reserves (preregistered)"),
                             (ex["summary"], "--", "equal reserve (exploratory)")):
         ax.plot(ranges, [100 * src[f"A_{r}"]["acc_modeled"] for r in ranges], style, marker="o", color="#2b6cb0",
                 lw=1.4, ms=3, label=f"A, {lab}")
         ax.axhline(100 * src["O"]["acc_modeled"], ls=style, color="#2f855a", lw=1)
         ax.axhline(100 * src["G"]["acc_modeled"], ls=style, color="#9b2c2c", lw=1)
-    ax.text(5150, 100 * S["O"]["acc_modeled"], "O", va="center", fontsize=7, color="#2f855a")
-    ax.text(5150, 100 * S["G"]["acc_modeled"], "G", va="center", fontsize=7, color="#9b2c2c")
-    ax.set_xlabel("ISL range R (km)", fontsize=7)
-    ax.set_ylabel("Accuracy on modeled events (%)", fontsize=7)
-    ax.tick_params(labelsize=6)
+    ax.text(5150, 100 * S["O"]["acc_modeled"], "O", va="center", fontsize=8, color="#2f855a")
+    ax.text(5150, 100 * S["G"]["acc_modeled"], "G", va="center", fontsize=8, color="#9b2c2c")
+    ax.set_xlabel("Inter-satellite link range R (km)", fontsize=8)
+    ax.set_ylabel("Accuracy on modelled events (%)", fontsize=8)
+    ax.tick_params(labelsize=8)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.legend(fontsize=5, frameon=False, loc="lower right")
-    fig.tight_layout()
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.2), frameon=False)
     (OUT / "figures").mkdir(exist_ok=True)
-    fig.savefig(OUT / "figures" / "fig5_fleet.pdf")
-    fig.savefig(OUT / "figures" / "fig5_fleet.png")
+    fig.savefig(OUT / "figures" / "fig5_fleet.pdf", bbox_inches="tight")
+    fig.savefig(OUT / "figures" / "fig5_fleet.png", bbox_inches="tight")
     print(f"wrote {len(m)} macros, table_fleet.tex, fig5_fleet.pdf")
 
 

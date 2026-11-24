@@ -231,7 +231,7 @@ def table_sim(rows):
 
 
 def fig_tti(s1):
-    fig, ax = plt.subplots(figsize=(3.4, 2.4))
+    fig, ax = plt.subplots(figsize=(3.2, 2.4))
     for key in ("P_open_world_eig", "B3_closed_world_eig", "B2_classifier_entropy",
                 "B1_cnp_reimplementation", "B0_fixed_cadence", "P_no_decay"):
         t = np.array([num(x) for x in s1["tti_days"][key]])
@@ -245,8 +245,8 @@ def fig_tti(s1):
     ax.set_xlim(0.008, 30)
     ax.set_ylim(0, 1)
     ax.set_xlabel("time since alert (days)")
-    ax.set_ylabel("fraction of modeled events\nidentified ($\\geq$0.95 on true class)")
-    ax.legend(fontsize=6, loc="upper left")
+    ax.set_ylabel("fraction of modelled events\nidentified ($\\geq$0.95 on true class)")
+    ax.legend(fontsize=8, loc="upper left")
     fig.savefig(FIG / "fig1_tti.pdf")
     plt.close(fig)
 
@@ -255,17 +255,17 @@ def fig_h2(s1):
     pc = s1["H2"]["per_class"]
     order = ["flare", "kilonova", "shock_cooling", "grb_afterglow"]
     names = {"flare": "flare", "kilonova": "kilonova", "shock_cooling": "shock cooling", "grb_afterglow": "GRB afterglow"}
-    fig, ax = plt.subplots(figsize=(3.4, 1.9))
+    fig, ax = plt.subplots(figsize=(2.15, 2.1))
     vals = [pc[c]["mean_delta"] for c in order]
     cols = [C[0] if c != "grb_afterglow" else C[1] for c in order]
     ax.barh(range(len(order)), vals, color=cols, height=0.55)
     ax.axvline(0, color=MUTED, lw=0.8)
     ax.set_yticks(range(len(order)), [f"{names[c]} (n={pc[c]['n']})" for c in order])
     ax.invert_yaxis()
-    ax.set_xlabel("information gained from the decay term\n(nats on ln amplitude, P minus P without decay)")
+    ax.set_xlabel("decay-term information gain\n(nats, P minus P without decay)")
     ax.grid(axis="y", visible=False)
     from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(color=C[0], label="fast classes"), Patch(color=C[1], label="slow class")], fontsize=6)
+    ax.legend(handles=[Patch(color=C[0], label="fast classes"), Patch(color=C[1], label="slow class")], fontsize=8, loc="lower right")
     fig.savefig(FIG / "fig2_decay.pdf")
     plt.close(fig)
 
@@ -280,9 +280,9 @@ def fig_roc_sim(s1):
         ax.plot(roc[k]["fpr"], roc[k]["tpr"], color=col, ls=ls, label=lab, lw=2.2 if k == "P_p_h0" else 1.4)
     ax.axvline(0.05, color=MUTED, lw=0.8, ls=":")
     ax.plot([0, 1], [0, 1], color=GRID, lw=0.8)
-    ax.set_xlabel("false-alarm rate on modeled events")
+    ax.set_xlabel("false-alarm rate on modelled events")
     ax.set_ylabel("detection rate on withheld events")
-    ax.legend(fontsize=6, loc="lower right")
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.2), frameon=False)
     fig.savefig(FIG / "fig3_roc_sim.pdf")
     plt.close(fig)
 
@@ -359,8 +359,8 @@ def fig_roc_real():
         ax.plot(fpr, tpr, color=col, ls=ls, label=f"{lab} ({auroc(pos, neg):.2f})", lw=2.0 if ls == "-" else 1.2)
     ax.plot([0, 1], [0, 1], color=GRID, lw=0.8)
     ax.set_xlabel("false-alarm rate on ordinary SNe")
-    ax.set_ylabel("detection rate on real unmodeled")
-    ax.legend(fontsize=5.5, loc="lower right", title="P's $P(h_0)$, test seed 1 (AUROC)", title_fontsize=6)
+    ax.set_ylabel("detection rate on real unmodelled")
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.2), frameon=False, title="P's $P(h_0)$, test seed 1 (AUROC)", title_fontsize=8)
     fig.savefig(FIG / "fig4_roc_real.pdf")
     plt.close(fig)
 

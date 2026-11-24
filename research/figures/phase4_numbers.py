@@ -88,6 +88,8 @@ def main() -> None:
         m[f"Fleet{key}Verdict"] = verdict(b["hypotheses"][k]["pass"])
         m[f"Fleet{key}Est"] = pts(b["hypotheses"][k]["estimate"])
         m[f"Fleet{key}CI"] = ci_pts(b["hypotheses"][k]["ci95"])
+        m[f"Fleet{key}Mag"] = f"{abs(b['hypotheses'][k]['estimate']) * 100:.1f}"
+    m["FleetHFourOneMag"] = f"{abs(H['H4.1']['estimate']) * 100:.1f}"
     h5 = b["hypotheses"]["B5"]
     m["FleetBFiveVerdict"] = verdict(h5["pass"])
     m["FleetBFiveEst"] = f"{h5['estimate']:+.2f}"

@@ -743,3 +743,35 @@ predicts, from real code on a real (if small) sample — not asserted a priori.
   continuous miscalibration story; Phase 2's AUROC-of-P(h0) metric is a more
   complete picture and should be treated as the primary evidence over this
   single-threshold number.
+
+## Phase 4 - decentralised fleet (started 2026-11-24)
+
+### Design decisions (fixed before any Phase 4 run)
+- User decisions: ISL line-of-sight with a range sweep (not ground relay, not
+  abstract link probability); 4 concurrent events per episode.
+- Fleet: the same 8 real-TLE satellites as Phase 2; one instrument each
+  (limiting magnitude 19/20/21); at most 1 measurement per epoch; budget 3
+  measurements per satellite (24 per episode, 6 per event on average).
+- Epochs: Phase 2's 16 log-spaced epochs (0.01-20 d). Alert time
+  t0 = 2026-01-01 + U[0,1) d per episode, so geometry varies across episodes.
+- Links: separation <= R and the segment clears Earth radius + 80 km; evaluated
+  every 2 min; store-and-forward flooding, instantaneous multi-hop inside a
+  component. R in {1000, 2000, 3000, 5000} km (5000 km ~ line-of-sight limit
+  at these altitudes), plus R = 0 (G) and ideal links (O).
+- Utility: Phase 2's frozen P utility (beta = 1, gamma = 0.1, GP length scale
+  1.2 d), unchanged. Auction: sequential greedy inside each component with
+  believer pseudo-observations at the predictive mean.
+- E-values: universal-inference e-process (GP h0 marginal likelihood over the
+  exact sup of the modeled-class likelihood over amplitude); alpha = 0.1, as in
+  Phase C.
+- Known limitation: these 8 satellites sit in different planes on old TLEs, so
+  ISLs are up only 1-12% of pair-time across the R grid. Reported, not tuned.
+
+### Reserve-price selection rule (declared before the validation runs)
+- Grid: reserve in {0.1, 0.3, 1, 3, 10} (utility units of the P utility).
+- Validation: seed 41, 100 episodes (400 events), nominal scenario, the same
+  reserve for every strategy in a run.
+- Rule: for each strategy family (O, G, A, K) separately, choose the reserve
+  that maximises the mean open-world log score of the true outcome (true class
+  for modeled events, h0 for withheld; floored at 1e-6), averaged over that
+  family's members. Ties -> smaller reserve. Equal tuning effort per family.

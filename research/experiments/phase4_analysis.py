@@ -18,7 +18,7 @@ import numpy as np
 from research.experiments.metrics import auroc
 from research.util import atomic_write_json
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results" / "phase4"
+RESULTS_DIR = Path(__file__).resolve().parent.parent / "results" / "phase4_fleet"
 ALPHA = 0.1
 LOG_FLOOR = 1e-6
 RESERVE_GRID = (0.1, 0.3, 1.0, 3.0, 10.0)

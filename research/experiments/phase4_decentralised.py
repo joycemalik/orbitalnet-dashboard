@@ -50,7 +50,7 @@ from research.transients.noise import assign_instruments, noise_sigma_from_limit
 from research.util import atomic_write_json, git_commit_hash
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-RESULTS_DIR = REPO_ROOT / "research" / "results" / "phase4"
+RESULTS_DIR = REPO_ROOT / "research" / "results" / "phase4_fleet"
 PREREGISTRATION_PATH = REPO_ROOT / "research" / "PREREGISTRATION_H4.md"
 TEST_SEED_MIN = 4000
 

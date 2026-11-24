@@ -25,7 +25,8 @@
   \bibinfo{author}{Narayan, G.}, et~al., \bibinfo{year}{2024}.
 \newblock \bibinfo{title}{Anomaly detection and approximate similarity searches
   of transients in real-time data streams}.
-\newblock \href{http://arxiv.org/abs/2404.01235}{{\tt arXiv:2404.01235}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2404.01235},
+  \href{http://arxiv.org/abs/2404.01235}{{\tt arXiv:2404.01235}}.
 %Type = Article
 \bibitem[{Almualla et~al.(2021)Almualla, Anand, Coughlin et~al.}]{Almualla2021}
 \bibinfo{author}{Almualla, M.}, \bibinfo{author}{Anand, S.},
@@ -67,7 +68,8 @@
   \bibinfo{author}{Kaski, S.}, \bibinfo{year}{2025}.
 \newblock \bibinfo{title}{Robust experimental design via generalised {Bayesian}
   inference}.
-\newblock \bibinfo{note}{ArXiv:2511.07671}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2511.07671}.
+  \bibinfo{note}{arXiv:2511.07671}.
 %Type = Article
 \bibitem[{Bellm et~al.(2019)}]{Bellm2019}
 \bibinfo{author}{Bellm, E.C.}, et~al., \bibinfo{year}{2019}.
@@ -81,7 +83,8 @@
   \bibinfo{year}{2023}.
 \newblock \bibinfo{title}{Metrics for {Bayesian} optimal experiment design
   under model misspecification}.
-\newblock \bibinfo{note}{ArXiv:2304.07949}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2304.07949}.
+  \bibinfo{note}{arXiv:2304.07949}.
 %Type = Article
 \bibitem[{Chaloner and Verdinelli(1995)}]{Chaloner1995}
 \bibinfo{author}{Chaloner, K.}, \bibinfo{author}{Verdinelli, I.},
@@ -136,7 +139,8 @@
   \bibinfo{author}{Lochner, M.}, \bibinfo{year}{2024}.
 \newblock \bibinfo{title}{A classifier-based approach to multi-class anomaly
   detection applied to astronomical time-series}.
-\newblock \href{http://arxiv.org/abs/2408.08888}{{\tt arXiv:2408.08888}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2408.08888},
+  \href{http://arxiv.org/abs/2408.08888}{{\tt arXiv:2408.08888}}.
 %Type = Inproceedings
 \bibitem[{Hedman et~al.(2025)Hedman, Ivanova, Guan and Rainforth}]{Hedman2025}
 \bibinfo{author}{Hedman, M.}, \bibinfo{author}{Ivanova, D.R.},
@@ -153,7 +157,8 @@
   \bibinfo{author}{Weston, J.}, \bibinfo{year}{2026}.
 \newblock \bibinfo{title}{Anomaly hunter for alerts ({AHA}): Anomaly detection
   in the {ZTF} transient alert stream}.
-\newblock \href{http://arxiv.org/abs/2602.12955}{{\tt arXiv:2602.12955}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2602.12955},
+  \href{http://arxiv.org/abs/2602.12955}{{\tt arXiv:2602.12955}}.
 %Type = Article
 \bibitem[{Ivezi{\'c} et~al.(2019)}]{Ivezic2019}
 \bibinfo{author}{Ivezi{\'c}, {\v{Z}}.}, et~al., \bibinfo{year}{2019}.
@@ -169,7 +174,8 @@
 \newblock \bibinfo{title}{Active learning with {RESSPECT}: Resource allocation
   for extragalactic astronomical transients}, in: \bibinfo{booktitle}{IEEE
   Symposium Series on Computational Intelligence (SSCI)}.
-\newblock \bibinfo{note}{ArXiv:2010.05941}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2010.05941}.
+  \bibinfo{note}{arXiv:2010.05941}.
 %Type = Article
 \bibitem[{Lindley(1956)}]{Lindley1956}
 \bibinfo{author}{Lindley, D.V.}, \bibinfo{year}{1956}.
@@ -201,7 +207,8 @@
   \bibinfo{year}{2026}.
 \newblock \bibinfo{title}{Consensus based task allocation for angles-only local
   catalog maintenance of satellite systems}.
-\newblock \href{http://arxiv.org/abs/2602.16678}{{\tt arXiv:2602.16678}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2602.16678},
+  \href{http://arxiv.org/abs/2602.16678}{{\tt arXiv:2602.16678}}.
 %Type = Misc
 \bibitem[{Pruzhinskaya et~al.(2026)Pruzhinskaya, Kornilov, Dodin
   et~al.}]{Pruzhinskaya2026}
@@ -209,7 +216,8 @@
   \bibinfo{author}{Dodin, A.V.}, et~al., \bibinfo{year}{2026}.
 \newblock \bibinfo{title}{Anomaly detection in {Fink}. {I}. discovery,
   follow-up, and classification of unusual sources}.
-\newblock \href{http://arxiv.org/abs/2603.29511}{{\tt arXiv:2603.29511}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2603.29511},
+  \href{http://arxiv.org/abs/2603.29511}{{\tt arXiv:2603.29511}}.
 %Type = Article
 \bibitem[{Ramdas et~al.(2023)Ramdas, Gr{\"u}nwald, Vovk and
   Shafer}]{Ramdas2023}
@@ -227,14 +235,16 @@
   \bibinfo{author}{Zhang, X.}, et~al., \bibinfo{year}{2026}a.
 \newblock \bibinfo{title}{Photometric classification and out-of-taxonomy
   detection of {ZTF} transients with {FLARE}}.
-\newblock \href{http://arxiv.org/abs/2610.30656}{{\tt arXiv:2610.30656}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2610.30656},
+  \href{http://arxiv.org/abs/2610.30656}{{\tt arXiv:2610.30656}}.
 %Type = Misc
 \bibitem[{Sasli et~al.(2026b)Sasli, Xu, Junell et~al.}]{Sasli2026ASTRANet}
 \bibinfo{author}{Sasli, A.}, \bibinfo{author}{Xu, M.}, \bibinfo{author}{Junell,
   A.}, et~al., \bibinfo{year}{2026}b.
 \newblock \bibinfo{title}{Catching disguised transients with {ASTRANet}:
   Anomaly-aware spectroscopic classification and conformal calibration}.
-\newblock \href{http://arxiv.org/abs/2607.08044}{{\tt arXiv:2607.08044}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2607.08044},
+  \href{http://arxiv.org/abs/2607.08044}{{\tt arXiv:2607.08044}}.
 %Type = Inproceedings
 \bibitem[{Shapiro et~al.(2011)Shapiro, Pregui{\c{c}}a, Baquero and
   Zawirski}]{Shapiro2011}
@@ -279,7 +289,8 @@
   \bibinfo{year}{2025}.
 \newblock \bibinfo{title}{Conformal inference for open-set and imbalanced
   classification}.
-\newblock \href{http://arxiv.org/abs/2510.13037}{{\tt arXiv:2510.13037}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2510.13037},
+  \href{http://arxiv.org/abs/2510.13037}{{\tt arXiv:2510.13037}}.
 %Type = Article
 \bibitem[{Yang et~al.(2025)Yang, Chen and Wu}]{Yang2025}
 \bibinfo{author}{Yang, H.}, \bibinfo{author}{Chen, C.}, \bibinfo{author}{Wu,
@@ -295,6 +306,7 @@
   \bibinfo{year}{2026}.
 \newblock \bibinfo{title}{Scalable dynamic distributed constraint optimization
   with metareasoning and application to continual satellite operations}.
-\newblock \href{http://arxiv.org/abs/2601.06188}{{\tt arXiv:2601.06188}}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2601.06188},
+  \href{http://arxiv.org/abs/2601.06188}{{\tt arXiv:2601.06188}}.
 
 \end{thebibliography}

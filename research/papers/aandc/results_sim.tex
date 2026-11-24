@@ -1,6 +1,6 @@
 \paragraph{Naming the unknown is what works} When we let the planner say ``none of the above'', it found \SimTprP\ of the never-seen event types at a 5\% false-alarm rate. The usual alternative, a threshold on how uncertain a closed-world planner is, found only \SimTprBthree\ (Fig.~\ref{fig:rocsim}). Without that extra option, closed-world information gain was confidently wrong on \SimCwWhBthreeAll\ of the unknown events, against \SimCwWhPAll\ for our planner P. It paid nothing for this on ordinary events, and kept the same accuracy on the known classes (\SimAccModPAll). We then checked whether P's gain comes from where it chooses to measure. It does not, since an uncertainty threshold computed on P's own measurements still reached an AUROC of only \SimAucPown, against \SimAucP\ for $P(h_0)$. So the gain comes from having a name for the unknown, not from clever measurement.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{generated/figures/fig3_roc_sim.pdf}
 \caption{Simulation. How well each method separates never-seen event types from known ones. The dotted line marks the 5\% false-alarm point we fixed in advance.}
@@ -9,7 +9,7 @@
 
 \paragraph{It is not the fastest} We expected P to identify known events sooner than every baseline, and it did not. A cheap rule that measures where classifiers disagree got there first on the events it could identify (median \SimTtiBtwo\ against \SimTtiP), but it gave up on many of them, identifying only \SimIdBtwo\ of events against \SimIdP\ for P (Fig.~\ref{fig:tti}).
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{generated/figures/fig1_tti.pdf}
 \caption{Simulation. Share of known events identified (posterior on the true class at least 0.95) against time since the alert. The disagreement rule B2 is quickest on the events it can identify, while P identifies almost all of them, a little later.}
@@ -18,14 +18,14 @@
 
 \paragraph{Urgency helps fast events, but not all of them} The decay term is meant to make the planner measure fast events before they fade. It did recover more information on kilonovae (\SimDeltaKilonova) and shock cooling (\SimDeltaShock) than on the slow GRB afterglow, but for the fastest class, the M-dwarf flare, it lost information (\SimDeltaFlare; Fig.~\ref{fig:decay}), and it reversed under model error. Its clearest benefit was indirect. Without it, the planner spent its measurements too early (\SimObsAllNoDecay\ instead of \SimObsAllP), which left $h_0$ too little data and raised confident errors on unknowns to \SimCwWhNoDecayAll. The term built to test $h_0$ directly ($\beta$) changed nothing we could measure.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{generated/figures/fig2_decay.pdf}
 \caption{Simulation. Information about each event's brightness gained from the decay term (P minus P without it). It helps kilonovae and shock cooling, does little for the slow class, and hurts flares.}
 \label{fig:decay}
 \end{figure}
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\scriptsize
 \caption{Simulation test results (1000 events per scenario). Acc.\ mod.: accuracy on modelled events (\%). CW: confident-wrong rate (\%) on unmodelled (withheld) and modelled events. $\bar n_{\rm obs}$: measurements used, out of 5. Log score: mean log probability of the true outcome (closed-world strategies cannot express ``withheld'', so they are floored at $10^{-6}$).}
 \label{tab:sim}

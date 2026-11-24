@@ -3,7 +3,7 @@ The Bayesian $h_0$ makes few confident errors, but it promises nothing about how
 
 \paragraph{Method} After any planner's measurements $D$, we compute $s=\log p(D\mid h_0)-\max_c\log p(D\mid c)$ and flag ``unknown'' when $s$ goes above a threshold $\tau$. We set $\tau$ by split-conformal calibration on known supernovae, so if new supernovae look like the calibration ones, the chance of a false ``unknown'' is at most $\alpha=\ConfAlpha$, for any planner \citep{Vovk2005,Angelopoulos2023}. We also added a lookahead planner L, which gives some value ($\lambda=\ConfLambda$, chosen on validation data) to keeping later epochs available, because the greedy planner used too little of its budget. We drew \ConfNCal\ calibration and \ConfNFresh\ sealed test supernovae from Bright Transient Survey events that no earlier analysis had touched.
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\scriptsize
 \caption{Conformal open-set study, preregistered results per noise seed: estimate [95\% CI]; $^\times$ marks a criterion not met. Primary system: lookahead planner L with the conformal decision (C-L). $\Delta$: C-L minus closed-world EIG (B3), except HC6 (AUROC of $s$, L minus P). HC1 uses Clopper--Pearson intervals; HC2--HC4 and HC6 use the paired bootstrap.}
 \label{tab:conf}

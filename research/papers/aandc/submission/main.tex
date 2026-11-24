@@ -1,7 +1,7 @@
 % Astronomy and Computing (Elsevier): elsarticle class, author-year references.
 % Text, numbers, tables and figures are the same as research/papers/jaa/; every result number is a
 % macro generated from committed result files (research/figures/paper_main.py, phase4_numbers.py).
-\documentclass[preprint,12pt,authoryear]{elsarticle}
+\documentclass[final,5p,times,twocolumn,authoryear]{elsarticle}
 \usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -411,7 +411,7 @@ under any modelled class, by Ville's inequality \citep{Ramdas2023}. This holds e
 \section{What we tested}\label{sec:tests}
 We ran four studies, and before each test we wrote down what we expected and how it would count as a pass. Table~\ref{tab:tests} lists every prediction and what happened, failures included. The rest of the paper tells the story behind it, so the text keeps to the numbers that matter and leaves intervals and per-seed detail to the tables.
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\footnotesize
 \caption{Every preregistered prediction, in plain words, and its outcome on the sealed test data.}
 \label{tab:tests}
@@ -445,32 +445,32 @@ HC6 & Lookahead ranks unknowns better & \ConfHCSixVerdict & & & \\
 
 \paragraph{Naming the unknown is what works} When we let the planner say ``none of the above'', it found \SimTprP\ of the never-seen event types at a 5\% false-alarm rate. The usual alternative, a threshold on how uncertain a closed-world planner is, found only \SimTprBthree\ (Fig.~\ref{fig:rocsim}). Without that extra option, closed-world information gain was confidently wrong on \SimCwWhBthreeAll\ of the unknown events, against \SimCwWhPAll\ for our planner P. It paid nothing for this on ordinary events, and kept the same accuracy on the known classes (\SimAccModPAll). We then checked whether P's gain comes from where it chooses to measure. It does not, since an uncertainty threshold computed on P's own measurements still reached an AUROC of only \SimAucPown, against \SimAucP\ for $P(h_0)$. So the gain comes from having a name for the unknown, not from clever measurement.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{fig3_roc_sim.pdf}
+\includegraphics[width=\columnwidth]{Figure_1.pdf}
 \caption{Simulation. How well each method separates never-seen event types from known ones. The dotted line marks the 5\% false-alarm point we fixed in advance.}
 \label{fig:rocsim}
 \end{figure}
 
 \paragraph{It is not the fastest} We expected P to identify known events sooner than every baseline, and it did not. A cheap rule that measures where classifiers disagree got there first on the events it could identify (median \SimTtiBtwo\ against \SimTtiP), but it gave up on many of them, identifying only \SimIdBtwo\ of events against \SimIdP\ for P (Fig.~\ref{fig:tti}).
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{fig1_tti.pdf}
+\includegraphics[width=\columnwidth]{Figure_2.pdf}
 \caption{Simulation. Share of known events identified (posterior on the true class at least 0.95) against time since the alert. The disagreement rule B2 is quickest on the events it can identify, while P identifies almost all of them, a little later.}
 \label{fig:tti}
 \end{figure}
 
 \paragraph{Urgency helps fast events, but not all of them} The decay term is meant to make the planner measure fast events before they fade. It did recover more information on kilonovae (\SimDeltaKilonova) and shock cooling (\SimDeltaShock) than on the slow GRB afterglow, but for the fastest class, the M-dwarf flare, it lost information (\SimDeltaFlare; Fig.~\ref{fig:decay}), and it reversed under model error. Its clearest benefit was indirect. Without it, the planner spent its measurements too early (\SimObsAllNoDecay\ instead of \SimObsAllP), which left $h_0$ too little data and raised confident errors on unknowns to \SimCwWhNoDecayAll. The term built to test $h_0$ directly ($\beta$) changed nothing we could measure.
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{fig2_decay.pdf}
+\includegraphics[width=\columnwidth]{Figure_3.pdf}
 \caption{Simulation. Information about each event's brightness gained from the decay term (P minus P without it). It helps kilonovae and shock cooling, does little for the slow class, and hurts flares.}
 \label{fig:decay}
 \end{figure}
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\scriptsize
 \caption{Simulation test results (1000 events per scenario). Acc.\ mod.: accuracy on modelled events (\%). CW: confident-wrong rate (\%) on unmodelled (withheld) and modelled events. $\bar n_{\rm obs}$: measurements used, out of 5. Log score: mean log probability of the true outcome (closed-world strategies cannot express ``withheld'', so they are floored at $10^{-6}$).}
 \label{tab:sim}
@@ -510,7 +510,7 @@ Model error & P (open world) & 87 & 21 & 8 & 3.9 & -1.21 \\
 
 \paragraph{It holds on real objects} On \RealNEvents\ real transients, closed-world information gain was confidently wrong about \RealCCwWhBthree\ of the tidal disruption events, superluminous supernovae and SN~Ibn, so about every second one. Our planner was confidently wrong about \RealCCwWhP\ of them, and it labelled \RealCFlagP\ as unknown (Fig.~\ref{fig:rocreal}). Colour mattered here, since a single band separated the unknowns much less well. On ordinary supernovae, P's accuracy (\RealCAccModP) matched the closed-world planner's (\RealCAccModBthree). We could not prove it was within five points on every noise seed, though, so that hypothesis failed narrowly (Table~\ref{tab:real}).
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\scriptsize
 \caption{Real ZTF replay, preregistered test results per noise seed: estimate [95\% CI]; $^\times$ marks a criterion not met on that seed. CW: confident-wrong rate. $\Delta$: P minus B3, or the colour arm minus the single-band arm for H4. The causal version (v3) is this paper's result. The retrospective version (v2) let planners measure earlier epochs after later ones and is shown only for comparison.}
 \label{tab:real}
@@ -542,9 +542,9 @@ H5 $\Delta$acc.\ mod. & 1 & +0.01 [-0.05, +0.07]$^\times$ & -0.08 [-0.14, -0.02]
 \end{tabular}
 \end{table*}
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
-\includegraphics[width=\columnwidth]{fig4_roc_real.pdf}
+\includegraphics[width=\columnwidth]{Figure_4.pdf}
 \caption{Real data. How well $P(h_0)$ separates real unknown transients (TDE, SLSN, SN~Ibn) from ordinary supernovae. Colour plus a model-discrepancy term is what makes it work, and measuring only forward in time leaves the curve almost unchanged.}
 \label{fig:rocreal}
 \end{figure}
@@ -556,7 +556,7 @@ The Bayesian $h_0$ makes few confident errors, but it promises nothing about how
 
 \paragraph{Method} After any planner's measurements $D$, we compute $s=\log p(D\mid h_0)-\max_c\log p(D\mid c)$ and flag ``unknown'' when $s$ goes above a threshold $\tau$. We set $\tau$ by split-conformal calibration on known supernovae, so if new supernovae look like the calibration ones, the chance of a false ``unknown'' is at most $\alpha=\ConfAlpha$, for any planner \citep{Vovk2005,Angelopoulos2023}. We also added a lookahead planner L, which gives some value ($\lambda=\ConfLambda$, chosen on validation data) to keeping later epochs available, because the greedy planner used too little of its budget. We drew \ConfNCal\ calibration and \ConfNFresh\ sealed test supernovae from Bright Transient Survey events that no earlier analysis had touched.
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\scriptsize
 \caption{Conformal open-set study, preregistered results per noise seed: estimate [95\% CI]; $^\times$ marks a criterion not met. Primary system: lookahead planner L with the conformal decision (C-L). $\Delta$: C-L minus closed-world EIG (B3), except HC6 (AUROC of $s$, L minus P). HC1 uses Clopper--Pearson intervals; HC2--HC4 and HC6 use the paired bootstrap.}
 \label{tab:conf}
@@ -586,7 +586,7 @@ HC6 $\Delta$AUROC, L$-$P ($>0$) & +0.012 [-0.013, +0.038]$^\times$ & +0.031 [+0.
 
 \paragraph{Talking helps, if the links are good} With ideal links, the fleet was \FleetHFourOneMag\ percentage points more accurate than satellites working alone. Our first test with realistic links showed no gain, but that test was not fair, because the rule we had fixed for choosing how readily each fleet spends its measurements made the realistic fleet more frugal (\FleetObsA\ measurements per event against \FleetObsG). So we wrote new predictions and ran a second test on fresh events with equal spending, and then realistic links helped by \FleetBOneMag\ points. In both tests, coordinating plans added nothing once satellites shared what they had seen.
 
-\begin{table*}[t]
+\begin{table*}[!tbp]
 \centering\tabularfont
 \caption{Fleet test results (nominal, preregistered reserves). Acc.\ mod.: accuracy on modelled events (\%); CW unk.: confidently wrong on unknowns (\%); Flag unk.: unknowns labelled $h_0$ (\%); $\bar n_{\rm obs}$: measurements per event; Stale: share of already-taken records a spacecraft does not yet know (\%).}
 \label{tab:fleet}
@@ -603,9 +603,9 @@ No links & 76 & 4 & 39 & 0.88 & -0.99 & 5.4 & 88 \\
 \end{tabular}
 \end{table*}
 
-\begin{figure}[t]
+\begin{figure}[!tbp]
 \centering
-\includegraphics[width=0.6\textwidth]{fig5_fleet.pdf}
+\includegraphics[width=\columnwidth]{Figure_5.pdf}
 \caption{Fleet accuracy against how far satellites can talk. Horizontal lines are the ideal fleet (O, green) and satellites working alone (G, red). Solid lines use the spending rule fixed in advance, and dashed lines give every fleet the same rule.}
 \label{fig:fleet}
 \end{figure}
@@ -642,7 +642,7 @@ All authors (J.M., A.H., M.B., S.S., S.S.B. and H.G.): Conceptualization, Method
 \section*{Declaration of competing interest}
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
 During the preparation of this work the authors used Claude Opus 5.5 (Anthropic) to assist with code development and refinement and with drafting and proofreading the text. After using this tool, the authors reviewed and edited the content as needed and take full responsibility for the content of the published article.
 
 \section*{Data and code availability}

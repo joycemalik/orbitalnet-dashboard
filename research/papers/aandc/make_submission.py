@@ -28,13 +28,17 @@ def inline(path: Path) -> str:
 
 
 def main() -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir()
-    tex = inline(HERE / "main.tex").replace("generated/figures/", "")
+    OUT.mkdir(exist_ok=True)
+    for old in OUT.iterdir():  # clear contents (the folder itself may be open in Explorer)
+        shutil.rmtree(old) if old.is_dir() else old.unlink()
+    tex = inline(HERE / "main.tex")
+    # Elsevier asks for one file per figure, named Figure_1, Figure_2, ... in order of appearance.
+    figs = re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", tex)
+    for n, path in enumerate(figs, start=1):
+        new = f"Figure_{n}{Path(path).suffix}"
+        tex = tex.replace("{" + path + "}", "{" + new + "}", 1)
+        shutil.copy2(HERE / path, OUT / new)
     (OUT / "main.tex").write_text(tex, encoding="utf-8")
-    for fig in sorted(set(re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", tex))):
-        shutil.copy2(HERE / "generated" / "figures" / fig, OUT / fig)
     for name in ["refs.bib", "main.bbl", "main.pdf", "highlights.txt", "cover_letter.pdf"]:
         shutil.copy2(HERE / name, OUT / name)
     print("\n".join(sorted(p.name for p in OUT.iterdir())))

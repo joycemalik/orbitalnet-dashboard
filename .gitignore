@@ -9,3 +9,6 @@ test_files/
 research/data/raw/*
 !research/data/raw/manifest.json
 !research/data/raw/selection.json
+
+# Local-only backups and duplicates (kept on disk, not versioned)
+archive/

@@ -642,7 +642,7 @@ FUNCTION {output.bibitem}
 FUNCTION {format.doi}
 { doi empty$
     { "" }
-    { "doi:" doi * }
+    { "\href{https://doi.org/" doi * "}{doi:" * doi * "}" * }
   if$
 }
 
@@ -651,10 +651,11 @@ FUNCTION {format.eprint}
     { "" }
     { archivePrefix empty$
         { "" }
-        { archivePrefix ":" * }
+        { "\href{https://arxiv.org/abs/" eprint * "}{" * archivePrefix * ":" * }
       if$
       eprint field.or.null
       *
+      archivePrefix empty$ 'skip$ { "}" * } if$
     }
   if$
 }
@@ -1088,6 +1089,10 @@ FUNCTION {article}
   pages empty$
     { format.pid output }
     { format.journal.pages }
+  if$
+  pages empty$
+    'skip$
+    { format.doi output }
   if$
   format.note output
   fin.entry

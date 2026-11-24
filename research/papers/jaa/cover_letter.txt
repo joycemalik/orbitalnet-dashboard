@@ -1,0 +1,22 @@
+Dear Editor,
+
+We are submitting our manuscript, "Knowing What You Do Not Know: Open-World Follow-Up Planning for Fading Transients, from One Spacecraft to a Fleet", for consideration as a Research Article in the Journal of Astrophysics and Astronomy.
+
+Sky surveys now find far more transients than any telescope can follow up, so future spacecraft will have to choose for themselves what to measure next. Today's planners pick the measurement that best separates the object types they already know. The problem is what happens when something new shows up. The planner has no way to say "I don't know this", so every extra measurement only makes it more sure of a wrong answer.
+
+We fix this by giving the planner one more option, "none of the above", and letting it measure only forward in time, as a real spacecraft must. In simulation it recognised 96% of never-seen object types at a 5% false-alarm rate, against 21% for the usual approach. We then replayed 364 real transients from the Zwicky Transient Facility. Here it was confidently wrong about 7-14% of the unfamiliar objects, against 50-56% for the standard planner. We also give the "unknown" label a false-alarm guarantee that holds at every step, and we run the planner across a fleet of satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was 9.4 percentage points less accurate than a spread one.
+
+We think this fits JAA well because it sits right between astronomy and instrumentation. The question is an astronomical one, how to follow up transients we have never seen before, and the answer is a method that onboard and ground-based schedulers can use directly. We fixed every prediction before running the test data, and the paper reports the ones that failed as well as the ones that held. All the code, result files and the scripts that generate every number, table and figure are public.
+
+This manuscript is original, has not been published before, and is not under consideration at any other journal. All six authors have read and approved the final version. We have no competing interests to declare, and this work received no external funding.
+
+Thank you for considering our work. We look forward to hearing from you.
+
+Yours sincerely,
+
+Joyce Malik (corresponding author)
+On behalf of all authors: Dr. Smitha Shekar B, Dr. Harish G, Joyce Malik, Anup H, Moghitha B and Swathi Sathish
+Computer Science and Engineering Program
+Dr. Ambedkar Institute of Technology, Bengaluru 560056, Karnataka, India
+Email: joycemalik14@gmail.com
+ORCID: 0009-0001-8293-8064

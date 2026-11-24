@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{textcomp}
 \usepackage{url}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 
 % Every result number below is a macro generated from committed result files
 % (research/figures/paper_main.py and research/figures/phase4_numbers.py).
@@ -26,17 +27,20 @@
 
 \title{Knowing What You Do Not Know: Open-World Follow-Up\\ Planning for Fading Transients, from One Spacecraft to a Fleet}
 
-\author{Joyce Malik\textsuperscript{1,*}, Anup H\textsuperscript{1}, Moghitha B\textsuperscript{1} and Swathi Sathish\textsuperscript{1}}
-\affilOne{\textsuperscript{1}Department of Computer Science and Engineering, Dr.\ Ambedkar Institute of Technology, Outer Ring Road, Mallathahalli, Bengaluru 560056, Karnataka, India.}
+\author{Dr.~Smitha Shekar B\textsuperscript{2}, Dr.~Harish G\textsuperscript{2}, Joyce Malik\textsuperscript{1,*}, Anup H\textsuperscript{1}, Moghitha B\textsuperscript{1} and Swathi Sathish\textsuperscript{1}}
+\affilOne{\textsuperscript{1}School of Computer Science and Engineering Program, Dr.\ Ambedkar Institute of Technology, Outer Ring Road, Mallathahalli, Bengaluru 560056, Karnataka, India.}
+\affilTwo{\par\vspace{4pt}\textsuperscript{2}Professor, Computer Science and Engineering Program, Dr.\ Ambedkar Institute of Technology, Bengaluru 560056, Karnataka, India.}
 
 \twocolumn[{
 
 \maketitle
+\vspace{10pt}
 
 \corres{joycemalik14@gmail.com (ORCID 0009-0001-8293-8064). Co-authors: alexanubius6808@gmail.com (A.H.), moghithab4@gmail.com (M.B.), sathishswathi04@gmail.com (S.S.)}
+\vspace{8pt}
 
 \begin{abstract}
-Sky surveys find more short-lived explosions than any telescope can follow, so future spacecraft will have to decide what to measure next. Today's planners choose the measurement that best separates the object types they already know. But when something new appears, they have no way to say so, and every extra measurement makes them more sure of a wrong answer. We give the planner one more option, ``none of the above'', and let it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. On \RealNEvents\ real transients from the Zwicky Transient Facility, it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree. We then give the word ``unknown'' a false-alarm guarantee that holds at every step, and spread the planner over satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one. All hypotheses were registered before testing, and we report the failures too.
+Sky surveys find more short-lived explosions than any telescope can follow, so future spacecraft will have to decide what to measure next. Today's planners choose the measurement that best separates the object types they already know. But when something new appears, they have no way to say so, and every extra measurement makes them more sure of a wrong answer. We give the planner one more option, ``none of the above'', and let it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. On \RealNEvents\ real transients from the Zwicky Transient Facility, it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree. We then give the word ``unknown'' a false-alarm guarantee that holds at every step, and spread the planner over satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one.
 \end{abstract}
 
 \keywords{transient follow-up---open-set recognition---Bayesian experimental design---anytime-valid inference---distributed spacecraft autonomy---preregistration.}
@@ -185,7 +189,7 @@ HC6 & Lookahead ranks unknowns better & \ConfHCSixVerdict & & & \\
 For autonomous follow-up of fading transients, give the planner a way to say ``none of the above''. In simulation and on real ZTF events, this is the part of the method that keeps stopping confident misclassification of the unknown, and once measurements are causal it costs little on ordinary events. If a guaranteed false-alarm rate matters, a conformal threshold gives one at the end of the budget, and an e-process gives one at every step and across spacecraft without calibration data. A one-step utility does not manage urgency well, so we would not rely on it for that, and every follow-up study should check the time arrow. For a fleet, spread the satellites out, decide carefully when to spend, and share what you have seen before negotiating what to see next.
 
 \section*{Acknowledgements}
-This work was carried out under the guidance of Dr.~Smitha Shekar B and Dr.~Harish G, Department of Computer Science and Engineering, Dr.\ Ambedkar Institute of Technology, Bengaluru.
+We thank Dr.\ Ambedkar Institute of Technology, Bengaluru, for its continuous support of this work.
 
 \section*{Declarations}
 
@@ -194,7 +198,7 @@ This work was carried out under the guidance of Dr.~Smitha Shekar B and Dr.~Hari
 \item Competing interests: None.
 \item Data availability: ZTF Bright Transient Survey light curves are public. Every per-event result, preregistration file and the scripts that generate every number, table and figure in this paper are in the code repository below.
 \item Code availability: \url{https://github.com/joycemalik/orbitalnet-dashboard}, branch \texttt{research/open-world-planner}.
-\item Author contributions: All authors (J.M., A.H., M.B. and S.S.) contributed to the conception and design of the framework and to the writing of the manuscript. All authors read and approved the final manuscript.
+\item Author contributions: All authors (J.M., A.H., M.B., S.S., S.S.B. and H.G.) contributed to the conception and design of the framework and to the writing of the manuscript. All authors read and approved the final manuscript.
 \end{itemize}
 
 \bibliography{refs}

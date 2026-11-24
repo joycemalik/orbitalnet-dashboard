@@ -1,4 +1,4 @@
-\documentclass{aastex701}
+\documentclass[linenumbers]{aastex701}
 
 % Every number below is a macro generated from research/results/atlas/ by
 % research/figures/rnaas_atlas.py (written to research/results/rnaas_atlas/numbers.tex).
@@ -20,7 +20,7 @@ Geomagnetic storms heat the thermosphere, so objects in low Earth orbit lose alt
 When the thermosphere heats up during a storm, its density at a fixed altitude goes up, and so does the drag on everything orbiting there. Debris and spent rocket bodies are useful here because they never fire thrusters, so any change in how fast they decay comes from the atmosphere. Deriving thermospheric density from the decay of tracked debris is an established idea \citep{Johlander2026,Constant2024}. What we add is small and specific: a preregistered, shell-resolved comparison of two storms, with the failed tests reported, and a direct check of how much payloads distort such a measurement.
 
 \section{Data and method}
-We used Space-Track \texttt{gp\_history} element sets for near-circular objects below about 1000\,km, object types from the CelesTrak SATCAT, and the GFZ Potsdam Kp index \citep{Matzka2021}. The May window has \MayNSets{} element sets and the October window \OctNSets.
+We used Space-Track (\url{https://www.space-track.org}) \texttt{gp\_history} element sets for near-circular objects below about 1000\,km, object types from the CelesTrak SATCAT (\url{https://celestrak.org}), and the GFZ Potsdam Kp index \citep{Matzka2021,Matzka2021data}. The May window has \MayNSets{} element sets and the October window \OctNSets.
 
 The semi-major axis comes from the mean motion, and an object's decay rate is the change in semi-major axis between consecutive element sets 0.2--2\,d apart, binned to 12\,h. Each object's quiet rate is its median over \MayNQuiet{} quiet days before the storm (daily maximum Kp $\leq 4$). Objects that are not clearly drag-dominated are dropped. The storm ratio of an object is its rate divided by its quiet rate, so it tracks density relative to quiet conditions with no density model needed. For each shell and time bin, we take the median ratio over at least 30 objects. The primary sample is debris and rocket bodies (\MayNPrimary{} objects in May, \OctNPrimary{} in October). Payloads are kept separate and never merged in.
 
@@ -46,10 +46,17 @@ Mean-element semi-major axes carry noise of tens of metres. Our time resolution 
 \section*{Data and code}
 Code, preregistrations and every output: \url{https://github.com/joycemalik/orbitalnet-dashboard} (\texttt{research/atlas/}, \texttt{research/results/atlas/}). Space-Track data are not redistributed.
 
+\software{NumPy \citep{Harris2020}, pandas \citep{McKinney2010}, SciPy \citep{Virtanen2020}, Matplotlib \citep{Hunter2007}}
+
 \begin{thebibliography}{}
 \bibitem[Constant et al.(2024)]{Constant2024} Constant, C., et al. 2024, arXiv:2408.16805
+\bibitem[Harris et al.(2020)]{Harris2020} Harris, C.~R., et al. 2020, Natur, 585, 357
+\bibitem[Hunter(2007)]{Hunter2007} Hunter, J.~D. 2007, CSE, 9, 90
 \bibitem[Johlander et al.(2026)]{Johlander2026} Johlander, A., Papadogiannakis, A., \& Rasmusson, J. 2026, JSWSC, 16, 7
-\bibitem[Matzka et al.(2021)]{Matzka2021} Matzka, J., Stolle, C., Yamazaki, Y., Bronkalla, O., \& Morschhauser, A. 2021, SpWea, 19, e2020SW002641
+\bibitem[Matzka et al.(2021a)]{Matzka2021} Matzka, J., Stolle, C., Yamazaki, Y., Bronkalla, O., \& Morschhauser, A. 2021, SpWea, 19, e2020SW002641
+\bibitem[Matzka et al.(2021b)]{Matzka2021data} Matzka, J., Bronkalla, O., Tornow, K., Elger, K., \& Stolle, C. 2021, Geomagnetic Kp index, V.~1.0, GFZ Data Services, doi:10.5880/Kp.0001
+\bibitem[McKinney(2010)]{McKinney2010} McKinney, W. 2010, in Proc. 9th Python in Science Conf., ed. S. van der Walt \& J. Millman, 56
+\bibitem[Virtanen et al.(2020)]{Virtanen2020} Virtanen, P., et al. 2020, NatMe, 17, 261
 \end{thebibliography}
 
 \end{document}

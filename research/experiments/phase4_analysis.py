@@ -172,6 +172,43 @@ def evaluate_hypotheses(run: dict) -> dict:
     return out
 
 
+
+def paired_cross(run_a: dict, sa: str, run_b: dict, sb: str, metric, population: str = "modeled",
+                 seed: int = 0, n_boot: int = N_BOOT) -> dict:
+    """metric(sa in run_a) - metric(sb in run_b) over identical episodes (same seed),
+    episode-cluster bootstrap. Refuses if the runs' events differ."""
+    per = []
+    for ea, eb in zip(run_a["episodes"], run_b["episodes"]):
+        assert ea["episode_index"] == eb["episode_index"]
+        assert [e["true_class"] for e in ea["events"]] == [e["true_class"] for e in eb["events"]]
+        xa, xb = [], []
+        for meta, ra, rb in zip(ea["events"], ea["strategies"][sa]["events"], eb["strategies"][sb]["events"]):
+            if population == "all" or (population == "modeled") == meta["modeled"]:
+                xa.append(metric(ra)); xb.append(metric(rb))
+        per.append((sum(xa), sum(xb), len(xa)))
+    arr = np.array(per, dtype=float)
+    est = (arr[:, 0].sum() - arr[:, 1].sum()) / arr[:, 2].sum()
+    idx = np.random.default_rng(seed).integers(0, len(arr), size=(n_boot, len(arr)))
+    s = arr[idx]
+    boots = (s[..., 0].sum(1) - s[..., 1].sum(1)) / np.clip(s[..., 2].sum(1), 1, None)
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    return {"estimate": float(est), "ci95": [float(lo), float(hi)]}
+
+
+def evaluate_h4b(r1: dict, r2: dict, r3: dict) -> dict:
+    """PREREGISTRATION_H4B.md, exactly as written."""
+    acc = lambda r: float(r["correct"])
+    epochs = lambda r: float(len(set(r["obs_epochs"])))
+    out = {}
+    d = paired_cross(r1, "A_5000", r1, "G", acc); out["B1"] = {**d, "pass": d["ci95"][0] > 0}
+    d = paired_cross(r1, "A_5000", r1, "K_5000", acc); out["B2"] = {**d, "pass": d["ci95"][0] > -0.05 and d["ci95"][1] < 0.05}
+    d = paired_cross(r3, "O", r1, "O", acc); out["B3"] = {**d, "pass": d["ci95"][0] > 0}
+    d = paired_cross(r1, "O", r2, "O", acc); out["B4"] = {**d, "pass": d["ci95"][0] > 0}
+    d = paired_cross(r1, "O", r2, "O", epochs, "all"); out["B5"] = {**d, "pass": d["ci95"][0] > 0}
+    out["reported_dense_A5000_minus_G"] = paired_cross(r2, "A_5000", r2, "G", acc)
+    return out
+
+
 def main() -> None:
     cmd = sys.argv[1]
     if cmd == "select":
@@ -182,6 +219,16 @@ def main() -> None:
         atomic_write_json(sys.argv[3], res)
         for h, v in res["hypotheses"].items():
             print(h, "PASS" if v["pass"] else "FAIL", {k: v[k] for k in v if k in ("estimate", "ci95", "false_alarm", "cp_upper95")})
+    elif cmd == "h4b":
+        runs = [load_run(RESULTS_DIR / t) for t in ("b_sparse_equal3", "b_dense_equal3", "b_sparse_selected")]
+        res = {"hypotheses": evaluate_h4b(*runs),
+               "summary": {t: summarize(r) for t, r in zip(("sparse_equal3", "dense_equal3", "sparse_selected"), runs)},
+               "link_up": {t: {k: float(np.mean([ep["link_up_fraction"][k] for ep in r["episodes"]]))
+                               for k in r["episodes"][0]["link_up_fraction"]}
+                           for t, r in zip(("sparse", "dense"), runs[:2])}}
+        atomic_write_json(str(RESULTS_DIR / "analysis_h4b.json"), res)
+        for h, v in res["hypotheses"].items():
+            print(h, ("PASS" if v.get("pass") else "FAIL") if "pass" in v else "reported", round(v["estimate"], 4), [round(x, 4) for x in v["ci95"]])
     elif cmd == "summary":
         run = load_run(Path(sys.argv[2]))
         out = summarize(run)

@@ -42,6 +42,7 @@ from research.experiments.phase2_single_planner import (
 from research.experiments.scenarios import SCENARIOS, class_prior_for_scenario
 from research.inference.bayes import default_amplitude_grid
 from research.orbitsim.contacts import REFERENCE_EPOCH, ContactSchedule
+from research.orbitsim.fleets import dense_fleet
 from research.orbitsim.geometry import random_sky_direction, visibility_margin_deg
 from research.orbitsim.isl import epoch_link_plan
 from research.planners.decentralised import SAT_BUDGET, default_strategies, run_strategy
@@ -92,9 +93,18 @@ def _entropy(p: dict) -> float:
     return float(-np.sum(v * np.log(v)))
 
 
-def run_episode(idx: int, seed_seq, scenario_name: str, reserves: dict) -> dict:
+_FLEETS: dict = {}
+
+
+def get_fleet(kind: str) -> dict:
+    if kind not in _FLEETS:
+        _FLEETS[kind] = _fleet_subset(N_SATELLITES) if kind == "sparse" else dense_fleet(str(REPO_ROOT / "satellites.txt"), N_SATELLITES)
+    return _FLEETS[kind]
+
+
+def run_episode(idx: int, seed_seq, scenario_name: str, reserves: dict, fleet_kind: str = "sparse") -> dict:
     scenario_cfg = SCENARIOS[scenario_name]
-    fleet = _fleet_subset(N_SATELLITES)
+    fleet = get_fleet(fleet_kind)
     flux_res = _belief_flux_fn_resolver(scenario_cfg.get("model_error_factor", 1.0))
     grid = default_amplitude_grid(AMPLITUDE_GRID_SIZE)
     episode, plan, events = build_episode(seed_seq, fleet, scenario_cfg)
@@ -143,6 +153,7 @@ def main() -> None:
     ap.add_argument("--n-shards", type=int, default=1)
     ap.add_argument("--workers", type=int, default=os.cpu_count())
     ap.add_argument("--tag", type=str, default="")
+    ap.add_argument("--fleet", choices=("sparse", "dense"), default="sparse")
     args = ap.parse_args()
 
     if args.split == "validation" and args.seed >= TEST_SEED_MIN:
@@ -164,7 +175,7 @@ def main() -> None:
 
     scenario_name = SCENARIO_FOR[args.scenario]
     seeds = np.random.SeedSequence(args.seed).spawn(args.n_episodes)
-    items = [(i, s, scenario_name, reserves) for i, s in enumerate(seeds) if i % args.n_shards == args.shard]
+    items = [(i, s, scenario_name, reserves, args.fleet) for i, s in enumerate(seeds) if i % args.n_shards == args.shard]
     t_start = time.time()
     if args.workers <= 1:
         records = [_star(it) for it in items]
@@ -173,11 +184,11 @@ def main() -> None:
             records = list(ex.map(_star, items, chunksize=1))
     records.sort(key=lambda r: r["episode_index"])
 
-    run_name = args.tag or (f"{args.split}_{args.scenario}_seed{args.seed}_n{args.n_episodes}_"
+    run_name = args.tag or (("dense_" if args.fleet == "dense" else "") + f"{args.split}_{args.scenario}_seed{args.seed}_n{args.n_episodes}_"
                             + ("reservesjson" if args.reserves_json else f"r{reserves['O']:g}"))
     meta = {"git_commit": git_commit_hash(), "python": platform.python_version(), "numpy": np.__version__,
             "argv": sys.argv, "split": args.split, "seed": args.seed, "n_episodes": args.n_episodes,
-            "scenario": scenario_name, "reserves": reserves, "shard": args.shard, "n_shards": args.n_shards,
+            "scenario": scenario_name, "reserves": reserves, "fleet": args.fleet, "shard": args.shard, "n_shards": args.n_shards,
             "n_events_per_episode": N_EVENTS, "ranges_km": RANGES_KM, "sat_budget": SAT_BUDGET,
             "beta": BETA, "gamma": GAMMA, "gp_lengthscale": GP_LENGTHSCALE,
             "seconds": round(time.time() - t_start, 1)}

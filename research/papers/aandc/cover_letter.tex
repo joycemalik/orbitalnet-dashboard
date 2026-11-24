@@ -1,0 +1,27 @@
+% Cover letter for Astronomy and Computing. Numbers are the paper's generated macros.
+\documentclass[11pt]{letter}
+\usepackage[margin=1in]{geometry}
+\usepackage{textcomp}
+\input{generated/numbers}
+\input{generated/numbers_phase4}
+\signature{Joyce Malik (corresponding author)\\
+On behalf of all authors: Dr.\ Smitha Shekar B, Dr.\ Harish G, Joyce Malik, Anup H, Moghitha B and Swathi Sathish\\
+Computer Science and Engineering Program, Dr.\ Ambedkar Institute of Technology, Bengaluru 560056, India\\
+Email: joycemalik14@gmail.com \quad ORCID: 0009-0001-8293-8064}
+\begin{document}
+\begin{letter}{The Editors\\ Astronomy and Computing}
+\opening{Dear Editors,}
+
+We are submitting our manuscript, ``Knowing What You Do Not Know: Open-World Follow-Up Planning for Fading Transients, from One Spacecraft to a Fleet'', for consideration as a full-length article in Astronomy and Computing.
+
+Sky surveys now find far more transients than any telescope can follow up, so future spacecraft will have to choose for themselves what to measure next. Today's planners pick the measurement that best separates the object types they already know. The problem is what happens when something new shows up. The planner has no way to say ``I don't know this'', so every extra measurement only makes it more sure of a wrong answer.
+
+We fix this by giving the planner one more option, ``none of the above'', and letting it measure only forward in time, as a real spacecraft must. In simulation it recognised \SimTprP\ of never-seen object types at a 5\% false-alarm rate, against \SimTprBthree\ for the usual approach. We then replayed \RealNEvents\ real transients from the Zwicky Transient Facility. Here it was confidently wrong about \RealCCwWhP\ of the unfamiliar objects, against \RealCCwWhBthree\ for the standard planner. We also give the ``unknown'' label a false-alarm guarantee that holds at every step, and we run the planner across a fleet of satellites that can only talk when they see each other. Sharing observations helped, but where the satellites sit mattered more, and a well-connected fleet in one orbital plane was \FleetBFourMag\ percentage points less accurate than a spread one.
+
+We think this fits Astronomy and Computing because the contribution is computational. It is a planning and inference method, with two statistical guarantees and a decentralised fleet design, built for an astronomical problem and tested on real survey data. The code is open, every study is a seeded script, and the numbers, tables and figures in the paper are generated straight from the result files. We fixed every prediction before running the test data, and the paper reports the ones that failed as well as the ones that held.
+
+This manuscript is original, has not been published before, and is not under consideration at any other journal. All six authors have read and approved the final version. We have no competing interests to declare, and this work received no external funding.
+
+\closing{Thank you for considering our work. We look forward to hearing from you.\\[1ex] Yours sincerely,}
+\end{letter}
+\end{document}

@@ -1,0 +1,300 @@
+\begin{thebibliography}{36}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\href}[2]{#2}
+\providecommand{\path}[1]{#1}
+\providecommand{\DOIprefix}{doi:}
+\providecommand{\ArXivprefix}{arXiv:}
+\providecommand{\URLprefix}{URL: }
+\providecommand{\Pubmedprefix}{pmid:}
+\providecommand{\doi}[1]{\href{http://dx.doi.org/#1}{\path{#1}}}
+\providecommand{\Pubmed}[1]{\href{pmid:#1}{\path{#1}}}
+\providecommand{\bibinfo}[2]{#2}
+\ifx\xfnm\relax \def\xfnm[#1]{\unskip,\space#1}\fi
+%Type = Techreport
+\bibitem[{Adams et~al.(2024)Adams, Iatauro, Gridnev et~al.}]{Adams2024}
+\bibinfo{author}{Adams, C.A.}, \bibinfo{author}{Iatauro, M.J.},
+  \bibinfo{author}{Gridnev, S.}, et~al., \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{Advancing Autonomy in Distributed Space Systems:
+  Insights From on-Orbit Testing with the {Starling 1.0} Mission}.
+\newblock \bibinfo{type}{Technical Report} \bibinfo{number}{20240004120}. NASA
+  Technical Reports Server.
+%Type = Misc
+\bibitem[{Aleo et~al.(2024)Aleo, Engel, Narayan et~al.}]{Aleo2024}
+\bibinfo{author}{Aleo, P.D.}, \bibinfo{author}{Engel, A.W.},
+  \bibinfo{author}{Narayan, G.}, et~al., \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{Anomaly detection and approximate similarity searches
+  of transients in real-time data streams}.
+\newblock \href{http://arxiv.org/abs/2404.01235}{{\tt arXiv:2404.01235}}.
+%Type = Article
+\bibitem[{Almualla et~al.(2021)Almualla, Anand, Coughlin et~al.}]{Almualla2021}
+\bibinfo{author}{Almualla, M.}, \bibinfo{author}{Anand, S.},
+  \bibinfo{author}{Coughlin, M.W.}, et~al., \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Optimizing serendipitous detections of kilonovae:
+  Cadence and filter selection}.
+\newblock \bibinfo{journal}{Monthly Notices of the Royal Astronomical Society}
+  \DOIprefix\doi{10.1093/mnras/stab1090}.
+%Type = Article
+\bibitem[{Angelopoulos and Bates(2023)}]{Angelopoulos2023}
+\bibinfo{author}{Angelopoulos, A.N.}, \bibinfo{author}{Bates, S.},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Conformal prediction: A gentle introduction}.
+\newblock \bibinfo{journal}{Foundations and Trends in Machine Learning}
+  \bibinfo{volume}{16}, \bibinfo{pages}{494--591}.
+%Type = Article
+\bibitem[{Astudillo et~al.(2020)Astudillo, Protopapas, Pichara and
+  Huijse}]{Astudillo2020}
+\bibinfo{author}{Astudillo, J.}, \bibinfo{author}{Protopapas, P.},
+  \bibinfo{author}{Pichara, K.}, \bibinfo{author}{Huijse, P.},
+  \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{An information theory approach on deciding
+  spectroscopic follow-ups}.
+\newblock \bibinfo{journal}{The Astronomical Journal} \bibinfo{volume}{159},
+  \bibinfo{pages}{16}.
+\newblock \DOIprefix\doi{10.3847/1538-3881/ab557d}.
+%Type = Inproceedings
+\bibitem[{Atanasov et~al.(2015)Atanasov, Le~Ny, Daniilidis and
+  Pappas}]{Atanasov2015}
+\bibinfo{author}{Atanasov, N.}, \bibinfo{author}{Le~Ny, J.},
+  \bibinfo{author}{Daniilidis, K.}, \bibinfo{author}{Pappas, G.J.},
+  \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{Decentralized active information acquisition: Theory
+  and application to multi-robot {SLAM}}, in: \bibinfo{booktitle}{Proc. IEEE
+  International Conference on Robotics and Automation (ICRA)}.
+%Type = Misc
+\bibitem[{Barlas et~al.(2025)Barlas, Sloman and Kaski}]{Barlas2025}
+\bibinfo{author}{Barlas, Y.Z.}, \bibinfo{author}{Sloman, S.J.},
+  \bibinfo{author}{Kaski, S.}, \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Robust experimental design via generalised {Bayesian}
+  inference}.
+\newblock \bibinfo{note}{ArXiv:2511.07671}.
+%Type = Article
+\bibitem[{Bellm et~al.(2019)}]{Bellm2019}
+\bibinfo{author}{Bellm, E.C.}, et~al., \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{The {Zwicky Transient Facility}: System overview,
+  performance, and first results}.
+\newblock \bibinfo{journal}{Publications of the Astronomical Society of the
+  Pacific} \bibinfo{volume}{131}, \bibinfo{pages}{018002}.
+%Type = Misc
+\bibitem[{Catanach and Das(2023)}]{Catanach2023}
+\bibinfo{author}{Catanach, T.A.}, \bibinfo{author}{Das, N.},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Metrics for {Bayesian} optimal experiment design
+  under model misspecification}.
+\newblock \bibinfo{note}{ArXiv:2304.07949}.
+%Type = Article
+\bibitem[{Chaloner and Verdinelli(1995)}]{Chaloner1995}
+\bibinfo{author}{Chaloner, K.}, \bibinfo{author}{Verdinelli, I.},
+  \bibinfo{year}{1995}.
+\newblock \bibinfo{title}{{Bayesian} experimental design: A review}.
+\newblock \bibinfo{journal}{Statistical Science} \bibinfo{volume}{10},
+  \bibinfo{pages}{273--304}.
+%Type = Article
+\bibitem[{Choi et~al.(2009)Choi, Brunet and How}]{Choi2009}
+\bibinfo{author}{Choi, H.L.}, \bibinfo{author}{Brunet, L.},
+  \bibinfo{author}{How, J.P.}, \bibinfo{year}{2009}.
+\newblock \bibinfo{title}{Consensus-based decentralized auctions for robust
+  task allocation}.
+\newblock \bibinfo{journal}{IEEE Transactions on Robotics}
+  \bibinfo{volume}{25}, \bibinfo{pages}{912--926}.
+\newblock \DOIprefix\doi{10.1109/TRO.2009.2022423}.
+%Type = Article
+\bibitem[{Coughlin et~al.(2019)Coughlin, Antier, Corre et~al.}]{Coughlin2019}
+\bibinfo{author}{Coughlin, M.W.}, \bibinfo{author}{Antier, S.},
+  \bibinfo{author}{Corre, D.}, et~al., \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{Teamwork makes the dream work: Optimizing
+  multi-telescope observations of gravitational-wave counterparts}.
+\newblock \bibinfo{journal}{Monthly Notices of the Royal Astronomical Society}
+  \DOIprefix\doi{10.1093/mnras/stz2485}.
+%Type = Inproceedings
+\bibitem[{Foster et~al.(2021)Foster, Ivanova, Malik and Rainforth}]{Foster2021}
+\bibinfo{author}{Foster, A.}, \bibinfo{author}{Ivanova, D.R.},
+  \bibinfo{author}{Malik, I.}, \bibinfo{author}{Rainforth, T.},
+  \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Deep adaptive design: Amortizing sequential
+  {Bayesian} experimental design}, in: \bibinfo{booktitle}{Proc. 38th
+  International Conference on Machine Learning (ICML)}.
+%Type = Article
+\bibitem[{Fremling et~al.(2020)}]{Fremling2020}
+\bibinfo{author}{Fremling, C.}, et~al., \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{The {Zwicky Transient Facility} {Bright Transient
+  Survey}. {I}. spectroscopic classification and the redshift completeness of
+  local galaxy catalogs}.
+\newblock \bibinfo{journal}{The Astrophysical Journal} \bibinfo{volume}{895},
+  \bibinfo{pages}{32}.
+%Type = Incollection
+\bibitem[{Ginsbourger et~al.(2010)Ginsbourger, Le~Riche and
+  Carraro}]{Ginsbourger2010}
+\bibinfo{author}{Ginsbourger, D.}, \bibinfo{author}{Le~Riche, R.},
+  \bibinfo{author}{Carraro, L.}, \bibinfo{year}{2010}.
+\newblock \bibinfo{title}{Kriging is well-suited to parallelize optimization},
+  in: \bibinfo{booktitle}{Computational Intelligence in Expensive Optimization
+  Problems}. \bibinfo{publisher}{Springer}, pp. \bibinfo{pages}{131--162}.
+%Type = Misc
+\bibitem[{Gupta et~al.(2024)Gupta, Muthukrishna and Lochner}]{Gupta2024}
+\bibinfo{author}{Gupta, R.}, \bibinfo{author}{Muthukrishna, D.},
+  \bibinfo{author}{Lochner, M.}, \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{A classifier-based approach to multi-class anomaly
+  detection applied to astronomical time-series}.
+\newblock \href{http://arxiv.org/abs/2408.08888}{{\tt arXiv:2408.08888}}.
+%Type = Inproceedings
+\bibitem[{Hedman et~al.(2025)Hedman, Ivanova, Guan and Rainforth}]{Hedman2025}
+\bibinfo{author}{Hedman, M.}, \bibinfo{author}{Ivanova, D.R.},
+  \bibinfo{author}{Guan, C.}, \bibinfo{author}{Rainforth, T.},
+  \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Step-{DAD}: Semi-amortized policy-based {Bayesian}
+  experimental design}, in: \bibinfo{booktitle}{Proc. 42nd International
+  Conference on Machine Learning, PMLR 267}, pp. \bibinfo{pages}{22904--22923}.
+%Type = Misc
+\bibitem[{Iskandarli et~al.(2026)Iskandarli, Lintott, Croft, Stevance and
+  Weston}]{Iskandarli2026}
+\bibinfo{author}{Iskandarli, L.}, \bibinfo{author}{Lintott, C.J.},
+  \bibinfo{author}{Croft, S.}, \bibinfo{author}{Stevance, H.},
+  \bibinfo{author}{Weston, J.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Anomaly hunter for alerts ({AHA}): Anomaly detection
+  in the {ZTF} transient alert stream}.
+\newblock \href{http://arxiv.org/abs/2602.12955}{{\tt arXiv:2602.12955}}.
+%Type = Article
+\bibitem[{Ivezi{\'c} et~al.(2019)}]{Ivezic2019}
+\bibinfo{author}{Ivezi{\'c}, {\v{Z}}.}, et~al., \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{{LSST}: From science drivers to reference design and
+  anticipated data products}.
+\newblock \bibinfo{journal}{The Astrophysical Journal} \bibinfo{volume}{873},
+  \bibinfo{pages}{111}.
+%Type = Inproceedings
+\bibitem[{Kennamer et~al.(2020)Kennamer, Ishida, Gonzalez-Gaitan
+  et~al.}]{Kennamer2020}
+\bibinfo{author}{Kennamer, N.}, \bibinfo{author}{Ishida, E.E.O.},
+  \bibinfo{author}{Gonzalez-Gaitan, S.}, et~al., \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Active learning with {RESSPECT}: Resource allocation
+  for extragalactic astronomical transients}, in: \bibinfo{booktitle}{IEEE
+  Symposium Series on Computational Intelligence (SSCI)}.
+\newblock \bibinfo{note}{ArXiv:2010.05941}.
+%Type = Article
+\bibitem[{Lindley(1956)}]{Lindley1956}
+\bibinfo{author}{Lindley, D.V.}, \bibinfo{year}{1956}.
+\newblock \bibinfo{title}{On a measure of the information provided by an
+  experiment}.
+\newblock \bibinfo{journal}{The Annals of Mathematical Statistics}
+  \bibinfo{volume}{27}, \bibinfo{pages}{986--1005}.
+%Type = Article
+\bibitem[{M{\"o}ller et~al.(2025)M{\"o}ller, Ishida, Peloton
+  et~al.}]{Moller2025}
+\bibinfo{author}{M{\"o}ller, A.}, \bibinfo{author}{Ishida, E.E.O.},
+  \bibinfo{author}{Peloton, J.}, et~al., \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Real-time active learning for optimised spectroscopic
+  follow-up: Enhancing early {SN Ia} classification with the {Fink} broker}.
+\newblock \bibinfo{journal}{Publications of the Astronomical Society of
+  Australia} \bibinfo{volume}{42}, \bibinfo{pages}{e057}.
+\newblock \DOIprefix\doi{10.1017/pasa.2025.20}.
+%Type = Article
+\bibitem[{Perley et~al.(2020)}]{Perley2020}
+\bibinfo{author}{Perley, D.A.}, et~al., \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{The {Zwicky Transient Facility} {Bright Transient
+  Survey}. {II}. a public statistical sample for exploring supernova
+  demographics}.
+\newblock \bibinfo{journal}{The Astrophysical Journal} \bibinfo{volume}{904},
+  \bibinfo{pages}{35}.
+%Type = Misc
+\bibitem[{Perone and Hays(2026)}]{Perone2026}
+\bibinfo{author}{Perone, H.}, \bibinfo{author}{Hays, C.W.},
+  \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Consensus based task allocation for angles-only local
+  catalog maintenance of satellite systems}.
+\newblock \href{http://arxiv.org/abs/2602.16678}{{\tt arXiv:2602.16678}}.
+%Type = Misc
+\bibitem[{Pruzhinskaya et~al.(2026)Pruzhinskaya, Kornilov, Dodin
+  et~al.}]{Pruzhinskaya2026}
+\bibinfo{author}{Pruzhinskaya, M.V.}, \bibinfo{author}{Kornilov, M.V.},
+  \bibinfo{author}{Dodin, A.V.}, et~al., \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Anomaly detection in {Fink}. {I}. discovery,
+  follow-up, and classification of unusual sources}.
+\newblock \href{http://arxiv.org/abs/2603.29511}{{\tt arXiv:2603.29511}}.
+%Type = Article
+\bibitem[{Ramdas et~al.(2023)Ramdas, Gr{\"u}nwald, Vovk and
+  Shafer}]{Ramdas2023}
+\bibinfo{author}{Ramdas, A.}, \bibinfo{author}{Gr{\"u}nwald, P.},
+  \bibinfo{author}{Vovk, V.}, \bibinfo{author}{Shafer, G.},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Game-theoretic statistics and safe anytime-valid
+  inference}.
+\newblock \bibinfo{journal}{Statistical Science} \bibinfo{volume}{38},
+  \bibinfo{pages}{576--601}.
+%Type = Misc
+\bibitem[{Sasli et~al.(2026a)Sasli, Fontinele~Nunes, Zhang
+  et~al.}]{Sasli2026FLARE}
+\bibinfo{author}{Sasli, A.}, \bibinfo{author}{Fontinele~Nunes, F.},
+  \bibinfo{author}{Zhang, X.}, et~al., \bibinfo{year}{2026}a.
+\newblock \bibinfo{title}{Photometric classification and out-of-taxonomy
+  detection of {ZTF} transients with {FLARE}}.
+\newblock \href{http://arxiv.org/abs/2610.30656}{{\tt arXiv:2610.30656}}.
+%Type = Misc
+\bibitem[{Sasli et~al.(2026b)Sasli, Xu, Junell et~al.}]{Sasli2026ASTRANet}
+\bibinfo{author}{Sasli, A.}, \bibinfo{author}{Xu, M.}, \bibinfo{author}{Junell,
+  A.}, et~al., \bibinfo{year}{2026}b.
+\newblock \bibinfo{title}{Catching disguised transients with {ASTRANet}:
+  Anomaly-aware spectroscopic classification and conformal calibration}.
+\newblock \href{http://arxiv.org/abs/2607.08044}{{\tt arXiv:2607.08044}}.
+%Type = Inproceedings
+\bibitem[{Shapiro et~al.(2011)Shapiro, Pregui{\c{c}}a, Baquero and
+  Zawirski}]{Shapiro2011}
+\bibinfo{author}{Shapiro, M.}, \bibinfo{author}{Pregui{\c{c}}a, N.},
+  \bibinfo{author}{Baquero, C.}, \bibinfo{author}{Zawirski, M.},
+  \bibinfo{year}{2011}.
+\newblock \bibinfo{title}{Conflict-free replicated data types}, in:
+  \bibinfo{booktitle}{Stabilization, Safety, and Security of Distributed
+  Systems (SSS 2011), LNCS 6976}, pp. \bibinfo{pages}{386--400}.
+%Type = Article
+\bibitem[{Villar et~al.(2021)Villar, Cranmer, Berger et~al.}]{Villar2021}
+\bibinfo{author}{Villar, V.A.}, \bibinfo{author}{Cranmer, M.},
+  \bibinfo{author}{Berger, E.}, et~al., \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{A deep learning approach for active anomaly detection
+  of extragalactic transients}.
+\newblock \bibinfo{journal}{The Astrophysical Journal Supplement Series}
+  \DOIprefix\doi{10.3847/1538-4365/ac0893}.
+%Type = Book
+\bibitem[{Vovk et~al.(2005)Vovk, Gammerman and Shafer}]{Vovk2005}
+\bibinfo{author}{Vovk, V.}, \bibinfo{author}{Gammerman, A.},
+  \bibinfo{author}{Shafer, G.}, \bibinfo{year}{2005}.
+\newblock \bibinfo{title}{Algorithmic Learning in a Random World}.
+\newblock \bibinfo{publisher}{Springer}, \bibinfo{address}{New York}.
+%Type = Article
+\bibitem[{Vovk and Wang(2021)}]{VovkWang2021}
+\bibinfo{author}{Vovk, V.}, \bibinfo{author}{Wang, R.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{E-values: Calibration, combination and applications}.
+\newblock \bibinfo{journal}{The Annals of Statistics} \bibinfo{volume}{49},
+  \bibinfo{pages}{1736--1754}.
+%Type = Article
+\bibitem[{Wasserman et~al.(2020)Wasserman, Ramdas and
+  Balakrishnan}]{Wasserman2020}
+\bibinfo{author}{Wasserman, L.}, \bibinfo{author}{Ramdas, A.},
+  \bibinfo{author}{Balakrishnan, S.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Universal inference}.
+\newblock \bibinfo{journal}{Proceedings of the National Academy of Sciences}
+  \bibinfo{volume}{117}, \bibinfo{pages}{16880--16890}.
+%Type = Misc
+\bibitem[{Xie et~al.(2025)Xie, Zhou, Liang, Favaro and Sesia}]{Xie2025}
+\bibinfo{author}{Xie, T.}, \bibinfo{author}{Zhou, Y.}, \bibinfo{author}{Liang,
+  Z.}, \bibinfo{author}{Favaro, S.}, \bibinfo{author}{Sesia, M.},
+  \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Conformal inference for open-set and imbalanced
+  classification}.
+\newblock \href{http://arxiv.org/abs/2510.13037}{{\tt arXiv:2510.13037}}.
+%Type = Article
+\bibitem[{Yang et~al.(2025)Yang, Chen and Wu}]{Yang2025}
+\bibinfo{author}{Yang, H.}, \bibinfo{author}{Chen, C.}, \bibinfo{author}{Wu,
+  J.L.}, \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Active learning of model discrepancy with {Bayesian}
+  experimental design}.
+\newblock \bibinfo{journal}{Computer Methods in Applied Mechanics and
+  Engineering} \bibinfo{volume}{446}, \bibinfo{pages}{118198}.
+\newblock \DOIprefix\doi{10.1016/j.cma.2025.118198}.
+%Type = Misc
+\bibitem[{Zilberstein and Chien(2026)}]{Zilberstein2026}
+\bibinfo{author}{Zilberstein, I.}, \bibinfo{author}{Chien, S.},
+  \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Scalable dynamic distributed constraint optimization
+  with metareasoning and application to continual satellite operations}.
+\newblock \href{http://arxiv.org/abs/2601.06188}{{\tt arXiv:2601.06188}}.
+
+\end{thebibliography}

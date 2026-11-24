@@ -1,0 +1,5 @@
+A follow-up planner that can say "none of the above" for never-seen transients
+Open-world belief stops confident misclassification on real ZTF events
+Conformal and anytime-valid e-process guarantees for the "unknown" label
+In a satellite fleet, orbit spread and spending rule matter more than coordination
+Preregistered tests, causal measurement order, open code behind every number

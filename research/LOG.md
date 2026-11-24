@@ -808,3 +808,11 @@ spending rule moves accuracy as much as ideal communication does.
 - Reported: dense A_5000 - G = +0.018 [-0.008, 0.044].
 Reading: the earlier H4.2 failure was the reserve difference; with equal spending, realistic links
 help. Where satellites sit on the sky matters more than how well they can talk.
+
+### Phase E test result (PREREGISTRATION_E.md pushed first at 9423046)
+- Validation: fresh_cal replays reproduce Phase C measurement sequences 4104/4104.
+- HR1 PASS: P's anytime false-"unknown" on 489 sealed SNe: 16, 21, 21 of 489 (CP upper <= 6.1%).
+- HR2 PASS: P flags 24, 23, 27 of 88 real unknowns on the test split (CP lower >= 19%).
+- Reported: the e-process is planner-agnostic. On B3's and L's measurements it flags 36-41% and 40-50%
+  of unknowns, because those planners take more measurements per event; their false-unknown rate on the
+  sealed SNe is 5.1-6.1%.

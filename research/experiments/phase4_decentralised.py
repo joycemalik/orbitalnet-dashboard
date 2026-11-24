@@ -16,6 +16,14 @@ Usage:
 
 from __future__ import annotations
 
+import os
+
+# One math-library thread per worker process: the matrices here are tiny, and
+# OpenBLAS's default of one thread per core made every worker reserve ~1 GB
+# and oversubscribe the CPU. Must be set before numpy is imported.
+for _var in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_var, "1")
+
 import argparse
 import datetime
 import json

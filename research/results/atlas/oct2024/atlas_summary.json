@@ -1,0 +1,109 @@
+{
+ "t0": "2024-10-10 15:00:00",
+ "shells": {
+  "400": {
+   "peak_R": 1.7821080397917162,
+   "peak_time": "2024-10-11 00:00:00",
+   "peak_lag_h": 9.0,
+   "n_at_peak": 33,
+   "base_mean": 1.0096831751431772,
+   "base_sd": 0.10221092485295137,
+   "secondary_peak_R": 1.9036430652667882
+  },
+  "450": {
+   "peak_R": 2.095748927203535,
+   "peak_time": "2024-10-10 12:00:00",
+   "peak_lag_h": -3.0,
+   "n_at_peak": 69,
+   "base_mean": 1.0163470134033412,
+   "base_sd": 0.10581700896565611,
+   "secondary_peak_R": 2.2984320084592156
+  },
+  "500": {
+   "peak_R": 2.4281815162777662,
+   "peak_time": "2024-10-10 12:00:00",
+   "peak_lag_h": -3.0,
+   "n_at_peak": 89,
+   "base_mean": 1.0180232888225718,
+   "base_sd": 0.12556283576357147,
+   "secondary_peak_R": 2.936119168280247
+  },
+  "550": {
+   "peak_R": 2.6595633489096966,
+   "peak_time": "2024-10-10 12:00:00",
+   "peak_lag_h": -3.0,
+   "n_at_peak": 135,
+   "base_mean": 1.0181046845136084,
+   "base_sd": 0.13890262718992752,
+   "secondary_peak_R": 3.253933309250517
+  },
+  "600": {
+   "peak_R": 2.715099869023258,
+   "peak_time": "2024-10-10 12:00:00",
+   "peak_lag_h": -3.0,
+   "n_at_peak": 206,
+   "base_mean": 0.9950411029329355,
+   "base_sd": 0.16472033629238803,
+   "secondary_peak_R": 4.2304356036037
+  }
+ },
+ "HA1_timing": {
+  "pass": false,
+  "shells": {
+   "400": 9.0,
+   "450": -3.0,
+   "500": -3.0,
+   "550": -3.0
+  }
+ },
+ "HA2_altitude": {
+  "pass": true,
+  "spearman_rho": 0.9999999999999999,
+  "n_shells": 5
+ },
+ "HA3_detectability": {
+  "pass": true,
+  "fraction": 1.0,
+  "n_shells": 4
+ },
+ "HA4_payload_not_larger": {
+  "pass": false,
+  "n_shells": 5
+ },
+ "n_element_sets": 1815748,
+ "n_primary_objects": 3776,
+ "n_secondary_objects": 3687,
+ "n_quiet_days": 8,
+ "HX_thrust_masking": {
+  "shells": [
+   400,
+   450,
+   500,
+   550
+  ],
+  "peak_primary": {
+   "400": 1.7821080397917162,
+   "450": 2.095748927203535,
+   "500": 2.4281815162777662,
+   "550": 2.6595633489096966
+  },
+  "peak_constellation": {
+   "400": 3.651986421934608,
+   "450": 3.6469438408830666,
+   "500": 3.476852859198496,
+   "550": 3.623948806578447
+  },
+  "peak_other_payload": {
+   "400": 1.828769657388523,
+   "450": 2.312963530758305,
+   "500": 2.7440634711973475,
+   "550": 3.1647807925370266
+  },
+  "other_payload_not_larger_all_shells": false,
+  "constellation_larger_in_at_least_3_shells": true,
+  "other_payload_within_0p8_1p25_of_primary_all_shells": true,
+  "status": "preregistered",
+  "n_constellation_objects": 1448,
+  "n_other_payload_objects": 2239
+ }
+}

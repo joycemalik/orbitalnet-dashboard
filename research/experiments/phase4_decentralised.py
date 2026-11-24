@@ -108,6 +108,7 @@ def run_episode(idx: int, seed_seq, scenario_name: str, reserves: dict) -> dict:
             confident = ow[decision] >= CONFIDENT_THRESHOLD
             rows.append({"decision": decision, "correct": bool(correct),
                          "confident_wrong": bool(confident and not correct), "p_h0": ow["h0"],
+                         "p_true": ow[ev.true_class] if modeled else ow["h0"],
                          "cw_entropy": _entropy(pe["cw_posterior"]), "n_obs": pe["n_obs"],
                          "duplicates": pe["duplicates"], "obs_epochs": pe["obs_epochs"],
                          "max_log_e_ground": pe["max_log_e_ground"], "max_log_e_union": pe["max_log_e_union"],

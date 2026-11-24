@@ -822,3 +822,76 @@ R-HA4 FAIL (repeated check), R-HX1 PASS (constellation payload peak above debris
 FAIL as preregistered: shells 450-550 km peak in the 12 h bin containing the onset, whose
 start is 3 h before it (negative lag), so 0 <= lag <= 72 h is not met. Not adjusted.
 Peak ratios are smaller than in May (primary 1.8-2.7x vs 3.2-4.9x).
+
+## Phase 4 - decentralised fleet (started 2026-11-24)
+
+### Design decisions (fixed before any Phase 4 run)
+- User decisions: ISL line-of-sight with a range sweep (not ground relay, not
+  abstract link probability); 4 concurrent events per episode.
+- Fleet: the same 8 real-TLE satellites as Phase 2; one instrument each
+  (limiting magnitude 19/20/21); at most 1 measurement per epoch; budget 3
+  measurements per satellite (24 per episode, 6 per event on average).
+- Epochs: Phase 2's 16 log-spaced epochs (0.01-20 d). Alert time
+  t0 = 2026-01-01 + U[0,1) d per episode, so geometry varies across episodes.
+- Links: separation <= R and the segment clears Earth radius + 80 km; evaluated
+  every 2 min; store-and-forward flooding, instantaneous multi-hop inside a
+  component. R in {1000, 2000, 3000, 5000} km (5000 km ~ line-of-sight limit
+  at these altitudes), plus R = 0 (G) and ideal links (O).
+- Utility: Phase 2's frozen P utility (beta = 1, gamma = 0.1, GP length scale
+  1.2 d), unchanged. Auction: sequential greedy inside each component with
+  believer pseudo-observations at the predictive mean.
+- E-values: universal-inference e-process (GP h0 marginal likelihood over the
+  exact sup of the modeled-class likelihood over amplitude); alpha = 0.1, as in
+  Phase C.
+- Known limitation: these 8 satellites sit in different planes on old TLEs, so
+  ISLs are up only 1-12% of pair-time across the R grid. Reported, not tuned.
+
+### Reserve-price selection rule (declared before the validation runs)
+- Grid: reserve in {0.1, 0.3, 1, 3, 10} (utility units of the P utility).
+- Validation: seed 41, 100 episodes (400 events), nominal scenario, the same
+  reserve for every strategy in a run.
+- Rule: for each strategy family (O, G, A, K) separately, choose the reserve
+  that maximises the mean open-world log score of the true outcome (true class
+  for modeled events, h0 for withheld; floored at 1e-6), averaged over that
+  family's members. Ties -> smaller reserve. Equal tuning effort per family.
+
+### Phase 4 test result (2026-11-24; PREREGISTRATION_H4.md committed and pushed at e30ed47 first)
+Nominal, seed 4000, 250 episodes (1000 events, 592 modeled). Verdicts exactly as preregistered:
+- H4.1 PASS: accuracy O - G = +0.105 [0.063, 0.145].
+- H4.2 FAIL: accuracy A_5000 - G = -0.015 [-0.054, 0.023].
+- H4.3 PASS: accuracy O - A_5000 = +0.120 [0.082, 0.158].
+- H4.4 PASS: accuracy A_5000 - K_5000 = +0.005 [-0.018, 0.028], inside +-0.05.
+- HE1 PASS: ground e-process false "unknown" at most 1/592 (O), CP upper <= 0.008 for every strategy.
+- HE2 PASS: mean-fused per-spacecraft false alarm 0/4736 for A_5000.
+Model-error run (seed 4100, reported only): HE1 fails for O (83/573 = 14.5%) and G (27/573);
+the e-process tests "data come from the modeled templates", which is false by construction when
+the templates are misspecified, so these alarms detect the misspecification itself. Strategies with
+more data (O) detect it most often.
+
+What H4.2's failure hides (stated as found, not explained away): the declared rule chose reserve 10
+for A/K but 3 for G, so A used 3.7 measurements per event vs 5.4 for G; A had the better log score
+(-0.88 vs -0.99) and fewer confident errors on unknowns, but not higher accuracy.
+
+EXPLORATORY (post hoc, not preregistered, an extra look at test seed 4000): all strategies at reserve 3.
+A_5000 - G = +0.024 [-0.010, 0.056]; O - G = +0.051 [0.010, 0.091]; O - A_5000 = +0.027 [-0.007, 0.062];
+A_5000 - K_5000 = -0.005 [-0.030, 0.019]. O at reserve 1 vs 3: 0.868 vs 0.814 accuracy - the
+spending rule moves accuracy as much as ideal communication does.
+
+### Phase 4b test result (seed 4200, 500 episodes, PREREGISTRATION_H4B.md pushed first at ad819c3)
+- B1 PASS: sparse, equal reserve: A_5000 - G = +0.053 [0.029, 0.076] (confirms the exploratory look).
+- B2 PASS: A_5000 - K_5000 = -0.013 [-0.030, 0.005], inside +-0.05.
+- B3 PASS: O at reserve 1 minus O at reserve 3 = +0.079 [0.059, 0.098].
+- B4 PASS: O sparse minus O dense = +0.094 [0.069, 0.120], although dense links are up 9-38% of
+  pair-time vs 1-12%.
+- B5 PASS: distinct epochs per event, O sparse minus O dense = +0.27 [0.23, 0.31].
+- Reported: dense A_5000 - G = +0.018 [-0.008, 0.044].
+Reading: the earlier H4.2 failure was the reserve difference; with equal spending, realistic links
+help. Where satellites sit on the sky matters more than how well they can talk.
+
+### Phase E test result (PREREGISTRATION_E.md pushed first at 9423046)
+- Validation: fresh_cal replays reproduce Phase C measurement sequences 4104/4104.
+- HR1 PASS: P's anytime false-"unknown" on 489 sealed SNe: 16, 21, 21 of 489 (CP upper <= 6.1%).
+- HR2 PASS: P flags 24, 23, 27 of 88 real unknowns on the test split (CP lower >= 19%).
+- Reported: the e-process is planner-agnostic. On B3's and L's measurements it flags 36-41% and 40-50%
+  of unknowns, because those planners take more measurements per event; their false-unknown rate on the
+  sealed SNe is 5.1-6.1%.

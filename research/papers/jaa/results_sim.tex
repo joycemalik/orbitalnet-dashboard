@@ -1,33 +1,29 @@
-\paragraph{Results.} Validation selected $\gamma=\SimGamma$ (the largest value in the grid) and a GP length scale of \SimLengthscale\,d. On the \SimNEvents\ Nominal test events (\SimNModeled\ modelled, \SimNWithheld\ withheld), H1 \SimHOneVerdict, H2 and H3 \SimHTwoVerdict. Table~\ref{tab:sim} lists every strategy in every scenario.
-
-\paragraph{H1, identification speed: refuted.} P reached a posterior of at least 0.95 on the true class after a median of \SimTtiP, and it got there for \SimIdP\ of modelled events (Fig.~\ref{fig:tti}). It was faster than the fixed cadence (which identified only \SimIdBzero), the auction baseline (median \SimTtiBone) and closed-world EIG (\SimTtiBthree; Holm $p$ \SimHolmBthree\ for each). But it was not faster than classifier-entropy sampling B2, whose median was \SimTtiBtwo. The paired test does favour P over B2 (Holm $p=\SimHolmBtwo$), but only because B2 identified just \SimIdBtwo\ of events, and unidentified events rank last. Looking pair by pair, P was slower in \SimSlowerBtwo\ of pairs and faster in \SimFasterBtwo. The preregistered criterion asks for a shorter median, so H1 fails. P also beats closed-world EIG here for an unflattering reason. Under causality, B3 greedily jumps to late, high-contrast epochs, so it uses only \SimObsAllBthree\ of its 5 measurements, against \SimObsAllP\ for P.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{generated/figures/fig1_tti.pdf}
-\caption{H1. Cumulative fraction of modelled events whose posterior on the true class has reached 0.95, by time since alert (Nominal, test). B2 identifies the events it can identify earliest. P identifies almost all of them, but later. Closed-world EIG (B3) leaves many identifications to the final epochs.}
-\label{fig:tti}
-\end{figure}
-
-\paragraph{H2, irreversibility: supported, with caveats.} Removing the decay term cut the information recovered about the true class's amplitude by \SimHtwoFast\ nats on fast classes and by \SimHtwoSlow\ on the slow GRB afterglow, a difference of \SimHtwoEst\ \SimHtwoCI. Kilonovae carry most of this effect (\SimDeltaKilonova), and shock cooling carries some of it (\SimDeltaShock). For the fastest class, the M-dwarf flare, the decay term actually lost information (\SimDeltaFlare; Fig.~\ref{fig:decay}). The effect also reversed under model error, because the wrong timescales mislead the urgency estimate (\SimHtwoModelErrorEst\ \SimHtwoModelErrorCI).
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{generated/figures/fig2_decay.pdf}
-\caption{H2. Information about the true amplitude gained from the decay term, per class (P minus P without it), Nominal test. The gain is positive for kilonova and shock cooling, near zero for the slow class, and negative for flares.}
-\label{fig:decay}
-\end{figure}
-
-\paragraph{H3, open-world detection: supported.} At a 5\% false-alarm rate on modelled events, P's $P(h_0)$ detected \SimTprP\ of withheld events. A threshold on B3's closed-world posterior entropy detected \SimTprBthree\ (difference \SimHthreeEst\ points, 95\% CI \SimHthreeCI; Fig.~\ref{fig:rocsim}). The AUROC was \SimAucP\ for $P(h_0)$, against \SimAucBthree\ for B3 entropy and \SimAucBtwo\ for B2 entropy. Entropy computed on P's own measurements did no better (\SimAucPown), so the gain comes from the hypothesis itself and not from the measurements P chose. Without $h_0$, closed-world EIG was confidently wrong on \SimCwWhBthreeAll\ of withheld events, and P on \SimCwWhPAll. P made no false ``unknown'' calls on modelled events (\SimFaP) and kept the same modelled accuracy as B3 (\SimAccModPAll). H3 held in all three scenarios, but model error is the failure mode we predicted. Under model error, P called \SimFaPModelError\ of modelled events unknown, and its modelled accuracy fell to \SimAccModPModelError\ (B3: \SimAccModBthreeModelError).
+\paragraph{Naming the unknown is what works.} When we let the planner say ``none of the above'', it found \SimTprP\ of the never-seen event types at a 5\% false-alarm rate. The usual alternative, a threshold on how uncertain a closed-world planner is, found only \SimTprBthree\ (Fig.~\ref{fig:rocsim}). Without that extra option, closed-world information gain was confidently wrong on \SimCwWhBthreeAll\ of the unknown events, against \SimCwWhPAll\ for our planner P. It paid nothing for this on ordinary events, and kept the same accuracy on the known classes (\SimAccModPAll). We then checked whether P's gain comes from where it chooses to measure. It does not, since an uncertainty threshold computed on P's own measurements still reached an AUROC of only \SimAucPown, against \SimAucP\ for $P(h_0)$. So the gain comes from having a name for the unknown, not from clever measurement.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{generated/figures/fig3_roc_sim.pdf}
-\caption{H3. ROC for separating withheld from modelled events (Nominal, test). The dotted line marks the preregistered 5\% false-alarm operating point.}
+\caption{Simulation. How well each method separates never-seen event types from known ones. The dotted line marks the 5\% false-alarm point we fixed in advance.}
 \label{fig:rocsim}
 \end{figure}
 
-\paragraph{Ablations.} Removing the adequacy term changed nothing we could measure. P$_{\beta=0}$ flagged \SimFlagNoAdeq\ of withheld events (P: \SimFlagP), with an AUROC of \SimAucAblNoAdeq\ (P: \SimAucAblP). Removing the decay term did matter. P$_{\gamma=0}$ took \SimObsAllNoDecay\ measurements instead of \SimObsAllP, flagged \SimFlagNoDecay, and was confidently wrong on \SimCwWhNoDecayAll\ of withheld events. So in this setting, the decay term helps open-world detection mainly by stopping the planner from spending its horizon too early, which leaves $h_0$ enough data to work with.
+\paragraph{It is not the fastest.} We expected P to identify known events sooner than every baseline, and it did not. A cheap rule that measures where classifiers disagree got there first on the events it could identify (median \SimTtiBtwo\ against \SimTtiP), but it gave up on many of them, identifying only \SimIdBtwo\ of events against \SimIdP\ for P (Fig.~\ref{fig:tti}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/figures/fig1_tti.pdf}
+\caption{Simulation. Share of known events identified (posterior on the true class at least 0.95) against time since the alert. The disagreement rule B2 is quickest on the events it can identify, while P identifies almost all of them, a little later.}
+\label{fig:tti}
+\end{figure}
+
+\paragraph{Urgency helps fast events, but not all of them.} The decay term is meant to make the planner measure fast events before they fade. It did recover more information on kilonovae (\SimDeltaKilonova) and shock cooling (\SimDeltaShock) than on the slow GRB afterglow, but for the fastest class, the M-dwarf flare, it lost information (\SimDeltaFlare; Fig.~\ref{fig:decay}), and it reversed under model error. Its clearest benefit was indirect. Without it, the planner spent its measurements too early (\SimObsAllNoDecay\ instead of \SimObsAllP), which left $h_0$ too little data and raised confident errors on unknowns to \SimCwWhNoDecayAll. The term built to test $h_0$ directly ($\beta$) changed nothing we could measure.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/figures/fig2_decay.pdf}
+\caption{Simulation. Information about each event's brightness gained from the decay term (P minus P without it). It helps kilonovae and shock cooling, does little for the slow class, and hurts flares.}
+\label{fig:decay}
+\end{figure}
 
 \begin{table*}[t]
 \centering\scriptsize
@@ -35,4 +31,3 @@
 \label{tab:sim}
 \input{generated/table_sim}
 \end{table*}
-

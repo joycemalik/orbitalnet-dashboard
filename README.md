@@ -167,3 +167,11 @@ If you build upon or reference this work in academic research, please cite:
 ```
 
 Licensed under the [MIT License](LICENSE).
+
+## ▶️ Run the demo (one click)
+
+1. Make sure Memurai (Redis for Windows) is running.
+2. Double-click **`DEMO.bat`** (or run `python demo.py`).
+3. One browser tab opens:
+   - http://localhost:8501 — one console: **Operations** (Orbital View, Mission Dispatch, Auction Internals) and **Discovery** (Event Lab, Evidence, Experiment Archive, Anomaly Watch)
+4. Press Ctrl+C in the demo window to stop everything.

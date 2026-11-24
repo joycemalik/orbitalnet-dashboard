@@ -10,10 +10,15 @@
 
 \title{Keeping a ``None of the Above'' Hypothesis Matters More Than Planning With It: A Controlled Test for Transient Follow-Up}
 
-\author[0000-0000-0000-0000]{Joyce Malik}
-\affiliation{[Department], [Institution], [City], India}
-\email{corresponding.author@example.org}
-% TODO before submission: real ORCID, affiliation, email, and any co-authors.
+\author[0009-0001-8293-8064]{Joyce Malik}
+\affiliation{Department of Computer Science and Engineering, Dr. Ambedkar Institute of Technology, Bengaluru, India}
+\email{colossus@drait.edu.in}
+\author{Anup H}
+\affiliation{Department of Computer Science and Engineering, Dr. Ambedkar Institute of Technology, Bengaluru, India}
+\author{Moghitha B}
+\affiliation{Department of Computer Science and Engineering, Dr. Ambedkar Institute of Technology, Bengaluru, India}
+\author{Swathi Satish}
+\affiliation{Department of Computer Science and Engineering, Dr. Ambedkar Institute of Technology, Bengaluru, India}
 
 \begin{abstract}
 Information-driven follow-up planners for astronomical transients usually assume the event belongs to one of a fixed set of classes. We test, in a controlled toy problem in which planners select epochs retrospectively (without time ordering), what happens when it does not. Across \NEvents{} simulated fading transients (\NSeeds{} seeds), a closed-world expected-information-gain planner was confidently wrong on \BCwWith\% of events from a withheld class. Adding an explicit unmodeled hypothesis $h_0$, represented by a Gaussian process, to the posterior removes most of this failure. Planning with $h_0$ helped only modestly: the open-world planner flagged \PFlagWith\% of withheld events, against \BHFlagWith\% for the closed-world planner's measurements rescored with $h_0$. Randomly timed measurements rescored the same way flagged \RndHFlagWith\%. Information-gain planning, even with $h_0$, chose measurements that exposed model inadequacy less well than random timing, so inadequacy detection has to be designed into the planning objective explicitly.
@@ -44,7 +49,7 @@ In this setting, most of the benefit of an open-world treatment comes from the \
 This is a toy problem with retrospective epoch selection: strategies were not required to measure in time order, so it does not measure follow-up urgency (a causal study changes several conclusions; see the code repository). Further simplifications: two exponential classes, one withheld shape, fixed noise, fixed Gaussian process hyperparameters, a uniform class prior, no observability constraints and a single threshold. The results establish a failure mode and a design requirement, not performance in realistic follow-up. A study with published light-curve templates, real orbital visibility and a preregistered evaluation is in progress.
 
 \section*{Code availability}
-Simulator, planners, raw outputs and the script that generates every number here: \url{https://github.com/joycemalik/orbitalnet-dashboard} (branch \texttt{research/open-world-planner}). % TODO: replace with the Zenodo DOI of the tagged release.
+Simulator, planners, raw outputs and the script that generates every number here: \url{https://github.com/joycemalik/orbitalnet-dashboard} (branch \texttt{research/open-world-planner}).
 
 \begin{thebibliography}{}
 \bibitem[Bellm et al.(2019)]{Bellm2019} Bellm, E.~C., et al. 2019, PASP, 131, 018002

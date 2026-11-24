@@ -743,3 +743,66 @@ predicts, from real code on a real (if small) sample — not asserted a priori.
   continuous miscalibration story; Phase 2's AUROC-of-P(h0) metric is a more
   complete picture and should be treated as the primary evidence over this
   single-threshold number.
+
+## 2026-10-27 — New track: satellite anomaly hunt (branch research/sat-anomaly)
+
+Started a discovery-oriented track: detect unreported orbital anomalies
+(maneuvers, silent failures, storm drag response, GEO relocation/RPO, station
+reboosts, fragmentations) from public Space-Track TLE history across five
+target tiers (crewed stations, GEO inspectors, mega-constellations, large
+derelicts, science flagships). Plan: `research/anomaly/PLAN.md`. Detectors
+must recover documented events on the 2021–2023 validation window before a
+preregistration is committed and the held-out 2024-07 → 2026-10 window is run.
+No results yet.
+
+## 2026-10-27 — Anomaly track, Phase 3 (in progress): detector validation, 2021–2023
+
+Data: Space-Track gp_history for tiers A/B/D/E (1.63M element sets). Recall is
+measured on 7 sourced events (`research/anomaly/known_events.csv`: 5 ISS
+debris-avoidance maneuvers, the SJ-21 tow of Compass-G2 and its separation).
+False alarms are measured on tier D objects, which cannot thrust (412 objects,
+1148.7 object-years after excluding the first 30 days after launch and the
+final 180 days before decay). Grid: `research/results/anomaly/validation_grid.json`.
+
+What failed and was changed, in order (each change is justified by physics or
+data, not by score):
+1. A single bad TLE appeared as a ± pair of fake maneuvers → despike.
+2. Steps across tracking gaps looked like burns (median flagged gap was 5.8 d).
+   A hard gap cut cost recall: **Space-Track published no ISS elements
+   16–19 Jun 2022, around the sourced debris-avoidance burn**, and SJ-21 lost
+   tracking for 3.2 d mid-tow. Publication gaps coincide with maneuvers. →
+   the threshold now scales with the gap; gaps are not skipped.
+3. The Dec 3 2021 ISS lowering is spread over two element sets
+   (−0.164 then −0.307 km), because the fits lag the burn → the size floor
+   applies to the merged burn total.
+4. The lowering false alarms on derelicts cluster on the G3/G4 storm days of
+   Mar 23, Apr 23 and Nov 4–5 2023, and the top offenders were SL-16 debris
+   in final decay → storm tagging (GFZ Kp ≥ 6, ±1 d) plus the final-decay
+   exclusion. Storm lowerings are reported separately and belong to the atlas track.
+
+Current best region (z=15, min 0.5 km): recall 7/7, 70 non-storm false alarms
+(0.061 per object-year). Not frozen yet: n=7 positives is too small, so the
+known-event list should grow before preregistration.
+
+### Known-event sourcing: a source claim the data does not support
+Seradata ("what exactly is Shijian-17 up to") reports a manoeuvre that
+"reapplied an inclination of circa four degrees" around 2022-01-25. The
+Space-Track elements for SJ-17 (41838) show inclination rising smoothly from
+1.54° to 1.83° over Dec 2021 – Mar 2022 (~0.0025°/day, natural luni-solar
+drift), with no step. The event is **excluded** from known_events.csv. A
+known-event list must agree with the primary data. Luch-5X (55841) relocations
+reported by SatTrackCam Leiden (optical observations) are added with window=test:
+they are held out, to be checked only after thresholds are frozen.
+
+### Fragmentation from catalog order (validation window 2021-01 → 2024-07)
+`research/anomaly/fragmentation.py`: NORAD numbers are assigned in cataloging
+order, so cummax(LAUNCH_DATE) over NORAD number gives a lower bound on each
+number's catalog date. Bursts (≥5 pieces, ≤60 d apart) of DEB entries of one
+launch, cataloged ≥30 d after launch, are candidates. Output:
+`research/results/anomaly/fragmentation_bursts_2021-01-01_2024-07-01.csv`
+(49 bursts). It recovers the well-known breakups of the window (NOAA-17,
+Cosmos 1408 ASAT, CZ-6A/Yunhai-3, AEHF-4 Centaur, Cosmos 2499, H-2A stages),
+which is a first sanity check, not a scored validation. It also returns things
+that are not breakups (batch re-cataloging of old objects, Cosmos 1818 NaK
+coolant, crewed-mission debris), and these need a vetting rule. The held-out
+window has not been run.

@@ -5,8 +5,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from config import get_redis_client
+from ui.theme import hero, label as section
 
-st.set_page_config(layout="wide", page_title="Under the Hood | OrbitalNet OS", page_icon="\u2699\ufe0f")
 
 r = get_redis_client()
 
@@ -21,8 +21,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("\u2699\ufe0f Swarm Intelligence Forensics")
-st.caption("Breaking the black box. Every decision the swarm makes is logged, scored, and explained here.")
+hero("Operations · Auction Internals", "Swarm forensics", "Every bid, score and decision the swarm makes — logged and explained. No black box.", status="Forensics recording")
 
 # Auto-refresh — evaluated AFTER all tabs render (at bottom of script)
 col_r, col_s = st.columns([4, 1])
@@ -41,7 +40,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # TAB 1 - LIVE BIDDING ARENA
 # ============================================================
 with tab1:
-    st.markdown("### \U0001f3af Live Bidding Arena")
+    section("01", "Live bidding arena")
     st.markdown("Every active mission, its current enclave, and how long each satellite has been on contract.")
 
     try:
@@ -120,7 +119,7 @@ with tab1:
 # TAB 2 - AUCTION LEDGER
 # ============================================================
 with tab2:
-    st.markdown("### \U0001f9fe Contract Net Protocol (CNP) - Historical Auction Records")
+    section("02", "Contract-net auction records")
     st.markdown("Every completed auction, permanently logged with full mathematical transparency.")
 
     st.markdown("""
@@ -190,7 +189,7 @@ with tab2:
 # TAB 3 - NODE DEEP SCAN
 # ============================================================
 with tab3:
-    st.markdown("### \U0001f50d Node Deep Scan - Full Telemetry Vector")
+    section("03", "Node deep scan · full telemetry vector")
     st.caption("Select any satellite to inspect every parameter driving its real-time Ci capability score.")
 
     try:
@@ -283,7 +282,7 @@ with tab3:
 # TAB 4 - FLEET STATISTICS
 # ============================================================
 with tab4:
-    st.markdown("### Fleet Statistics - Real-Time Constellation Health")
+    section("04", "Fleet statistics")
 
     try:
         all_keys4 = r.keys("STARLINK-*")

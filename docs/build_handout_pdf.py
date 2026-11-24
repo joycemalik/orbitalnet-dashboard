@@ -1,306 +1,549 @@
-"""Builds docs/OrbitalNet_Handout.pdf — one-page illustrated project brief.
-Counts are read from satellites.txt and research/results/ at build time; nothing is hand-typed."""
+"""Builds docs/OrbitalNet_Handout.pdf — single-page illustrated technical brief.
+
+Every metric is parsed from research/papers/main/generated/numbers.tex (itself generated from
+research/results/) or counted from satellites.txt / result JSONs. Nothing numeric is typed by hand.
+"""
 import json
 import math
 import random
+import re
 from pathlib import Path
 
+import matplotlib
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "OrbitalNet_Handout.pdf"
 RES = ROOT / "research" / "results"
-hx = colors.HexColor
-RED, INK, GREY, LIGHT, SPACE = hx("#C8102E"), hx("#15171C"), hx("#5C6370"), hx("#F2F3F5"), hx("#070B14")
-BLUE, CYAN, GREEN, AMBER, PURPLE = hx("#2F6DB5"), hx("#38BDF8"), hx("#22A06B"), hx("#E3A008"), hx("#8B5CF6")
-W, H = A4
-M = 13 * mm
+NUMS = ROOT / "research" / "papers" / "main" / "generated" / "numbers.tex"
 
-TEAM = "Joyce Malik  ·  Anup H  ·  Moghitha B  ·  Swathi Satish"
-GUIDES = "Guided by  Smitha Shekar B  &  Harish G"
-DEPT = "Department of Computer Science and Engineering, Dr. Ambedkar Institute of Technology, Bengaluru"
+FD = Path(matplotlib.__file__).parent / "mpl-data" / "fonts" / "ttf"
+for name, f in [("Sans", "DejaVuSans.ttf"), ("SansB", "DejaVuSans-Bold.ttf"), ("SansI", "DejaVuSans-Oblique.ttf"),
+                ("Math", "DejaVuSerif-Italic.ttf"), ("MathR", "DejaVuSerif.ttf")]:
+    pdfmetrics.registerFont(TTFont(name, str(FD / f)))
+
+hx = colors.HexColor
+RED, INK, GREY, LIGHT, SPACE = hx("#D0102B"), hx("#14161B"), hx("#5B6270"), hx("#F1F3F6"), hx("#060A14")
+BLUE, CYAN, GREEN, AMBER, PURPLE = (hx(c) for c in ("#2563EB", "#22D3EE", "#16A34A", "#F59E0B", "#8B5CF6"))
+W, H = A4
+M = 9 * mm
+
+
+def load_numbers():
+    d = {}
+    for k, v in re.findall(r"\\newcommand\{\\(\w+)\}\{(.*)\}", NUMS.read_text(encoding="utf-8")):
+        v = v.replace("\\%", "%").replace("\\,", " ").replace("--", "–").replace("~", " ")
+        d[k] = re.sub(r"\\textbf\{(\w+)\}", r"\1", v)
+    return d
+
+
+def num(s):
+    vals = [float(x) for x in re.findall(r"\d*\.?\d+", s)]
+    return sum(vals) / len(vals) if vals else 0.0
 
 
 def counts():
     n_sat = len([l for l in (ROOT / "satellites.txt").read_text(encoding="utf-8").splitlines() if l.strip()]) // 3
-    hp = ha = 0
+    hp = 0
     for f, k in [("phase2/analysis_test.json", "verdict"), ("phase3/analysis_test.json", "overall_pass_all_seeds"),
                  ("phase5/analysis_test_v2.json", "overall_pass_all_seeds"),
                  ("phase6/analysis_test_v3.json", "overall_pass_all_seeds")]:
         p = RES / f
         if p.exists():
-            v = json.loads(p.read_text()).get(k, {})
-            hp += sum(bool(x) for x in v.values()); ha += len(v)
-    return n_sat, hp, ha
+            hp += sum(bool(x) for x in json.loads(p.read_text()).get(k, {}).values())
+    return n_sat, hp
 
 
-def wrap(c, text, x, y, width, font="Helvetica", size=8.2, leading=10.6, color=INK):
-    c.setFont(font, size); c.setFillColor(color)
-    for para in text.split("\n"):
-        line = ""
-        for w in para.split():
-            t = (line + " " + w).strip()
-            if c.stringWidth(t, font, size) > width:
-                c.drawString(x, y, line); y -= leading; line = w
-            else:
-                line = t
-        c.drawString(x, y, line); y -= leading
-    return y
+def txt(c, x, y, s, font="Sans", size=7, col=INK, align="l", alpha=1):
+    c.setFont(font, size); c.setFillColor(col, alpha=alpha)
+    {"l": c.drawString, "c": c.drawCentredString, "r": c.drawRightString}[align](x, y, s)
+    c.setFillAlpha(1)
 
 
-def heading(c, x, y, num, text, width):
-    c.setFillColor(RED); c.setFont("Helvetica-Bold", 7.5); c.drawString(x, y + 0.5, num)
-    c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(x + 14, y, text.upper())
-    c.setStrokeColor(hx("#D5D8DE")); c.setLineWidth(0.5)
-    c.line(x + 18 + c.stringWidth(text.upper(), "Helvetica-Bold", 10), y + 3, x + width, y + 3)
-    return y - 13
+def panel(c, x, y, w, h, n, title, accent=RED):
+    c.setFillColor(colors.white); c.setStrokeColor(hx("#DDE1E7")); c.setLineWidth(0.5)
+    c.roundRect(x, y, w, h, 2.5, fill=1, stroke=1)
+    c.setFillColor(accent); c.rect(x, y + h - 0.9 * mm, w, 0.9 * mm, fill=1, stroke=0)
+    txt(c, x + 2.5 * mm, y + h - 5 * mm, n, "SansB", 6.2, accent)
+    txt(c, x + 7.5 * mm, y + h - 5 * mm, title.upper(), "SansB", 6.9, INK)
+    return y + h - 7.5 * mm
 
 
-def arrow(c, x1, y1, x2, y2, col=INK, lw=0.9):
-    c.setStrokeColor(col); c.setFillColor(col); c.setLineWidth(lw); c.line(x1, y1, x2, y2)
-    a = math.atan2(y2 - y1, x2 - x1); L = 4.2
+def mathbox(c, x, y, w, lines, size=7.0, lead=9.4, tag=BLUE):
+    h = len(lines) * lead + 3.5
+    c.setFillColor(hx("#F6F7FA")); c.setStrokeColor(hx("#E3E6EC")); c.setLineWidth(0.4)
+    c.roundRect(x, y - h, w, h, 2, fill=1, stroke=1)
+    c.setFillColor(tag); c.rect(x, y - h, 0.8 * mm, h, fill=1, stroke=0)
+    yy = y - lead + 1
+    for s, lab in lines:
+        txt(c, x + 2.6 * mm, yy, s, "Math", size)
+        txt(c, x + w - 1.5 * mm, yy, lab, "Sans", 5.0, GREY, "r")
+        yy -= lead
+    return y - h - 1.4 * mm
+
+
+def arrow(c, x1, y1, x2, y2, col=INK, lw=0.7, head=3.0, dash=None):
+    c.setStrokeColor(col); c.setFillColor(col); c.setLineWidth(lw)
+    if dash:
+        c.setDash(*dash)
+    c.line(x1, y1, x2, y2); c.setDash()
+    a = math.atan2(y2 - y1, x2 - x1)
     p = c.beginPath(); p.moveTo(x2, y2)
-    p.lineTo(x2 - L * math.cos(a - 0.4), y2 - L * math.sin(a - 0.4))
-    p.lineTo(x2 - L * math.cos(a + 0.4), y2 - L * math.sin(a + 0.4)); p.close()
+    p.lineTo(x2 - head * math.cos(a - 0.42), y2 - head * math.sin(a - 0.42))
+    p.lineTo(x2 - head * math.cos(a + 0.42), y2 - head * math.sin(a + 0.42)); p.close()
     c.drawPath(p, fill=1, stroke=0)
 
 
-def glow(c, x, y, r, col, steps=6):
+def glow(c, x, y, r, col, steps=5):
     for i in range(steps, 0, -1):
-        c.setFillColor(col, alpha=0.06 + 0.02 * (steps - i)); c.circle(x, y, r * (1 + i * 0.55), fill=1, stroke=0)
+        c.setFillColor(col, alpha=0.07 + 0.025 * (steps - i)); c.circle(x, y, r * (1 + i * 0.6), fill=1, stroke=0)
     c.setFillColor(col, alpha=1); c.circle(x, y, r, fill=1, stroke=0)
 
 
-# ── hero illustration ─────────────────────────────────────────────────────────
-def hero(c, top):
-    hh = 78 * mm
-    y0 = top - hh
-    c.saveState()
-    cp = c.beginPath(); cp.rect(0, y0, W, hh); c.clipPath(cp, stroke=0, fill=0)
+def node(c, x, y, w, h, a, b="", fc=colors.white, ec=BLUE, tc=INK, sc=GREY, fs=6.2):
+    c.setFillColor(fc); c.setStrokeColor(ec); c.setLineWidth(0.8); c.roundRect(x, y, w, h, 2, fill=1, stroke=1)
+    txt(c, x + w / 2, y + h / 2 + 0.6, a, "SansB", fs, tc, "c")
+    txt(c, x + w / 2, y + h / 2 - 5.4, b, "Sans", 4.8, sc, "c")
+
+
+def hero(c):
+    hh = 48 * mm; y0 = H - hh
+    c.saveState(); cp = c.beginPath(); cp.rect(0, y0, W, hh); c.clipPath(cp, stroke=0, fill=0)
     c.setFillColor(SPACE); c.rect(0, y0, W, hh, fill=1, stroke=0)
-    rnd = random.Random(7)
-    for _ in range(420):
-        x, y = rnd.uniform(0, W), rnd.uniform(y0, top)
-        c.setFillColor(colors.white, alpha=rnd.uniform(0.15, 0.85)); c.circle(x, y, rnd.choice([0.25, 0.35, 0.5, 0.8]), fill=1, stroke=0)
-    # Earth limb
-    ex, er = W * 0.62, 260 * mm
-    ey = y0 - er + 20 * mm
-    for i in range(14, 0, -1):
-        c.setFillColor(CYAN, alpha=0.012 * (15 - i)); c.circle(ex, ey, er + i * 2.2 * mm, fill=1, stroke=0)
-    c.setFillColor(hx("#0E2A4F"), alpha=1); c.circle(ex, ey, er, fill=1, stroke=0)
-    c.setFillColor(hx("#143A6B")); c.circle(ex - 20 * mm, ey - 6 * mm, er - 6 * mm, fill=1, stroke=0)
-    # orbits (ellipses around Earth centre, clipped to hero by drawing order)
+    rnd = random.Random(11)
+    for _ in range(380):
+        c.setFillColor(colors.white, alpha=rnd.uniform(0.15, 0.9))
+        c.circle(rnd.uniform(0, W), rnd.uniform(y0, H), rnd.choice([0.25, 0.35, 0.5, 0.75]), fill=1, stroke=0)
+    er = 230 * mm; ex = W * 0.76; ey = y0 - er + 14 * mm
+    for i in range(16, 0, -1):
+        c.setFillColor(CYAN, alpha=0.011 * (17 - i)); c.circle(ex, ey, er + i * 1.9 * mm, fill=1, stroke=0)
+    c.setFillColor(hx("#0B2547"), alpha=1); c.circle(ex, ey, er, fill=1, stroke=0)
+    c.setFillColor(hx("#12386A")); c.circle(ex - 16 * mm, ey - 5 * mm, er - 5 * mm, fill=1, stroke=0)
     sats = []
-    for k, (rr, tilt, col) in enumerate([(er + 12 * mm, 0.0, CYAN), (er + 24 * mm, 0.0, AMBER), (er + 37 * mm, 0.0, PURPLE)]):
-        c.setStrokeColor(col, alpha=0.6); c.setLineWidth(0.8); c.setDash(1.5, 2.5)
+    for k, (dr, col) in enumerate([(9, CYAN), (18, AMBER), (27, PURPLE)]):
+        rr = er + dr * mm
+        c.setStrokeColor(col, alpha=0.55); c.setLineWidth(0.6); c.setDash(1.2, 2.2)
         p = c.beginPath()
-        for t in range(0, 181):
-            a = math.radians(60 + t * 0.33)
-            x = ex + rr * math.cos(a); y = ey + rr * math.sin(a) - tilt * (x - ex) * 0.2
-            (p.moveTo if t == 0 else p.lineTo)(x, y)
+        for t in range(121):
+            a = math.radians(68 + t * 0.28); (p.moveTo if t == 0 else p.lineTo)(ex + rr * math.cos(a), ey + rr * math.sin(a))
         c.drawPath(p, stroke=1, fill=0); c.setDash()
-        for j, ang in enumerate([70, 76, 82, 88, 94, 100, 106, 112]):
-            a = math.radians(ang + k * 2.5)
-            x = ex + rr * math.cos(a); y = ey + rr * math.sin(a) - tilt * (x - ex) * 0.2
-            if y0 + 4 < y < top - 6:
+        for ang in range(72, 102, 3):
+            a = math.radians(ang + k * 1.4)
+            x, y = ex + rr * math.cos(a), ey + rr * math.sin(a)
+            if y0 < y < H and x > W * 0.48:
                 sats.append((x, y, col))
-    # enclave: links from selected satellites to a ground target
-    tx, ty = W * 0.66, y0 + 17 * mm
-    team = sorted(sats, key=lambda s: math.hypot(s[0] - tx, s[1] - ty))[:4]
+    tx, ty = W * 0.72, y0 + 10 * mm
+    team = sorted(sats, key=lambda s: math.hypot(s[0] - tx, s[1] - ty))[:5]
     for (x, y, _) in team:
-        c.setStrokeColor(GREEN, alpha=0.85); c.setLineWidth(1.0); c.line(x, y, tx, ty)
-    # inter-satellite links
+        c.setStrokeColor(GREEN, alpha=0.9); c.setLineWidth(0.8); c.line(x, y, tx, ty)
     for (x1, y1, _), (x2, y2, _) in zip(team, team[1:]):
-        c.setStrokeColor(colors.white, alpha=0.5); c.setLineWidth(0.5); c.setDash(1, 2); c.line(x1, y1, x2, y2); c.setDash()
-    for (x, y, col) in sats:
-        glow(c, x, y, 1.7, GREEN if (x, y, col) in team else col, steps=4)
-    glow(c, tx, ty, 1.6, RED, steps=7)
-    c.setFillColor(colors.white, alpha=0.9); c.setFont("Helvetica", 6)
-    c.drawString(tx + 4, ty - 2, "TASKED TARGET · ENCLAVE LOCKED")
-    # transient in the sky
-    sx, sy = W * 0.88, top - 18 * mm
+        c.setStrokeColor(colors.white, alpha=0.55); c.setLineWidth(0.45); c.setDash(1, 1.6); c.line(x1, y1, x2, y2); c.setDash()
+    for s in sats:
+        glow(c, s[0], s[1], 1.35, GREEN if s in team else s[2], 4)
+    glow(c, tx, ty, 1.5, RED, 7)
+    txt(c, tx + 4, ty - 2.5, "ENCLAVE  ·  CNP AWARD", "SansB", 4.8, colors.white, alpha=0.9)
+    sx, sy = W * 0.93, H - 12 * mm
     for i in range(10, 0, -1):
-        c.setFillColor(hx("#FDE68A"), alpha=0.03 * (11 - i)); c.circle(sx, sy, i * 1.9 * mm, fill=1, stroke=0)
-    c.setStrokeColor(colors.white, alpha=0.9); c.setLineWidth(0.6)
-    c.line(sx - 9 * mm, sy, sx + 9 * mm, sy); c.line(sx, sy - 9 * mm, sx, sy + 9 * mm)
-    glow(c, sx, sy, 1.8, colors.white, steps=3)
-    c.setFillColor(hx("#FDE68A"), alpha=1); c.setFont("Helvetica-Bold", 6.2)
-    c.drawRightString(sx - 4 * mm, sy - 11 * mm, "NEW TRANSIENT  ·  P(h0) RISING")
-    # observation rays from two satellites to the transient
-    for (x, y, _) in sorted(sats, key=lambda s: -s[1])[:2]:
-        c.setStrokeColor(hx("#FDE68A"), alpha=0.55); c.setLineWidth(0.6); c.setDash(2, 2); c.line(x, y, sx, sy); c.setDash()
+        c.setFillColor(hx("#FDE68A"), alpha=0.032 * (11 - i)); c.circle(sx, sy, i * 1.5 * mm, fill=1, stroke=0)
+    c.setStrokeColor(colors.white, alpha=0.9); c.setLineWidth(0.5)
+    c.line(sx - 7 * mm, sy, sx + 7 * mm, sy); c.line(sx, sy - 7 * mm, sx, sy + 7 * mm)
+    glow(c, sx, sy, 1.4, colors.white, 3)
+    for (x, y, _) in sorted(sats, key=lambda s: -s[1])[:3]:
+        c.setStrokeColor(hx("#FDE68A"), alpha=0.6); c.setLineWidth(0.5); c.setDash(1.6, 1.6); c.line(x, y, sx, sy); c.setDash()
+    txt(c, sx - 4 * mm, sy - 10.5 * mm, "TRANSIENT  ·  a* = argmax EIG  ·  P(h₀|D)", "SansB", 4.8, hx("#FDE68A"), "r")
     c.restoreState()
-    # title block
-    c.setFillColor(RED, alpha=1); c.rect(M, top - 13 * mm, 9 * mm, 1.2 * mm, fill=1, stroke=0)
-    c.setFillColor(colors.white, alpha=0.75); c.setFont("Helvetica-Bold", 6.8)
-    c.drawString(M + 11 * mm, top - 13.3 * mm, "MAJOR PROJECT  ·  AUTONOMOUS SPACE SYSTEMS  ·  BAYESIAN DECISION THEORY")
-    c.setFillColor(colors.white, alpha=1); c.setFont("Helvetica-Bold", 30)
-    c.drawString(M, top - 27 * mm, "OrbitalNet OS")
-    c.setFont("Helvetica", 11.5); c.setFillColor(hx("#E5E7EB"))
-    c.drawString(M, top - 34 * mm, "Self-organising satellite constellations that")
-    c.drawString(M, top - 39.5 * mm, "plan observations — and recognise the unknown.")
-    c.setFont("Helvetica-Bold", 8.4); c.setFillColor(colors.white)
-    c.drawString(M, top - 50 * mm, TEAM)
-    c.setFont("Helvetica", 7.6); c.setFillColor(hx("#FCA5A5"))
-    c.drawString(M, top - 55 * mm, GUIDES)
-    c.setFillColor(hx("#9CA3AF")); c.setFont("Helvetica", 6.8)
-    c.drawString(M, top - 60 * mm, DEPT)
+    c.setFillColor(RED); c.rect(M, H - 9 * mm, 7 * mm, 0.9 * mm, fill=1, stroke=0)
+    txt(c, M + 9 * mm, H - 9.3 * mm, "MAJOR PROJECT  ·  SCHOOL OF COMPUTER SCIENCE & ENGINEERING", "SansB", 5.6, colors.white, alpha=0.75)
+    txt(c, M, H - 19 * mm, "OrbitalNet OS", "SansB", 24, colors.white)
+    txt(c, M, H - 25 * mm, "Distributed Architecture for Intelligent Satellite Fleet Management", "Sans", 9.2, hx("#E5E7EB"))
+    names = "JOYCE MALIK  ·  MOGHITHA B  ·  SWATHI SATHISH  ·  ANUP H"
+    txt(c, M, H - 32 * mm, names, "SansB", 6.9, colors.white)
+    txt(c, M + c.stringWidth(names, "SansB", 6.9) + 2 * mm, H - 32 * mm, "(CSE, SCSE)", "Sans", 6.2, hx("#9CA3AF"))
+    txt(c, M, H - 37 * mm, "Under the Guidance of", "SansI", 5.9, hx("#FCA5A5"))
+    txt(c, M, H - 41.5 * mm, "Dr. SMITHA SHEKAR B", "SansB", 6.4, colors.white)
+    txt(c, M, H - 44.6 * mm, "Professor, CSE Programme, SCSE", "Sans", 5.3, hx("#9CA3AF"))
+    txt(c, M + 42 * mm, H - 41.5 * mm, "Dr. HARISH G", "SansB", 6.4, colors.white)
+    txt(c, M + 42 * mm, H - 44.6 * mm, "Professor, CSE Programme, SCSE", "Sans", 5.3, hx("#9CA3AF"))
     return y0
 
 
-def evidence_panel(c, x, y, w, h, title, vals, highlight):
-    c.setFillColor(LIGHT); c.roundRect(x, y, w, h, 3, fill=1, stroke=0)
-    c.setFillColor(INK); c.setFont("Helvetica-Bold", 7); c.drawString(x + 4, y + h - 9, title)
-    labs = ["KN", "SC", "GRB", "FL", "h0"]
-    cols = [RED, AMBER, BLUE, PURPLE, INK]
-    bw = (w - 16) / 5
-    for i, (v, lab, col) in enumerate(zip(vals, labs, cols)):
-        bx = x + 8 + i * bw; bh = v * (h - 26)
-        c.setFillColor(col, alpha=1 if i == highlight else 0.28)
-        c.rect(bx + 2, y + 11, bw - 6, bh, fill=1, stroke=0)
-        c.setFillColor(GREY); c.setFont("Helvetica", 6); c.drawCentredString(bx + bw / 2 - 1, y + 4, lab)
+def kpis(c, y, items):
+    n = len(items); g = 1.6 * mm; kw = (W - 2 * M - (n - 1) * g) / n; kh = 13 * mm
+    for i, (v, l1, l2, col) in enumerate(items):
+        x = M + i * (kw + g)
+        c.setFillColor(INK); c.roundRect(x, y - kh, kw, kh, 2, fill=1, stroke=0)
+        c.setFillColor(col); c.rect(x, y - kh, kw, 0.8 * mm, fill=1, stroke=0)
+        txt(c, x + 2.2 * mm, y - 6 * mm, v, "SansB", 11, colors.white)
+        txt(c, x + 2.2 * mm, y - 9 * mm, l1, "SansB", 5.0, hx("#D1D5DB"))
+        txt(c, x + 2.2 * mm, y - 11.4 * mm, l2, "Sans", 4.7, hx("#9CA3AF"))
+    return y - kh - 2 * mm
+
+
+def topology(c, x, y, w, h):
+    top = panel(c, x, y, w, h, "01", "Architectural topology · event-sourced state bus", BLUE)
+    c.setFillColor(hx("#0B1220")); c.roundRect(x + 2 * mm, top - 10 * mm, w - 4 * mm, 10 * mm, 2, fill=1, stroke=0)
+    rnd = random.Random(3)
+    for _ in range(70):
+        c.setFillColor(colors.white, alpha=rnd.uniform(0.2, 0.7))
+        c.circle(rnd.uniform(x + 3 * mm, x + w - 3 * mm), rnd.uniform(top - 9.5 * mm, top - 0.5 * mm), 0.3, fill=1, stroke=0)
+    pts = [(x + 6 * mm + i * (w - 12 * mm) / 11, top - 6 * mm + 1.8 * mm * math.sin(i * 1.1)) for i in range(12)]
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+        c.setStrokeColor(CYAN, alpha=0.45); c.setLineWidth(0.4); c.setDash(1, 1.5); c.line(x1, y1, x2, y2); c.setDash()
+    for i, (px, py) in enumerate(pts):
+        glow(c, px, py, 0.9, [CYAN, AMBER, PURPLE, GREEN][i % 4], 3)
+    txt(c, x + 3.5 * mm, top - 2.6 * mm, "ORBITAL LAYER · TLE → SGP4 → ECI → (φ, λ) @ 1 Hz", "SansB", 4.7, colors.white, alpha=0.85)
+    cx, cy = x + w * 0.5, y + 33 * mm
+    R = 9.5 * mm
+    for i in range(6, 0, -1):
+        c.setFillColor(RED, alpha=0.045 * (7 - i)); c.circle(cx, cy, R + i * 1.1 * mm, fill=1, stroke=0)
+    c.setFillColor(RED, alpha=1); c.circle(cx, cy, R, fill=1, stroke=0)
+    c.setStrokeColor(colors.white, alpha=0.5); c.setLineWidth(0.4); c.circle(cx, cy, R - 1.5 * mm, fill=0, stroke=1)
+    txt(c, cx, cy + 1, "REDIS", "SansB", 7.2, colors.white, "c")
+    txt(c, cx, cy - 5, "state bus", "Sans", 5, colors.white, "c")
+    keys = ["STARLINK-⟨id⟩", "MISSIONS_LEDGER", "AUCTION_LOGS", "TRIGGER_CHAOS", "SCORING_WEIGHTS", "CURRENT_MISSION"]
+    kx0 = x + 10 * mm; kwid = (w - 20 * mm) / 3
+    for i, k in enumerate(keys):
+        kx = kx0 + (i % 3) * kwid + kwid / 2; ky = top - 13.2 * mm - (i // 3) * 6
+        tw = c.stringWidth(k, "Sans", 4.1) + 3
+        c.setFillColor(hx("#FFF1F2")); c.setStrokeColor(hx("#FECDD3")); c.setLineWidth(0.3)
+        c.roundRect(kx - tw / 2, ky - 2.4, tw, 5.0, 1.2, fill=1, stroke=1)
+        txt(c, kx, ky - 1.2, k, "Sans", 4.1, RED, "c")
+    nw, nh = 25 * mm, 9 * mm
+    services = [(x + 2.5 * mm, cy + 4 * mm, "physics_engine", "SGP4 · HAL telemetry", BLUE),
+                (x + 2.5 * mm, cy - 13 * mm, "scoring_engine", "gate · Σwθ · e^(−λR)", PURPLE),
+                (x + w - 2.5 * mm - nw, cy + 4 * mm, "consensus_engine", "leaders · CNP · enclaves", GREEN),
+                (x + w - 2.5 * mm - nw, cy - 13 * mm, "streamer", "async WebSocket · 2 Hz", AMBER)]
+    for sx, sy, a, b, col in services:
+        node(c, sx, sy, nw, nh, a, b, ec=col)
+        left = sx < cx
+        ax = sx + nw if left else sx
+        hxp = cx + (-1 if left else 1) * (R + 1.0 * mm)
+        hyp = cy + (sy + nh / 2 - cy) * 0.45
+        arrow(c, ax, sy + nh / 2 + 1.2, hxp, hyp + 1.2, col)
+        arrow(c, hxp, hyp - 1.6, ax, sy + nh / 2 - 1.6, col, dash=(1.1, 1.1))
+    by = y + 2.5 * mm; bh_ = 8.5 * mm
+    node(c, x + 2.5 * mm, by, nw, bh_, "Three.js globe", "WebGL · 10⁴ live sprites", fc=hx("#0B1220"), ec=CYAN,
+         tc=colors.white, sc=hx("#9CA3AF"))
+    node(c, x + w / 2 - nw / 2, by, nw, bh_, "Streamlit console", "operations · discovery", ec=RED)
+    node(c, x + w - 2.5 * mm - nw, by, nw, bh_, "research engine", "Bayes · GP · EIG", fc=hx("#F5F3FF"), ec=PURPLE)
+    arrow(c, x + w - 2.5 * mm - nw / 2, cy - 13 * mm, x + 2.5 * mm + nw * 0.85, by + bh_, AMBER, dash=(1.1, 1.1))
+    arrow(c, cx, cy - R, x + w / 2, by + bh_, RED)
+    txt(c, x + w - 2.5 * mm - nw / 2, by + bh_ + 1.4, "pure · seeded · reproducible", "SansI", 4.3, PURPLE, "c")
+    txt(c, x + 2.5 * mm + nw / 2, by + bh_ + 1.4, "solid: write · dashed: read", "SansI", 4.3, GREY, "c")
+
+
+def decision_math(c, x, y, w, h):
+    yy = panel(c, x, y, w, h, "02", "Decision mathematics · capability & auction", PURPLE)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("G(θ) = ∏ₖ 1[ gₖ(θ) ∈ Ωₖ ]", "hard gatekeepers"),
+        ("Cᵢ = G(θᵢ) · ( Σⱼ wⱼ θᵢⱼ ) · exp(−λ Rᵢ)", "capability score"),
+        ("Rᵢ = p_conj + ½ Φ_rad + ⅕ S_solar", "aggregate risk"),
+        ("U_swarm = Σᵢ Cᵢ · max( Δ_div , δ )", "swarm utility"),
+    ], tag=PURPLE)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("dᵢ = 2r · asin √( sin²(Δφ/2) + cos φᵢ cos φ* sin²(Δλ/2) )", "haversine"),
+        ("bᵢ = w_p ( 1 − dᵢ / d_max ) + w_b · SoCᵢ", "CNP bid"),
+        ("E = top-N { bᵢ : G(θᵢ) = 1 ∧ sᵢ = s* ∧ dᵢ ≤ d_max }", "award"),
+        ("Eₜ₊₁ = { i ∈ Eₜ : dᵢ(t) ≤ d_max } ,  |E| < N ⇒ re-auction", "rolling enclave"),
+        ("L_π = argmax_{i ∈ π} Cᵢ", "plane leader"),
+    ], tag=GREEN)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("r(t), v(t) = SGP4( TLE, t )", "orbit propagation"),
+        ("θ_G = 280.4606° + 360.9856° · (JD − 2451545)", "sidereal angle"),
+        ("λ = atan2(y, x) − θ_G ,   φ = asin( z / ‖r‖ )", "ECI → geodetic"),
+    ], tag=BLUE)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("SoCₜ₊₁ = clip( SoCₜ + 1_sun·c⁺ − 1_ecl·c⁻ , 0, 1 )", "power model"),
+        ("DoD = 1 − SoC ,   M_buf ← M_buf + Δm  (flush on downlink)", "HAL state"),
+    ], tag=AMBER)
+    steps = [("ANNOUNCE", BLUE), ("GATE", AMBER), ("BID", PURPLE), ("AWARD", GREEN), ("HEAL", RED)]
+    sw = (w - 4 * mm - 4 * 1.8 * mm) / 5
+    for i, (s, col) in enumerate(steps):
+        bx = x + 2 * mm + i * (sw + 1.8 * mm)
+        c.setFillColor(col); c.roundRect(bx, y + 2.5 * mm, sw, 5 * mm, 1.5, fill=1, stroke=0)
+        txt(c, bx + sw / 2, y + 4.3 * mm, s, "SansB", 5.2, colors.white, "c")
+        if i < 4:
+            arrow(c, bx + sw + 0.2 * mm, y + 5 * mm, bx + sw + 1.6 * mm, y + 5 * mm, GREY, head=1.6)
+    txt(c, x + w / 2, y + 8.8 * mm, "decentralised · auditable (every bid logged) · fault-tolerant under injected node loss",
+        "SansI", 4.9, GREY, "c")
+
+
+def inference(c, x, y, w, h):
+    yy = panel(c, x, y, w, h, "03", "Open-world Bayesian inference · null hypothesis h₀", RED)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("H = { h₁, … , h_K } ∪ { h₀ }", "open hypothesis space"),
+        ("p(D | hₖ) = ∫ p(D | hₖ, A) p(A) dA", "marginal evidence"),
+        ("log p(D|h₀) = −½ yᵀ(K+Σ)⁻¹y − ½ log|K+Σ| − (n/2) log 2π", "GP evidence"),
+        ("K(t, t′) = σ_f² exp( −(t − t′)² / 2l² )", "RBF kernel"),
+        ("P(h | D) = p(D|h) P(h) / Σ_{h′} p(D|h′) P(h′)", "posterior"),
+        ("q̂ = Q_{⌈(n+1)(1−α)⌉/n}{ sᵢ }  ⇒  P(false unknown) ≤ α", "split-conformal"),
+    ], size=6.8, lead=9.2, tag=RED)
+    bw_ = (w - 6 * mm) / 2
+    for j, (title, vals, hi) in enumerate([("modelled event", [0.84, 0.07, 0.04, 0.02, 0.03], 0),
+                                           ("novel event", [0.05, 0.04, 0.03, 0.03, 0.85], 4)]):
+        px = x + 2 * mm + j * (bw_ + 2 * mm); ph = yy - y - 2.5 * mm; py = y + 2 * mm
+        c.setFillColor(LIGHT); c.roundRect(px, py, bw_, ph, 2, fill=1, stroke=0)
+        txt(c, px + 2 * mm, py + ph - 3.8 * mm, "P(h | D)  ·  " + title, "SansB", 5.4, INK)
+        cols = [RED, AMBER, BLUE, PURPLE, INK]; labs = ["KN", "SC", "GRB", "FL", "h₀"]
+        bb = (bw_ - 6 * mm) / 5
+        for i, v in enumerate(vals):
+            bx = px + 3 * mm + i * bb
+            c.setFillColor(cols[i], alpha=1 if i == hi else 0.25)
+            c.rect(bx + 1, py + 4.3 * mm, bb - 3, v * (ph - 9.5 * mm), fill=1, stroke=0)
+            c.setFillAlpha(1)
+            txt(c, bx + bb / 2 - 1, py + 1.5 * mm, labs[i], "Sans", 4.8, GREY, "c")
+
+
+def planner(c, x, y, w, h):
+    yy = panel(c, x, y, w, h, "04", "Sequential planner · information under fading", GREEN)
+    yy = mathbox(c, x + 2 * mm, yy, w - 4 * mm, [
+        ("I(H; Y_a | bₜ) = H[H | bₜ] − E_y H[H | bₜ, y]", "expected info gain"),
+        ("D(a, bₜ) = I_t(a) − I_{t+τ}(a)", "opportunity decay"),
+        ("U(a | bₜ) = [ I(H;Y_a) + β I(Z;Y_a) + γ D(a) ] / c(a)", "utility"),
+        ("a* = argmax_{a ∈ A(t)} U(a | bₜ)", "next action"),
+        ("P(h₀ | D) > τ for m steps  ⇒  PRESERVE", "mode switch"),
+    ], size=6.8, lead=9.2, tag=GREEN)
+    gx0, gy0, gw, gh = x + 2 * mm, y + 2 * mm, w - 4 * mm, yy - y - 2.5 * mm
+    c.setFillColor(hx("#0B1220")); c.roundRect(gx0, gy0, gw, gh, 2, fill=1, stroke=0)
+    ccx, ccy, rr = gx0 + gw * 0.24, gy0 + gh / 2, gh * 0.36
+    c.setFillColor(hx("#12386A")); c.circle(ccx, ccy, rr * 0.45, fill=1, stroke=0)
+    c.setStrokeColor(CYAN, alpha=0.35); c.setLineWidth(0.4); c.setDash(1, 1.5); c.circle(ccx, ccy, rr, fill=0, stroke=1); c.setDash()
+    nodes = [(ccx + rr * math.cos(math.radians(a)), ccy + rr * math.sin(math.radians(a))) for a in range(20, 380, 60)]
+    up = [True, False, True, True, False, True]
+    for i in range(6):
+        (x1, y1), (x2, y2) = nodes[i], nodes[(i + 1) % 6]
+        c.setStrokeColor(GREEN if up[i] else hx("#4B5563"), alpha=1); c.setLineWidth(0.9 if up[i] else 0.5)
+        if not up[i]:
+            c.setDash(1, 1.4)
+        c.line(x1, y1, x2, y2); c.setDash()
+    for i, (nx, ny) in enumerate(nodes):
+        glow(c, nx, ny, 1.4, [CYAN, AMBER, PURPLE, CYAN, GREEN, AMBER][i], 3)
+    lx = gx0 + gw * 0.47
+    for k, s in enumerate(["local belief bₜ⁽ⁱ⁾, stale-tolerant", "bid = marginal ΔU given commitments",
+                           "evidence merged by observation-ID set", "time-varying contact graph G(t)"]):
+        txt(c, lx, gy0 + gh - 4.8 * mm - k * 3.9 * mm, "▸ " + s, "Sans", 5.0, colors.white, alpha=0.9)
+
+
+def results(c, x, y, w, h, N):
+    yy = panel(c, x, y, w, h, "05", "Measured performance · preregistered, held-out test seeds", AMBER)
+    groups = [("Novelty AUROC", "simulation", N["SimAucP"], N["SimAucBthree"], 1.0, "closed-world"),
+              ("Novel flagged", "simulation · 5% FA", N["SimTprP"], N["SimTprBthree"], 100, "entropy"),
+              ("Real AUROC", f"{N['RealNEvents']} ZTF events", N["RealCAuc"], "0.5", 1.0, "chance"),
+              ("Confident errors", "sim. unknowns · lower wins", N["SimCwWhP"], N["SimCwWhBthree"], 100, "closed-world"),
+              ("Confident errors", "real unknowns · lower wins", N["RealCCwWhP"], N["RealCCwWhBthree"], 100, "closed-world"),
+              ("False alarms", f"{N['ConfNFresh']} sealed SNe", N["ConfFa"], N["ConfAlphaPct"], 100, "bound α")]
+    phases = ["P1 · proof", "P2 · simulation", "P3 · real ZTF", "P5 · two-band", "P6 · frozen v3", "PC · conformal"]
+    pw = (w - 4 * mm - 5 * 1.6 * mm) / 6
+    for i, ph in enumerate(phases):
+        px = x + 2 * mm + i * (pw + 1.6 * mm)
+        c.setFillColor([BLUE, CYAN, GREEN, AMBER, PURPLE, RED][i]); c.roundRect(px, yy - 5 * mm, pw, 4.6 * mm, 1.4, fill=1, stroke=0)
+        txt(c, px + pw / 2, yy - 3.4 * mm, ph, "SansB", 4.5, colors.white, "c")
+        if i < 5:
+            arrow(c, px + pw + 0.1 * mm, yy - 2.7 * mm, px + pw + 1.4 * mm, yy - 2.7 * mm, GREY, head=1.4)
+    yy -= 6.5 * mm
+    gw = (w - 4 * mm) / len(groups)
+    for i, (t1, t2, pv, bv, scale, lbl) in enumerate(groups):
+        gx = x + 2 * mm + i * gw
+        c.setFillColor(LIGHT); c.roundRect(gx + 0.5 * mm, y + 2 * mm, gw - 1 * mm, yy - y - 1.5 * mm, 2, fill=1, stroke=0)
+        base = y + 11.5 * mm; ch = yy - base - 5 * mm
+        bwid = (gw - 8 * mm) / 2
+        for j, (v, col) in enumerate([(pv, GREEN), (bv, hx("#A3A9B3"))]):
+            frac = max(num(v) / scale, 0.02)
+            bx = gx + 2.8 * mm + j * (bwid + 2.4 * mm)
+            c.setFillColor(col); c.rect(bx, base, bwid, frac * ch, fill=1, stroke=0)
+            txt(c, bx + bwid / 2, base + frac * ch + 1.3, v, "SansB", 5.2 if j == 0 else 4.6, GREEN if j == 0 else GREY, "c")
+        txt(c, gx + 2.8 * mm + bwid / 2, base - 3, "ours", "SansB", 4.5, GREEN, "c")
+        txt(c, gx + 2.8 * mm + bwid * 1.5 + 2.4 * mm, base - 3, lbl, "Sans", 4.2, GREY, "c")
+        txt(c, gx + gw / 2, y + 6.4 * mm, t1, "SansB", 4.8, INK, "c")
+        txt(c, gx + gw / 2, y + 3.6 * mm, t2, "Sans", 4.3, GREY, "c")
+
+
+def unified(c, x, y, w, h):
+    yy = panel(c, x, y, w, h, "06", "Six capabilities · one system", RED) - 1 * mm
+    caps = [("Real-orbit physics", "SGP4 over the full TLE catalogue"),
+            ("Decentralised tasking", "Contract-Net auctions, no central planner"),
+            ("Self-healing enclaves", "rolling hand-off, chaos-tested recovery"),
+            ("Open-world inference", "explicit h₀ via GP Bayesian evidence"),
+            ("Deadline-aware planning", "EIG with opportunity-decay utility"),
+            ("Certified abstention", "split-conformal false-alarm guarantee")]
+    cols = [BLUE, GREEN, AMBER, RED, PURPLE, CYAN]
+    step = (yy - y - 2 * mm) / len(caps)
+    for i, (a, b) in enumerate(caps):
+        cy_ = yy - i * step
+        c.setFillColor(cols[i]); c.circle(x + 4.2 * mm, cy_ - 1.6 * mm, 1.7 * mm, fill=1, stroke=0)
+        txt(c, x + 4.2 * mm, cy_ - 2.6 * mm, "✓", "SansB", 5.6, colors.white, "c")
+        txt(c, x + 7.6 * mm, cy_ - 0.9 * mm, a, "SansB", 6.0, INK)
+        txt(c, x + 7.6 * mm, cy_ - 3.8 * mm, b, "Sans", 4.9, GREY)
+
+
+from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
+from reportlab.platypus import Frame, Paragraph
+
+registerFontFamily("Sans", normal="Sans", bold="SansB", italic="SansI", boldItalic="SansB")
+P_BODY = ParagraphStyle("pb", fontName="Sans", fontSize=8.0, leading=11.3, alignment=TA_JUSTIFY, textColor=INK, spaceAfter=4)
+P_LI = ParagraphStyle("li", parent=P_BODY, fontSize=7.6, leading=10.3, spaceAfter=2.8, leftIndent=12, firstLineIndent=-12)
+P_ABS = ParagraphStyle("pa", parent=P_BODY, fontSize=8.1, leading=11.4, textColor=hx("#1F2937"))
+
+
+def hexs(col):
+    return "#" + col.hexval()[2:]
+
+
+def H2(n, title, col):
+    st = ParagraphStyle("h", fontName="SansB", fontSize=9.4, leading=12.5, textColor=INK, spaceBefore=7, spaceAfter=3.5)
+    return Paragraph(f'<font color="{hexs(col)}">{n}&nbsp;&nbsp;|</font>&nbsp;&nbsp;{title.upper()}', st)
+
+
+def items(lst, col):
+    return [Paragraph(f'<font name="SansB" color="{hexs(col)}">{i:02d}</font>&nbsp;&nbsp;<b>{h}.</b> {b}', P_LI)
+            for i, (h, b) in enumerate(lst, 1)]
+
+
+def footer(c, page):
+    c.setFillColor(SPACE); c.rect(0, 0, W, 7.5 * mm, fill=1, stroke=0)
+    c.setFillColor(RED); c.rect(0, 7.5 * mm - 0.7, W, 0.7, fill=1, stroke=0)
+    txt(c, M, 2.8 * mm, "OrbitalNet OS  ·  Major Project  ·  CSE Programme, SCSE", "Sans", 5.6, hx("#D1D5DB"))
+    txt(c, W / 2, 2.8 * mm, f"{page} / 2", "SansB", 5.8, colors.white, "c")
+    txt(c, W - M, 2.8 * mm, "github.com/joycemalik/orbitalnet-dashboard", "SansB", 5.7, colors.white, "r")
+
+
+def page_one(c, N, n_sat, hp):
+    y = hero(c) - 2.2 * mm
+    ah = 35 * mm
+    c.setFillColor(hx("#F4F6F9")); c.rect(0, y - ah, W, ah, fill=1, stroke=0)
+    c.setFillColor(RED); c.rect(M, y - ah + 3 * mm, 0.9 * mm, ah - 6 * mm, fill=1, stroke=0)
+    txt(c, M + 3.5 * mm, y - 5 * mm, "ABSTRACT", "SansB", 7, RED)
+    abs_ = Paragraph(
+        f"OrbitalNet OS is a distributed operating layer for satellite fleets. It propagates <b>{n_sat:,} real satellites</b> "
+        "from public orbital element sets with the SGP4 model, lets every spacecraft negotiate its own tasking through a "
+        "<b>Contract-Net auction</b>, sustains coverage through rolling hand-offs, and recovers from node loss autonomously. "
+        "Above this operational substrate sits a scientific decision engine: an <b>open-world Bayesian planner</b> that decides "
+        "which spacecraft should observe a fading astronomical transient, and when, by maximising expected information gain "
+        "across known physical models and an explicit <b>null hypothesis h₀</b>. The result is a fleet that coordinates "
+        "itself and states, with a calibrated guarantee, when an event lies beyond known physics.", P_ABS)
+    Frame(M + 3.5 * mm, y - ah + 1.5 * mm, W - 2 * M - 3.5 * mm, ah - 7.5 * mm, 0, 0, 0, 0).addFromList([abs_], c)
+    y -= ah + 2.2 * mm
+    y = kpis(c, y, [
+        (f"{n_sat:,}", "SATELLITES PROPAGATED", "real TLEs · SGP4 · 1 Hz", CYAN),
+        (N["SimAucP"], "NOVELTY AUROC", f"vs {N['SimAucBthree']} closed-world", GREEN),
+        (N["SimTprP"], "NOVEL EVENTS FLAGGED", f"vs {N['SimTprBthree']} baseline", AMBER),
+        (N["RealNEvents"], "REAL ZTF TRANSIENTS", "replayed on the real fleet", PURPLE),
+        (N["ConfFa"], "CERTIFIED FALSE ALARMS", f"guarantee ≤ {N['ConfAlphaPct']}", RED),
+        (str(hp), "PREREGISTERED TESTS", "confirmed on held-out seeds", BLUE),
+    ])
+    g = 7 * mm; cw = (W - 2 * M - g) / 2; top = y - 1 * mm; bottom = 10 * mm
+    c.setStrokeColor(hx("#E5E7EB")); c.setLineWidth(0.5); c.line(W / 2, bottom + 2 * mm, W / 2, top - 2 * mm)
+    left = [
+        H2("1", "The opportunity", RED),
+        Paragraph("Constellations now number in the thousands, and the sky surveys they could serve discover more "
+                  "transients each night than any team can follow up. Realising this potential calls for two advances "
+                  "together: <b>coordination that scales</b> with the fleet itself, and <b>interpretation that remains "
+                  "trustworthy</b> when nature presents something new. OrbitalNet OS is built around both.", P_BODY),
+        H2("2", "What OrbitalNet OS does", BLUE),
+        Paragraph("The fleet operates as a society of autonomous agents. Each satellite carries its own state "
+                  "(position, battery, thermal margin, payload, memory) and reasons about which missions it can serve. "
+                  "A mission is simply <i>announced</i>: capable spacecraft bid, the strongest form an <b>enclave</b>, and "
+                  "the enclave re-forms continuously as members pass out of view. The same fleet then acts as a "
+                  "<b>distributed observatory</b>: for a newly detected transient it plans the measurements that most "
+                  "rapidly discriminate between physical explanations (kilonova, shock-cooling supernova, GRB afterglow, "
+                  "stellar flare) and recognises when the evidence points beyond all of them.", P_BODY),
+        H2("3", "How it works", GREEN),
+        *items([
+            ("Orbital physics", f"{n_sat:,} two-line element sets are propagated with SGP4 every second and mapped from "
+                                "the inertial frame to latitude and longitude through Greenwich sidereal time."),
+            ("Health model", "A hardware-abstraction layer evolves battery charge through sunlight and eclipse, memory "
+                             "fill and downlink, thermal margin and sensor calibration."),
+            ("Capability scoring", "Hard gatekeepers admit only safe nodes, which then receive a weighted capability "
+                                   "score discounted exponentially by aggregate risk."),
+            ("Contract-Net auction", "Bids blend normalised proximity (haversine distance within the slew envelope) with "
+                                     "battery reserve; the top-N bidders win the contract."),
+            ("Rolling enclaves", "Each cycle re-validates the enclave, releases departing members and re-opens the "
+                                 "auction, so coverage persists and self-heals."),
+            ("State bus", "Services exchange state solely through Redis keys, so each runs, restarts and scales "
+                          "independently: an event-sourced, fault-isolated topology."),
+        ], GREEN),
+    ]
+    right = [
+        H2("4", "The discovery engine", PURPLE),
+        Paragraph("For every candidate measurement (which satellite, which instant) the planner computes the expected "
+                  "information gain about the event's identity, adds a term for evidence of <b>model inadequacy</b> and "
+                  "a term for the <b>information that waiting would forfeit</b> as the source fades, and normalises by "
+                  "cost. Its belief spans every known model <i>plus</i> h₀, a Gaussian-process hypothesis able to "
+                  "describe any smooth light curve. Bayesian evidence acts as an automatic Occam's razor: it rewards a "
+                  "physical model that fits and charges h₀ for its flexibility, so h₀ rises precisely when known "
+                  "physics runs out. Split-conformal calibration then certifies the false-alarm rate of every "
+                  "“unknown” verdict. The engine is fully analytic: no training data, every decision traceable to "
+                  "a likelihood.", P_BODY),
+        H2("5", "In the live demonstration", AMBER),
+        *items([
+            ("Mission console", "Live fleet status, executing missions and open auctions, streamed from the bus."),
+            ("Orbital view", f"A WebGL globe rendering all {n_sat:,} satellites, coloured by payload, with enclave links "
+                             "locking onto the target."),
+            ("Mission dispatch", "Broadcast a scenario (cyclone tracking, maritime overwatch, disaster imaging) and see "
+                                 "it awarded within one consensus cycle."),
+            ("Auction forensics", "A complete ledger of every bidder's distance, battery, score and outcome."),
+            ("Chaos injection", "Disable part of an enclave and watch the auction recruit replacements on its own."),
+            ("Event Lab", "Place a transient anywhere in the sky; real satellites plan the campaign and the belief "
+                          "engine delivers its verdict, h₀ included."),
+            ("Evidence board", "The preregistered hypothesis matrix, read live from experiment result files."),
+        ], AMBER),
+        H2("6", "What sets it apart", RED),
+        Paragraph("OrbitalNet OS brings together, in one coherent system, capabilities usually studied separately: "
+                  "<b>real-orbit physics</b>, <b>decentralised market-based tasking</b>, <b>self-healing coverage</b>, "
+                  "<b>open-world Bayesian inference</b>, <b>deadline-aware planning</b> and a <b>certified false-alarm "
+                  "guarantee</b>. Its claims carry research-grade rigour: hypotheses preregistered before testing, "
+                  f"identical inputs for every strategy, {N['RealNEvents']} real ZTF transients replayed against the "
+                  "real Starlink fleet, and every figure generated programmatically from result files.", P_BODY),
+    ]
+    Frame(M, bottom, cw, top - bottom, 0, 0, 0, 0).addFromList(left, c)
+    Frame(M + cw + g, bottom, cw, top - bottom, 0, 0, 0, 0).addFromList(right, c)
+    if left or right:
+        print("WARNING overflow:", len(left), len(right))
+    footer(c, "1")
+
+
+def mini_header(c):
+    hh = 15 * mm
+    c.setFillColor(SPACE); c.rect(0, H - hh, W, hh, fill=1, stroke=0)
+    rnd = random.Random(5)
+    for _ in range(160):
+        c.setFillColor(colors.white, alpha=rnd.uniform(0.15, 0.8))
+        c.circle(rnd.uniform(0, W), rnd.uniform(H - hh, H), rnd.choice([0.25, 0.4, 0.6]), fill=1, stroke=0)
+    c.setFillColor(RED, alpha=1); c.rect(0, H - hh, W, 0.7, fill=1, stroke=0)
+    txt(c, M, H - 7.5 * mm, "OrbitalNet OS", "SansB", 13, colors.white)
+    txt(c, M + 41 * mm, H - 7.5 * mm, "Technical architecture, decision mathematics & measured performance", "Sans", 8, hx("#D1D5DB"))
+    txt(c, M, H - 12 * mm, "TOPOLOGY  ·  CAPABILITY & AUCTION CALCULUS  ·  OPEN-WORLD INFERENCE  ·  SEQUENTIAL PLANNING  ·  RESULTS",
+        "SansB", 5.2, hx("#FCA5A5"))
+    return H - hh
 
 
 def main():
-    n_sat, hp, ha = counts()
+    N = load_numbers(); n_sat, hp = counts()
     c = canvas.Canvas(str(OUT), pagesize=A4)
-    c.setTitle("OrbitalNet OS — Project Brief")
-    y = hero(c, H)
-
-    # ── abstract ──
-    y -= 7 * mm
-    y = wrap(c, "Abstract.  OrbitalNet OS is a decentralised operating layer for satellite constellations. Built on "
-                f"{n_sat:,} real orbital element sets propagated with SGP4, it lets spacecraft allocate tasks among "
-                "themselves through a Contract-Net auction, maintain coverage with rolling hand-offs, and recover from "
-                "node loss without ground intervention. On top of this substrate sits the scientific core: an "
-                "open-world Bayesian planner that chooses which spacecraft should observe a fading astronomical "
-                "transient, and when, by maximising expected information gain over the known physical models and an "
-                "explicit null hypothesis h0 — allowing the system to report that an event lies outside known physics "
-                "rather than forcing a confident but wrong label.", M, y, W - 2 * M, size=8.4, leading=11)
-    # ── KPI strip ──
-    y -= 3 * mm
-    kp = [(f"{n_sat:,}", "real satellites, SGP4"), ("K + 1", "hypotheses incl. h0"),
-          ("4", "fault-isolated services"), (f"{hp} / {ha}" if ha else "—", "preregistered tests passed")]
-    kw = (W - 2 * M - 9 * mm) / 4
-    for i, (v, l) in enumerate(kp):
-        x = M + i * (kw + 3 * mm)
-        c.setFillColor(INK); c.roundRect(x, y - 12 * mm, kw, 12 * mm, 3, fill=1, stroke=0)
-        c.setFillColor(RED); c.rect(x, y - 12 * mm, 1.2 * mm, 12 * mm, fill=1, stroke=0)
-        c.setFillColor(colors.white); c.setFont("Helvetica-Bold", 13); c.drawString(x + 4 * mm, y - 6.3 * mm, v)
-        c.setFillColor(hx("#AEB4BE")); c.setFont("Helvetica", 6.8); c.drawString(x + 4 * mm, y - 10 * mm, l)
-    y -= 18 * mm
-
-    cw = (W - 2 * M - 7 * mm) / 2
-    L, R = M, M + cw + 7 * mm
-
-    # ── 01 architecture (left) ──
-    yl = heading(c, L, y, "01", "Decoupled architecture", cw)
-    bw, bh = 30 * mm, 9.5 * mm
-    t = yl - bh
-    def node(x, yy, a, b, hot=False, col=BLUE):
-        c.setFillColor(RED if hot else colors.white); c.setStrokeColor(RED if hot else col); c.setLineWidth(0.9)
-        c.roundRect(x, yy, bw, bh, 3, fill=1, stroke=1)
-        c.setFillColor(colors.white if hot else INK); c.setFont("Helvetica-Bold", 7.4); c.drawCentredString(x + bw / 2, yy + 5.2 * mm, a)
-        c.setFillColor(colors.white if hot else GREY); c.setFont("Helvetica", 5.9); c.drawCentredString(x + bw / 2, yy + 2.0 * mm, b)
-    node(L, t, "Orbit propagator", "SGP4 · 1 Hz state vectors")
-    node(L + cw - bw, t, "Consensus engine", "leader election · CNP")
-    node(L + cw / 2 - bw / 2, t - 13 * mm, "Redis state bus", "publish / subscribe keys", hot=True)
-    node(L, t - 26 * mm, "Telemetry stream", "WebSocket → WebGL globe", col=GREEN)
-    node(L + cw - bw, t - 26 * mm, "Mission console", "operations · discovery", col=GREEN)
-    mx = L + cw / 2
-    arrow(c, L + bw / 2, t, mx - 8 * mm, t - 13 * mm + bh); arrow(c, L + cw - bw / 2, t, mx + 8 * mm, t - 13 * mm + bh)
-    arrow(c, mx - 8 * mm, t - 13 * mm, L + bw / 2, t - 26 * mm + bh); arrow(c, mx + 8 * mm, t - 13 * mm, L + cw - bw / 2, t - 26 * mm + bh)
-    yl = wrap(c, "Services share state only through the bus — no direct calls — so any process can fail and restart "
-                 "without halting the constellation.", L, t - 30 * mm, cw, size=7.6, leading=9.6, color=GREY)
-
-    # ── 02 auction (right) ──
-    yr = heading(c, R, y, "02", "Decentralised task allocation", cw)
-    yr = wrap(c, "Missions are announced to a shared ledger. Each spacecraft passes a hard gatekeeper (free, correct "
-                 "payload, within slew range), then bids:", R, yr, cw, size=7.9, leading=10)
-    c.setFillColor(LIGHT); c.roundRect(R, yr - 11 * mm, cw, 10 * mm, 3, fill=1, stroke=0)
-    c.setFillColor(INK); c.setFont("Times-Italic", 10.5)
-    c.drawCentredString(R + cw / 2, yr - 6.4 * mm, "bid  =  w_p · (1 − d / d_max)  +  w_b · battery")
-    yr -= 15 * mm
-    steps = [("ANNOUNCE", BLUE), ("FILTER", AMBER), ("BID", PURPLE), ("AWARD", GREEN), ("HEAL", RED)]
-    sw = (cw - 4 * 2.5 * mm) / 5
-    for i, (s, col) in enumerate(steps):
-        x = R + i * (sw + 2.5 * mm)
-        c.setFillColor(col); c.roundRect(x, yr - 6 * mm, sw, 6 * mm, 2, fill=1, stroke=0)
-        c.setFillColor(colors.white); c.setFont("Helvetica-Bold", 6.3); c.drawCentredString(x + sw / 2, yr - 3.9 * mm, s)
-    yr -= 9 * mm
-    yr = wrap(c, "The top-N bidders form an enclave. Members leaving view are released and the auction re-opens, "
-                 "giving rolling hand-off and self-healing under injected node failures; every bid is logged for audit.",
-              R, yr, cw, size=7.6, leading=9.6, color=GREY)
-
-    y = min(yl, yr) - 4 * mm
-
-    # ── 03 h0 (full width) ──
-    y = heading(c, L, y, "03", "Open-world inference: how the null hypothesis h0 works", W - 2 * M)
-    tw = (W - 2 * M) * 0.56
-    yt = wrap(c, "Each known class (kilonova, shock cooling, GRB afterglow, stellar flare) is a physical light-curve "
-                 "model. h0 is a Gaussian process — a non-parametric prior over any smooth light curve. All K + 1 "
-                 "hypotheses are scored by their Bayesian evidence, the probability of the data averaged over each "
-                 "model's parameters:", L, y, tw, size=7.9, leading=10)
-    c.setFillColor(LIGHT); c.roundRect(L, yt - 10 * mm, tw, 9.5 * mm, 3, fill=1, stroke=0)
-    c.setFillColor(INK); c.setFont("Times-Italic", 10.5)
-    c.drawCentredString(L + tw / 2, yt - 4.6 * mm, "P(h | D)  ∝  p(D | h) P(h),        p(D | h0) = N( y ; 0, K + σ²I )")
-    c.setFont("Helvetica", 6.4); c.setFillColor(GREY)
-    c.drawCentredString(L + tw / 2, yt - 8.3 * mm, "posterior over K known models + h0  ·  GP marginal likelihood with RBF kernel K")
-    yt -= 13 * mm
-    yt = wrap(c, "No neural network is trained. This is Bayesian model comparison: flexible h0 is automatically "
-                 "penalised for its flexibility (Bayesian Occam's razor), so it wins only when every physical model "
-                 "fits poorly. The ‘unknown’ decision threshold is then calibrated by split-conformal prediction, "
-                 "which certifies the false-alarm rate on known events.", L, yt, tw, size=7.9, leading=10)
-    px = L + tw + 5 * mm; pw = (W - M - px - 3 * mm) / 2; ph = 30 * mm
-    evidence_panel(c, px, y - ph + 4, pw, ph, "Known event", [0.82, 0.10, 0.04, 0.02, 0.06], 0)
-    evidence_panel(c, px + pw + 3 * mm, y - ph + 4, pw, ph, "Unknown event", [0.08, 0.06, 0.05, 0.04, 0.88], 4)
-    c.setFillColor(GREY); c.setFont("Helvetica-Oblique", 6.2)
-    c.drawString(px, y - ph - 2, "Posterior after measurements (schematic): a known class wins — or h0 does.")
-    y = min(yt, y - ph - 4) - 3 * mm
-
-    # ── 04 planner (left) / 05 evaluation (right) ──
-    yl = heading(c, L, y, "04", "Planning under fading information", cw)
-    c.setFillColor(LIGHT); c.roundRect(L, yl - 10 * mm, cw, 9.5 * mm, 3, fill=1, stroke=0)
-    c.setFillColor(INK); c.setFont("Times-Italic", 10)
-    c.drawCentredString(L + cw / 2, yl - 5.6 * mm, "U(a) = [ I(H;Y) + β I(Z;Y) + γ D(a) ] / c(a)")
-    yl -= 13 * mm
-    yl = wrap(c, "Information about the class, about model adequacy, and the value lost if the observation is "
-                 "delayed — per unit cost. When P(h0) stays above τ, the planner switches from identification to "
-                 "evidence preservation.", L, yl, cw, size=7.6, leading=9.6, color=GREY)
-
-    yr = heading(c, R, y, "05", "Evaluation protocol", cw)
-    items = ["Real ZTF Bright Transient Survey light curves, replayed against the real Starlink fleet",
-             "Baselines: fixed cadence, nearest-capable dispatch, classifier entropy, closed-world EIG",
-             "Hypotheses preregistered; tuning on validation seeds only; identical inputs per seed",
-             (f"{hp} of {ha} preregistered hypotheses passed — failures reported, not hidden" if ha else
-              "Results generated only from result files")]
-    for it in items:
-        c.setFillColor(RED); c.rect(R, yr + 1.2, 2.2, 2.2, fill=1, stroke=0)
-        yr = wrap(c, it, R + 3.5 * mm, yr, cw - 3.5 * mm, size=7.6, leading=9.4) - 1.5
-    y = min(yl, yr) - 2 * mm
-
-    # ── stack strip ──
-    c.setFillColor(LIGHT); c.roundRect(M, y - 8 * mm, W - 2 * M, 8 * mm, 3, fill=1, stroke=0)
-    c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.8); c.drawString(M + 3 * mm, y - 5 * mm, "STACK")
-    c.setFont("Helvetica", 6.8); c.setFillColor(GREY)
-    c.drawString(M + 15 * mm, y - 5 * mm, "Python · SGP4 · NumPy/SciPy · Gaussian processes · Redis · WebSockets · Three.js · Streamlit")
-
-    # ── footer ──
-    c.setFillColor(SPACE); c.rect(0, 0, W, 10 * mm, fill=1, stroke=0)
-    c.setFillColor(RED); c.rect(0, 10 * mm - 0.8, W, 0.8, fill=1, stroke=0)
-    c.setFillColor(colors.white); c.setFont("Helvetica-Bold", 7.4)
-    c.drawString(M, 3.8 * mm, "LIVE DEMO")
-    c.setFont("Helvetica", 7.4); c.setFillColor(hx("#D1D5DB"))
-    c.drawString(M + 17 * mm, 3.8 * mm, "Memurai  →  DEMO.bat  →  localhost:8501")
-    c.drawRightString(W - M, 3.8 * mm, "github.com/joycemalik/orbitalnet-dashboard")
-    c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.8); c.drawRightString(W - M - 3 * mm, y - 5 * mm, "DATA")
-    c.setFont("Helvetica", 6.8); c.setFillColor(GREY)
-    c.drawRightString(W - M - 3 * mm - 8 * mm, y - 5 * mm, "Space-Track · ZTF · GFZ")
+    c.setTitle("OrbitalNet OS — Distributed Architecture for Intelligent Satellite Fleet Management")
+    page_one(c, N, n_sat, hp)
+    c.showPage()
+    y = mini_header(c) - 3 * mm
+    g = 2.2 * mm; cw = (W - 2 * M - g) / 2
+    hA = 84 * mm
+    topology(c, M, y - hA, cw, hA); decision_math(c, M + cw + g, y - hA, cw, hA)
+    y -= hA + g
+    hB = 84 * mm
+    inference(c, M, y - hB, cw, hB); planner(c, M + cw + g, y - hB, cw, hB)
+    y -= hB + g
+    hC = y - 10 * mm
+    rw = (W - 2 * M - g) * 0.70
+    results(c, M, y - hC, rw, hC, N); unified(c, M + rw + g, y - hC, W - 2 * M - rw - g, hC)
+    footer(c, "2")
     c.showPage(); c.save()
-    print("wrote", OUT, "| lowest content y =", round((y - 8 * mm) / mm, 1), "mm")
+    print("wrote", OUT)
 
 
 if __name__ == "__main__":

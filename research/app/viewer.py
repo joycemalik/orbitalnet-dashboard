@@ -25,10 +25,21 @@ from research.app.plotting import (
     worked_example_figure,
 )
 
-st.set_page_config(page_title="Open-World Planner Research Viewer", layout="wide")
+try:
+    import sys as _sys
+    from pathlib import Path as _P
+    _sys.path.insert(0, str(_P(__file__).resolve().parents[2]))
+    from ui.theme import apply_theme as _apply, hero as _hero
+    _apply()
+except Exception:  # standalone without the console theme
+    _hero = None
 
-st.title("Open-World Sequential Measurement Planner — Results Viewer")
-st.caption("Reads only from research/results/. Never computes a result number.")
+if _hero:
+    _hero("Discovery · Experiment Archive", "Experiment archive", "Phase 1 existence proof, worked examples and Phase 2 strategy tables, straight from research/results/.")
+else:
+    st.title("Open-World Sequential Measurement Planner — Results Viewer")
+st.caption("Reads only from research/results/. Never computes a result number. "
+           "👈 Try the 🔭 Event Lab in the sidebar to inject your own space event.")
 
 progress = load_progress()
 if progress:
@@ -113,63 +124,35 @@ with tabs[2]:
     else:
         scenario = st.selectbox("Scenario", scenarios)
         scenario_result = load_scenario_summary("phase2", scenario)
-        cfg = scenario_result["config"]
+        import json as _json, os as _os
+        import pandas as _pd
+        from research.app.data import RESULTS_DIR as _RD
+        _cfg_path = _os.path.join(_RD, "phase2", scenario, "config.json")
+        cfg = _json.load(open(_cfg_path)) if _os.path.exists(_cfg_path) else {}
         st.caption(
-            f"seed={scenario_result['seed']} | git_commit={scenario_result['git_commit'][:12]} | "
-            f"config_hash={scenario_result['config_hash']} | tag={scenario_result.get('tag', '?')} | "
-            f"generated_at={scenario_result['generated_at']}"
+            f"split={cfg.get('split', '?')} | seed={cfg.get('seed', '?')} | n_events={scenario_result.get('n_events', '?')} | "
+            f"git_commit={str(scenario_result.get('git_commit', '?'))[:12]} | config_hash={scenario_result.get('config_hash', '?')} | "
+            f"generated_at={scenario_result.get('generated_at', '?')}"
         )
-        scenario_cfg = cfg["scenarios"][scenario]
-        st.caption(scenario_cfg["description"])
-
-        summary = scenario_result["summary"]
-        st.pyplot(strategy_comparison_figure(summary))
-        st.pyplot(time_to_identification_figure(summary))
-
-        st.subheader("Metrics by strategy")
-        rows = []
-        for name, stats in summary["strategies"].items():
-            row = {
-                "strategy": name,
-                "accuracy (modeled)": stats["accuracy_modeled"],
-                "accuracy (withheld)": stats["accuracy_withheld"],
-                "mean log score": stats["mean_log_score"],
-                "mean time to ID": stats["mean_time_to_identification"],
-                "never identified": stats["fraction_never_identified"],
-                "mean instrument time": stats["mean_instrument_time"],
-                "early amp error (fast)": stats["early_amp_error_fast"],
-                "early amp error (slow)": stats["early_amp_error_slow"],
-            }
-            if "auroc_p_h0_withheld_vs_modeled" in stats:
-                row["AUROC P(h0)"] = stats["auroc_p_h0_withheld_vs_modeled"]
-            rows.append(row)
-        st.dataframe(rows, use_container_width=True)
-
-        st.subheader("Validity checks")
-        nc = scenario_result["null_control"]
-        hc = scenario_result["h0_calibration"]
-        ngc = scenario_result["negative_control"]
-        st.write(
-            f"Null control (P vs B3 on modeled-only events): "
-            f"{'PASSED' if nc['passed'] else 'FAILED'} (mean log-score diff={nc['mean_diff']:.4f}, "
-            f"tolerance={nc['tolerance']})"
-        )
-        st.write(
-            f"h0 calibration: threshold={hc['calibrated_threshold']:.4f} calibrated for target FPR="
-            f"{hc['target_fpr']} on validation seed {hc['seed']}"
-        )
-        st.write(
-            f"Negative control (test seed): observed FPR={ngc['observed_fpr']} vs target={ngc['target_fpr']} "
-            f"(n={ngc['n_modeled_events']} modeled events)"
-        )
+        if isinstance(cfg.get("scenario_cfg"), dict) and cfg["scenario_cfg"].get("description"):
+            st.caption(cfg["scenario_cfg"]["description"])
+        per_strategy = scenario_result.get("summary", {})
+        per_strategy = per_strategy.get("strategies", per_strategy)
+        st.subheader("Metrics by strategy (B0-B3 = baselines, P = open-world planner)")
+        df = _pd.DataFrame(per_strategy).T
+        df = df[[c for c in df.columns if df[c].map(lambda v: isinstance(v, (int, float))).all()]]
+        st.dataframe(df, use_container_width=True)
+        for col in ("accuracy_modeled", "confident_wrong_rate_withheld", "fraction_identified"):
+            if col in df.columns:
+                st.bar_chart(df[col].astype(float), horizontal=True, y_label=col)
 
 with tabs[3]:
     st.header("Ablations")
-    st.info("Not run yet — this fills in after Phase 3 (remove h0 / adequacy term / decay).")
+    st.info("Ablation and later-phase results are on the 📊 Scorecard page (sidebar).")
 
 with tabs[4]:
     st.header("Decentralization")
-    st.info("Not run yet — this fills in after Phase 4 (per-spacecraft beliefs, contact-fraction sweep).")
+    st.info("Phase 4–6 results are on the 📊 Scorecard page (sidebar).")
 
 with tabs[5]:
     st.header("Hardware testbed")

@@ -1,0 +1,20 @@
+\paragraph{Protocol.} A preregistered rule picked the configuration on the validation split: two bands, discrepancy $\kappa=0.5$ and a GP length scale of 5\,d. We fixed five hypotheses. H1 says P is less often confidently wrong than B3 on unmodelled events. H2 says $P(h_0)$ ranks unmodelled events above modelled ones (AUROC $>0.5$). On supernovae, H3 says P is not more than 5 points more often confidently wrong than B3, and H5 says it is not more than 5 points less accurate. H4 says colour raises the AUROC over a single-band arm on the same events. Each hypothesis has to pass on all three noise seeds (stratified paired bootstrap, $10^4$ resamples). The test events (\RealNEvents: \RealNModeled\ supernovae, \RealNWithheld\ unmodelled) had already been used twice, in the retrospective analyses, so this causal run is a declared third look.
+
+\paragraph{Results.} Table~\ref{tab:real} shows both versions side by side. With causal measurements, H1--H4 pass and H5 fails. Closed-world EIG was confidently wrong on \RealCCwWhBthree\ of real unmodelled transients (\RealRCwWhBthree\ retrospectively), the auction baseline B1 on \RealCCwWhBone, and P on \RealCCwWhP. P labelled \RealCFlagP\ of unmodelled events as unknown, with an AUROC of \RealCAuc\ (Fig.~\ref{fig:rocreal}).
+
+\begin{table*}[t]
+\centering\scriptsize
+\caption{Real ZTF replay, preregistered test results per noise seed: estimate [95\% CI]; $^\times$ marks a criterion not met on that seed. CW: confident-wrong rate. $\Delta$: P minus B3, or the colour arm minus the single-band arm for H4. The causal version (v3) is this paper's result. The retrospective version (v2) let planners measure earlier epochs after later ones and is shown only for comparison.}
+\label{tab:real}
+\input{generated/table_real}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/figures/fig4_roc_real.pdf}
+\caption{Real data: ROC of the open-world planner's $P(h_0)$ for separating real unmodelled transients (TDE, SLSN, SN~Ibn) from ordinary supernovae, test seed 1. Colour plus model discrepancy is what makes $h_0$ usable, and enforcing causality leaves the curve almost unchanged.}
+\label{fig:rocreal}
+\end{figure}
+
+\paragraph{What causality changed.} The retrospective runs failed H3 and H5. There, P paid for its safety on unknowns with more confident errors and lower accuracy on ordinary supernovae. With causality, H3 passes, the false-``unknown'' rate on supernovae falls from \RealRFaP\ to \RealCFaP, and P's supernova accuracy (\RealCAccModP) matches B3's (\RealCAccModBthree). H5 still fails, but narrowly. On two seeds, the lower confidence bound falls just below $-5$ points, so we cannot rule out a small loss. The cost moved to the unknowns instead: P now flags \RealCFlagP\ of them, against \RealRFlagP\ retrospectively. The reason is the measurement budget. With a time arrow, one-step utilities jump to a late, informative epoch and give up the earlier ones. P used \RealCObsP\ of its 5 measurements on average (B3 \RealCObsBthree, fixed-cadence B0 \RealCObsBzero), against \RealRObsP\ when it could go back in time. Fewer measurements make every posterior less confident, so confident errors drop on both populations, and some of P's detections go with them.
+

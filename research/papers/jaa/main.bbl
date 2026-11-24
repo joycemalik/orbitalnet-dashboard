@@ -1,0 +1,207 @@
+\begin{thebibliography}{}
+\makeatletter
+\relax
+\def\mn@urlcharsother{\let\do\@makeother \do\$\do\&\do\#\do\^\do\_\do\%\do\~}
+\def\mn@doi{\begingroup\mn@urlcharsother \@ifnextchar [ {\mn@doi@}
+  {\mn@doi@[]}}
+\def\mn@doi@[#1]#2{\def\@tempa{#1}\ifx\@tempa\@empty \href
+  {http://dx.doi.org/#2} {doi:#2}\else \href {http://dx.doi.org/#2} {#1}\fi
+  \endgroup}
+\def\mn@eprint#1#2{\mn@eprint@#1:#2::\@nil}
+\def\mn@eprint@arXiv#1{\href {http://arxiv.org/abs/#1} {{\tt arXiv:#1}}}
+\def\mn@eprint@dblp#1{\href {http://dblp.uni-trier.de/rec/bibtex/#1.xml}
+  {dblp:#1}}
+\def\mn@eprint@#1:#2:#3:#4\@nil{\def\@tempa {#1}\def\@tempb {#2}\def\@tempc
+  {#3}\ifx \@tempc \@empty \let \@tempc \@tempb \let \@tempb \@tempa \fi \ifx
+  \@tempb \@empty \def\@tempb {arXiv}\fi \@ifundefined
+  {mn@eprint@\@tempb}{\@tempb:\@tempc}{\expandafter \expandafter \csname
+  mn@eprint@\@tempb\endcsname \expandafter{\@tempc}}}
+
+\bibitem[\protect\citeauthoryear{Adams, Iatauro, Gridnev  et~al.}{Adams
+  et~al.}{2024}]{Adams2024}
+Adams C.~A.,  Iatauro M.~J.,  Gridnev S.,   et~al., 2024, Technical Report
+  20240004120, Advancing Autonomy in Distributed Space Systems: Insights From
+  on-Orbit Testing with the {Starling 1.0} Mission.
+NASA Technical Reports Server
+
+\bibitem[\protect\citeauthoryear{Aleo, Engel, Narayan  et~al.}{Aleo
+  et~al.}{2024}]{Aleo2024}
+Aleo P.~D.,  Engel A.~W.,  Narayan G.,   et~al., 2024, Anomaly Detection and
+  Approximate Similarity Searches of Transients in Real-time Data Streams
+  (\mn@eprint {arXiv} {2404.01235})
+
+\bibitem[\protect\citeauthoryear{Almualla, Anand, Coughlin  et~al.}{Almualla
+  et~al.}{2021}]{Almualla2021}
+Almualla M.,  Anand S.,  Coughlin M.~W.,   et~al., 2021, \mn@doi [Monthly
+  Notices of the Royal Astronomical Society] {10.1093/mnras/stab1090}
+
+\bibitem[\protect\citeauthoryear{Angelopoulos \& Bates}{Angelopoulos \&
+  Bates}{2023}]{Angelopoulos2023}
+Angelopoulos A.~N.,  Bates S.,  2023, Foundations and Trends in Machine
+  Learning, 16, 494
+
+\bibitem[\protect\citeauthoryear{Astudillo, Protopapas, Pichara  \&
+  Huijse}{Astudillo et~al.}{2020}]{Astudillo2020}
+Astudillo J.,  Protopapas P.,  Pichara K.,   Huijse P.,  2020, \mn@doi [The
+  Astronomical Journal] {10.3847/1538-3881/ab557d}, 159, 16
+
+\bibitem[\protect\citeauthoryear{Atanasov, Le~Ny, Daniilidis  \&
+  Pappas}{Atanasov et~al.}{2015}]{Atanasov2015}
+Atanasov N.,  Le~Ny J.,  Daniilidis K.,   Pappas G.~J.,  2015, in Proc. IEEE
+  International Conference on Robotics and Automation (ICRA).
+
+\bibitem[\protect\citeauthoryear{Barlas, Sloman  \& Kaski}{Barlas
+  et~al.}{2025}]{Barlas2025}
+Barlas Y.~Z.,  Sloman S.~J.,   Kaski S.,  2025, Robust Experimental Design via
+  Generalised {Bayesian} Inference
+
+\bibitem[\protect\citeauthoryear{Bellm et~al.}{Bellm et~al.}{2019}]{Bellm2019}
+Bellm E.~C.,  et~al., 2019, Publications of the Astronomical Society of the
+  Pacific, 131, 018002
+
+\bibitem[\protect\citeauthoryear{Catanach \& Das}{Catanach \&
+  Das}{2023}]{Catanach2023}
+Catanach T.~A.,  Das N.,  2023, Metrics for {Bayesian} Optimal Experiment
+  Design under Model Misspecification
+
+\bibitem[\protect\citeauthoryear{Chaloner \& Verdinelli}{Chaloner \&
+  Verdinelli}{1995}]{Chaloner1995}
+Chaloner K.,  Verdinelli I.,  1995, Statistical Science, 10, 273
+
+\bibitem[\protect\citeauthoryear{Choi, Brunet  \& How}{Choi
+  et~al.}{2009}]{Choi2009}
+Choi H.-L.,  Brunet L.,   How J.~P.,  2009, \mn@doi [IEEE Transactions on
+  Robotics] {10.1109/TRO.2009.2022423}, 25, 912
+
+\bibitem[\protect\citeauthoryear{Coughlin, Antier, Corre  et~al.}{Coughlin
+  et~al.}{2019}]{Coughlin2019}
+Coughlin M.~W.,  Antier S.,  Corre D.,   et~al., 2019, \mn@doi [Monthly Notices
+  of the Royal Astronomical Society] {10.1093/mnras/stz2485}
+
+\bibitem[\protect\citeauthoryear{Foster, Ivanova, Malik  \& Rainforth}{Foster
+  et~al.}{2021}]{Foster2021}
+Foster A.,  Ivanova D.~R.,  Malik I.,   Rainforth T.,  2021, in Proc. 38th
+  International Conference on Machine Learning (ICML).
+
+\bibitem[\protect\citeauthoryear{Fremling et~al.}{Fremling
+  et~al.}{2020}]{Fremling2020}
+Fremling C.,  et~al., 2020, The Astrophysical Journal, 895, 32
+
+\bibitem[\protect\citeauthoryear{Ginsbourger, Le~Riche  \& Carraro}{Ginsbourger
+  et~al.}{2010}]{Ginsbourger2010}
+Ginsbourger D.,  Le~Riche R.,   Carraro L.,  2010, in , Computational
+  Intelligence in Expensive Optimization Problems.
+Springer, pp 131--162
+
+\bibitem[\protect\citeauthoryear{Gupta, Muthukrishna  \& Lochner}{Gupta
+  et~al.}{2024}]{Gupta2024}
+Gupta R.,  Muthukrishna D.,   Lochner M.,  2024, A Classifier-Based Approach to
+  Multi-Class Anomaly Detection Applied to Astronomical Time-Series (\mn@eprint
+  {arXiv} {2408.08888})
+
+\bibitem[\protect\citeauthoryear{Hedman, Ivanova, Guan  \& Rainforth}{Hedman
+  et~al.}{2025}]{Hedman2025}
+Hedman M.,  Ivanova D.~R.,  Guan C.,   Rainforth T.,  2025, in Proc. 42nd
+  International Conference on Machine Learning, PMLR 267. pp 22904--22923
+
+\bibitem[\protect\citeauthoryear{Iskandarli, Lintott, Croft, Stevance  \&
+  Weston}{Iskandarli et~al.}{2026}]{Iskandarli2026}
+Iskandarli L.,  Lintott C.~J.,  Croft S.,  Stevance H.,   Weston J.,  2026,
+  Anomaly Hunter for Alerts ({AHA}): Anomaly Detection in the {ZTF} Transient
+  Alert Stream (\mn@eprint {arXiv} {2602.12955})
+
+\bibitem[\protect\citeauthoryear{Ivezi{\'c} et~al.}{Ivezi{\'c}
+  et~al.}{2019}]{Ivezic2019}
+Ivezi{\'c} {\v{Z}}.,  et~al., 2019, The Astrophysical Journal, 873, 111
+
+\bibitem[\protect\citeauthoryear{Kennamer, Ishida, Gonzalez-Gaitan
+  et~al.}{Kennamer et~al.}{2020}]{Kennamer2020}
+Kennamer N.,  Ishida E. E.~O.,  Gonzalez-Gaitan S.,   et~al., 2020, in IEEE
+  Symposium Series on Computational Intelligence (SSCI).
+
+\bibitem[\protect\citeauthoryear{Lindley}{Lindley}{1956}]{Lindley1956}
+Lindley D.~V.,  1956, The Annals of Mathematical Statistics, 27, 986
+
+\bibitem[\protect\citeauthoryear{M{\"o}ller, Ishida, Peloton
+  et~al.}{M{\"o}ller et~al.}{2025}]{Moller2025}
+M{\"o}ller A.,  Ishida E. E.~O.,  Peloton J.,   et~al., 2025, \mn@doi
+  [Publications of the Astronomical Society of Australia]
+  {10.1017/pasa.2025.20}, 42, e057
+
+\bibitem[\protect\citeauthoryear{Perley et~al.}{Perley
+  et~al.}{2020}]{Perley2020}
+Perley D.~A.,  et~al., 2020, The Astrophysical Journal, 904, 35
+
+\bibitem[\protect\citeauthoryear{Perone \& Hays}{Perone \&
+  Hays}{2026}]{Perone2026}
+Perone H.,  Hays C.~W.,  2026, Consensus Based Task Allocation for Angles-Only
+  Local Catalog Maintenance of Satellite Systems (\mn@eprint {arXiv}
+  {2602.16678})
+
+\bibitem[\protect\citeauthoryear{Pruzhinskaya, Kornilov, Dodin
+  et~al.}{Pruzhinskaya et~al.}{2026}]{Pruzhinskaya2026}
+Pruzhinskaya M.~V.,  Kornilov M.~V.,  Dodin A.~V.,   et~al., 2026, Anomaly
+  detection in {Fink}. {I}. Discovery, follow-up, and classification of unusual
+  sources (\mn@eprint {arXiv} {2603.29511})
+
+\bibitem[\protect\citeauthoryear{Ramdas, Gr{\"u}nwald, Vovk  \& Shafer}{Ramdas
+  et~al.}{2023}]{Ramdas2023}
+Ramdas A.,  Gr{\"u}nwald P.,  Vovk V.,   Shafer G.,  2023, Statistical Science,
+  38, 576
+
+\bibitem[\protect\citeauthoryear{Sasli, Xu, Junell  et~al.}{Sasli
+  et~al.}{2026b}]{Sasli2026ASTRANet}
+Sasli A.,  Xu M.,  Junell A.,   et~al., 2026b, Catching Disguised Transients
+  with {ASTRANet}: Anomaly-Aware Spectroscopic Classification and Conformal
+  Calibration (\mn@eprint {arXiv} {2607.08044})
+
+\bibitem[\protect\citeauthoryear{Sasli, Fontinele~Nunes, Zhang  et~al.}{Sasli
+  et~al.}{2026a}]{Sasli2026FLARE}
+Sasli A.,  Fontinele~Nunes F.,  Zhang X.,   et~al., 2026a, Photometric
+  classification and out-of-taxonomy detection of {ZTF} transients with {FLARE}
+  (\mn@eprint {arXiv} {2610.30656})
+
+\bibitem[\protect\citeauthoryear{Shapiro, Pregui{\c{c}}a, Baquero  \&
+  Zawirski}{Shapiro et~al.}{2011}]{Shapiro2011}
+Shapiro M.,  Pregui{\c{c}}a N.,  Baquero C.,   Zawirski M.,  2011, in
+  Stabilization, Safety, and Security of Distributed Systems (SSS 2011), LNCS
+  6976. pp 386--400
+
+\bibitem[\protect\citeauthoryear{Villar, Cranmer, Berger  et~al.}{Villar
+  et~al.}{2021}]{Villar2021}
+Villar V.~A.,  Cranmer M.,  Berger E.,   et~al., 2021, \mn@doi [The
+  Astrophysical Journal Supplement Series] {10.3847/1538-4365/ac0893}
+
+\bibitem[\protect\citeauthoryear{Vovk \& Wang}{Vovk \&
+  Wang}{2021}]{VovkWang2021}
+Vovk V.,  Wang R.,  2021, The Annals of Statistics, 49, 1736
+
+\bibitem[\protect\citeauthoryear{Vovk, Gammerman  \& Shafer}{Vovk
+  et~al.}{2005}]{Vovk2005}
+Vovk V.,  Gammerman A.,   Shafer G.,  2005, Algorithmic Learning in a Random
+  World.
+Springer, New York
+
+\bibitem[\protect\citeauthoryear{Wasserman, Ramdas  \& Balakrishnan}{Wasserman
+  et~al.}{2020}]{Wasserman2020}
+Wasserman L.,  Ramdas A.,   Balakrishnan S.,  2020, Proceedings of the National
+  Academy of Sciences, 117, 16880
+
+\bibitem[\protect\citeauthoryear{Xie, Zhou, Liang, Favaro  \& Sesia}{Xie
+  et~al.}{2025}]{Xie2025}
+Xie T.,  Zhou Y.,  Liang Z.,  Favaro S.,   Sesia M.,  2025, Conformal Inference
+  for Open-Set and Imbalanced Classification (\mn@eprint {arXiv} {2510.13037})
+
+\bibitem[\protect\citeauthoryear{Yang, Chen  \& Wu}{Yang
+  et~al.}{2025}]{Yang2025}
+Yang H.,  Chen C.,   Wu J.-L.,  2025, \mn@doi [Computer Methods in Applied
+  Mechanics and Engineering] {10.1016/j.cma.2025.118198}, 446, 118198
+
+\bibitem[\protect\citeauthoryear{Zilberstein \& Chien}{Zilberstein \&
+  Chien}{2026}]{Zilberstein2026}
+Zilberstein I.,  Chien S.,  2026, Scalable Dynamic Distributed Constraint
+  Optimization with Metareasoning and Application to Continual Satellite
+  Operations (\mn@eprint {arXiv} {2601.06188})
+
+\makeatother
+\end{thebibliography}

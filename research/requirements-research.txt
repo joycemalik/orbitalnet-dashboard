@@ -1,0 +1,6 @@
+# Pinned so shards from different laptops merge (merge_shards checks numpy/python).
+numpy==2.2.6
+scipy==1.16.0
+sgp4==2.25
+matplotlib==3.10.5
+pytest==8.4.0

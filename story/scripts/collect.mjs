@@ -1,6 +1,8 @@
 // Gathers the rest of the research into the site at build time, so one deploy
 // serves everything from orbitalnet.joycemalik.com:
-//   /paper/            the manuscript page (from ../docs), plus /paper/manuscript.pdf
+//   /paper/            the JAA paper page (a Vite page: paper/index.html, data from public/jaa/)
+//   /paper/archive/    the earlier manuscript page (from ../docs), plus manuscript.pdf
+//   /jaa/, /code/      JAA numbers, figures, PDF and the rendered notebook (scripts/jaa_assets.py)
 //   /paper/venues/     the submission roadmap (from ../docs/venues)
 //   /notebook/         the lab notebook: research/LOG.md and research/PLAN.md, rendered
 // Nothing here is hand-written: every page is copied or rendered from the repo.
@@ -8,6 +10,7 @@ import { cpSync, rmSync, mkdirSync, readFileSync, writeFileSync, existsSync, sta
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { marked } from 'marked';
+import { spawnSync } from 'node:child_process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -17,10 +20,16 @@ const PDF = 'Hypothesis-Discriminating Observation Campaigns for Distributed Spa
 const HOME_BAR = `<a href="/" style="position:fixed;left:12px;bottom:12px;z-index:9999;font:500 11px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#111;padding:9px 12px;border-radius:3px;text-decoration:none;opacity:.86">← OrbitalNet research</a>`;
 
 /* ---------- paper + roadmap ---------- */
-const paperOut = resolve(pub, 'paper');
-rmSync(paperOut, { recursive: true, force: true });
+/* JAA assets: refreshed from the repo when Python is available, otherwise the committed copies are used. */
+const py = spawnSync(process.platform === 'win32' ? 'python' : 'python3', [resolve(here, 'jaa_assets.py')], { stdio: 'inherit' });
+if (py.status !== 0) console.warn('collect: jaa_assets.py did not run; using committed public/jaa and public/code');
+
+const paperRoot = resolve(pub, 'paper');
+rmSync(paperRoot, { recursive: true, force: true });
+const paperOut = resolve(paperRoot, 'archive');
 cpSync(resolve(repo, 'docs'), paperOut, { recursive: true });
-for (const f of ['index.html', 'venues/index.html']) {
+cpSync(resolve(repo, 'docs/venues'), resolve(paperRoot, 'venues'), { recursive: true });
+for (const f of ['index.html', 'venues/index.html', '../venues/index.html']) {
   const p = resolve(paperOut, f);
   if (existsSync(p)) writeFileSync(p, readFileSync(p, 'utf8').replace(/<body([^>]*)>/i, m => m + '\n' + HOME_BAR));
 }
@@ -92,7 +101,7 @@ h1,h2,h3,h4{text-wrap:balance;scroll-margin-top:80px}
 :focus-visible{outline:2px solid var(--ember);outline-offset:3px}
 @media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr);gap:8px}.toc{position:static;max-height:none;border-bottom:1px solid var(--rule);padding-bottom:12px}.nav-group a:not(.nav-doc){display:none}.nav-group{display:inline-grid;margin:0 18px 0 0}}
 </style></head><body>
-<header class="top"><a class="brand" href="/">ORBITALNET</a><nav><a href="/film/">Film</a><a href="/paper/">Paper</a><a href="/paper/venues/">Roadmap</a><a href="/notebook/" aria-current="page">Notebook</a><a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">Code</a></nav></header>
+<header class="top"><a class="brand" href="/">ORBITALNET</a><nav><a href="/film/">Film</a><a href="/paper/">Paper</a><a href="/paper/venues/">Roadmap</a><a href="/notebook/" aria-current="page">Lab log</a><a href="/code/">Notebook</a><a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">GitHub</a></nav></header>
 <div class="wrap"><aside class="toc" aria-label="Contents">${nav}</aside><main>${body}</main></div>
 <div class="foot">Rendered from ${parts.map(p => `${p.file} (updated ${p.updated})`).join(' · ')} at build time. Edit the markdown, not this page.</div>
 </body></html>`);

@@ -6,10 +6,15 @@ The public home of the OrbitalNet research, built from this repository:
 |---|---|---|
 | `/` | Landing page with a live 3D Earth and all 10,109 orbits | `index.html`, `src/landing.*` |
 | `/film/` | The film (below) | `film/index.html`, `src/main.js` |
-| `/paper/` | The manuscript page, plus `/paper/manuscript.pdf` | copied from `../docs/` and the PDF at the repo root |
+| `/paper/` | The JAA paper (submitted, under review): interactive charts, every prediction, PDF | `paper/index.html`, `src/paper.*`, `src/space.js`, data in `public/jaa/` |
+| `/paper/archive/` | The earlier manuscript page, plus `manuscript.pdf` | copied from `../docs/` |
 | `/paper/venues/` | Submission roadmap | copied from `../docs/venues/` |
-| `/notebook/` | Lab notebook: phase log and research plan | rendered from `../research/LOG.md` and `../research/PLAN.md` |
+| `/code/` | The Colab notebook, rendered | `../research/notebooks/jaa_walkthrough.ipynb` |
+| `/notebook/` | Lab log: phase log and research plan | rendered from `../research/LOG.md` and `../research/PLAN.md` |
 
+`scripts/jaa_assets.py` builds `public/jaa/` (numbers from the paper's generated macros, figures,
+PDF, ROC data) and `public/code/`. `collect.mjs` runs it when Python is available; the outputs are
+committed so a build without Python still works.
 `scripts/collect.mjs` copies and renders the `/paper/` and `/notebook/` pages into
 `public/` before every `dev` and `build`, so they always match the repo. Those
 generated folders are git-ignored; edit the sources, not the output.

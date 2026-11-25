@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Knowing What You Do Not Know · OrbitalNet</title>
+  <meta name="description" content="Open-world follow-up planning for fading transients, from one spacecraft to a fleet. Submitted to the Journal of Astrophysics and Astronomy, under review.">
+  <meta name="theme-color" content="#03040a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ffb766'/%3E%3Cellipse cx='16' cy='16' rx='14' ry='5' fill='none' stroke='%237fd0ff' stroke-width='1.5' transform='rotate(-25 16 16)'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/src/theme.css">
+  <link rel="stylesheet" href="/src/paper.css">
+</head>
+<body class="hud">
+  <header class="top">
+    <a class="wm" href="/">ORBITAL<span>NET</span></a>
+    <nav id="nav" aria-label="Main">
+      <a href="/paper/" aria-current="page">Paper</a>
+      <a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener">Code</a>
+      <a href="/code/">Notebook</a>
+      <a href="/film/">Film</a>
+      <a href="/notebook/">Lab log</a>
+    </nav>
+    <a class="cta" href="/jaa/jaa-manuscript.pdf">Download PDF</a>
+    <button class="menu" aria-controls="nav" aria-expanded="false">Menu</button>
+  </header>
+
+  <main class="paper">
+    <section class="p-hero">
+      <p class="lab acc">OrbitalNet · paper</p>
+      <h1>Knowing What You Do Not Know</h1>
+      <p class="sub">Open-world follow-up planning for fading transients, from one spacecraft to a fleet</p>
+      <p class="authors">Under review at the Journal of Astrophysics and Astronomy.<br>Dr. Smitha Shekar B, Dr. Harish G, Joyce Malik, Anup H, Moghitha B and Swathi Sathish<br><span>Dr. Ambedkar Institute of Technology, Bengaluru</span></p>
+      <div class="cta">
+        <a class="btn primary" href="/jaa/jaa-manuscript.pdf">Read the manuscript (PDF)</a>
+        <a class="btn" href="https://colab.research.google.com/github/joycemalik/orbitalnet-dashboard/blob/main/research/notebooks/jaa_walkthrough.ipynb" target="_blank" rel="noopener">Open the code in Colab</a>
+        <a class="btn" href="#cite">Cite</a>
+      </div>
+    </section>
+
+    <section class="tiles" aria-label="Headline results">
+      <div class="tile glass"><span class="k">Unknowns caught · simulation</span><b data-n="SimTprP"></b><span class="vs">vs <em data-n="SimTprBthree"></em> for the usual planner, at 5% false alarms</span></div>
+      <div class="tile glass"><span class="k">Confidently wrong · real ZTF</span><b data-n="RealCCwWhP"></b><span class="vs">vs <em data-n="RealCCwWhBthree"></em>, on <em data-n="RealNEvents"></em> real transients</span></div>
+      <div class="tile glass"><span class="k">False alarms · anytime-valid</span><b data-n="EFreshFa"></b><span class="vs">on <em data-n="EFreshN"></em> fresh events, guaranteed at every step</span></div>
+      <div class="tile glass"><span class="k">Fleet · one plane vs spread</span><b><span data-n="FleetBFourMag"></span> pts</b><span class="vs">less accurate when all satellites share one orbital plane</span></div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">01</span>The problem</h2>
+      <div class="two">
+        <div class="prose">
+          <p>Sky surveys find more short-lived explosions than any telescope can follow. So future spacecraft will have to decide for themselves what to measure next.</p>
+          <p>Today's planners pick the measurement that best separates the object types they already know. That works, until something new shows up. A posterior over known classes always sums to one, so every extra measurement pushes the planner towards whichever known class fits least badly. It gets <em>more</em> sure exactly when it should get less sure.</p>
+          <p>We give the planner one more option, <b class="h0">h₀</b>, "none of the above", and we let it measure only forward in time, as a real spacecraft must.</p>
+        </div>
+        <figure class="toy glass" aria-label="Interactive toy: closed world versus open world">
+          <figcaption><span class="k">Try it · toy model, not a result</span>Drag to take measurements of an event that fits none of the known classes.</figcaption>
+          <div class="bars" id="toyBars"></div>
+          <label class="slider"><span>Measurements: <b id="toyN">0</b></span><input id="toy" type="range" min="0" max="6" value="0"></label>
+          <div class="legend"><span class="sw closed"></span>Closed world <span class="sw open"></span>Open world (with h₀)</div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">02</span>Does h₀ catch the unknowns?</h2>
+      <div class="two">
+        <div class="prose">
+          <p>Yes, and by a wide margin. In simulation we withheld whole event types from the planner and asked how well its "this is new" score separates them from known events.</p>
+          <p>The open-world planner P reaches an AUROC of <b data-n="SimAucP"></b>. Closed-world EIG (B3) reaches <b data-n="SimAucBthree"></b>. At the 5% false-alarm point we fixed in advance, P catches <b data-n="SimTprP"></b> of unknowns and B3 catches <b data-n="SimTprBthree"></b>.</p>
+          <p>It costs almost nothing on known events. Both reach <b data-n="SimAccModP"></b> accuracy on the modelled classes. P just uses a few more measurements (<b data-n="SimObsP"></b> against <b data-n="SimObsBthree"></b>).</p>
+          <p class="note">Hover the chart to read off detection rates at any false-alarm rate.</p>
+        </div>
+        <figure class="glass chart">
+          <figcaption><span class="k">Interactive · simulation test seeds, S1 nominal</span>Detection of never-seen types vs false alarms on known ones</figcaption>
+          <svg id="roc" viewBox="0 0 420 380" role="img" aria-label="ROC curves for P, B3 and B2"></svg>
+          <div class="readout" id="rocRead">Hover the chart</div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">03</span>On real transients</h2>
+      <div class="two">
+        <div class="prose">
+          <p>Simulation can flatter a method, so we replayed <b data-n="RealNEvents"></b> real transients from the Zwicky Transient Facility. <b data-n="RealNWithheld"></b> of them were types the planner had never been taught: tidal disruption events, superluminous supernovae and SN Ibn.</p>
+          <p>The usual planner was confidently wrong about <b data-n="RealCCwWhBthree"></b> of them. P was confidently wrong about <b data-n="RealCCwWhP"></b>. The ranges cover the three noise seeds.</p>
+          <p>Not everything held. P's accuracy on ordinary supernovae did not stay within the 5 points we promised, so that prediction failed. It is in the table below with the rest.</p>
+        </div>
+        <figure class="glass figwhite"><img src="/jaa/fig4_roc_real.png" alt="ROC curves on real ZTF data" loading="lazy"><figcaption>How well P(h₀) separates real unknown transients from ordinary supernovae. Colour plus a model-discrepancy term is what makes it work.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">04</span>A guarantee on "unknown", then a fleet</h2>
+      <div class="two">
+        <div class="prose">
+          <p>A planner that says "unknown" too often is useless, so we put a number on it. With anytime-valid e-values the false-alarm rate on <b data-n="EFreshN"></b> fresh events was <b data-n="EFreshFa"></b>, and the guarantee holds at every step, not just at the end.</p>
+          <p>Then we spread the planner over satellites that can only talk when they see each other. Sharing observations helped. But where the satellites sit mattered more. A well-connected fleet in one orbital plane was <b><span data-n="FleetBFourMag"></span> points</b> less accurate than a spread one (<b data-n="FleetBAccODense"></b> against <b data-n="FleetBAccOSparse"></b>).</p>
+          <p>Realistic links did not beat satellites working alone. Two things explain this: stale records and duplicated work. The chart shows both ends.</p>
+        </div>
+        <figure class="glass chart">
+          <figcaption><span class="k">Interactive · fleet test results</span>Accuracy on known events, by how the fleet talks</figcaption>
+          <div class="hbars" id="fleet"></div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">05</span>Every prediction, and how it went</h2>
+      <p class="prose wide">We committed every hypothesis before the test data were run. Here is all of it, the passes and the fails.</p>
+      <div class="glass verdicts" id="verdicts"></div>
+    </section>
+
+    <section class="block">
+      <h2><span class="idx">06</span>Figures from the paper</h2>
+      <div class="gallery">
+        <figure class="figwhite glass"><img src="/jaa/fig1_tti.png" alt="Share of known events identified against time" loading="lazy"><figcaption>Share of known events identified against time since the alert. B2 is quickest on what it can identify, P identifies almost all of them, a little later.</figcaption></figure>
+        <figure class="figwhite glass"><img src="/jaa/fig2_decay.png" alt="Information gained from the decay term" loading="lazy"><figcaption>What the decay term adds. It helps kilonovae and shock cooling, and hurts flares.</figcaption></figure>
+        <figure class="figwhite glass"><img src="/jaa/fig3_roc_sim.png" alt="Simulation ROC" loading="lazy"><figcaption>Simulation ROC. The dotted line is the 5% false-alarm point fixed in advance.</figcaption></figure>
+        <figure class="figwhite glass"><img src="/jaa/fig5_fleet.png" alt="Fleet accuracy against link range" loading="lazy"><figcaption>Fleet accuracy against how far satellites can talk.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="block" id="cite">
+      <h2><span class="idx">07</span>Code, data and citation</h2>
+      <div class="two">
+        <div class="prose">
+          <p>Every number on this page is read from the same files the paper uses, in <code>research/results/</code>. None is typed by hand.</p>
+          <p>The notebook rebuilds the headline numbers and figures from those files, and runs a small simulation you can change. It takes a few minutes on a free Colab CPU.</p>
+          <div class="cta">
+            <a class="btn primary" href="https://colab.research.google.com/github/joycemalik/orbitalnet-dashboard/blob/main/research/notebooks/jaa_walkthrough.ipynb" target="_blank" rel="noopener">Open in Colab</a>
+            <a class="btn" href="/code/">Read the notebook here</a>
+          </div>
+          <p class="note">An earlier manuscript lives in the <a href="/paper/archive/">archive</a>.</p>
+        </div>
+        <pre class="glass bib">@unpublished{malik2026knowing,
+  title  = {Knowing What You Do Not Know: Open-World
+            Follow-Up Planning for Fading Transients,
+            from One Spacecraft to a Fleet},
+  author = {Shekar B, Smitha and G, Harish and
+            Malik, Joyce and H, Anup and
+            B, Moghitha and Sathish, Swathi},
+  note   = {Submitted to the Journal of Astrophysics
+            and Astronomy, under review},
+  year   = {2026}
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="manifest" aria-label="Quick links">
+    <a href="/"><i>00</i>Home</a>
+    <a href="/jaa/jaa-manuscript.pdf"><i>01</i>PDF</a>
+    <a href="https://github.com/joycemalik/orbitalnet-dashboard" target="_blank" rel="noopener"><i>02</i>Code</a>
+    <a href="/code/"><i>03</i>Notebook</a>
+    <a href="#cite"><i>04</i>Cite</a>
+  </footer>
+  <script type="module" src="/src/paper.js"></script>
+</body>
+</html>
